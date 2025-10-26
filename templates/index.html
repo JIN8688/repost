@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리포스트 - 블로그 댓글 자동 추천</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .blog-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .blog-info.show {
+            display: block;
+        }
+
+        .blog-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .blog-info p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .comments-section {
+            display: none;
+        }
+
+        .comments-section.show {
+            display: block;
+        }
+
+        .comments-header {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .comment-item {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .comment-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .comment-text {
+            flex: 1;
+            color: #333;
+            font-size: 1em;
+        }
+
+        .copy-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .copy-btn.copied {
+            background: #28a745;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .go-to-blog-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            display: none;
+        }
+
+        .go-to-blog-btn.show {
+            display: block;
+        }
+
+        .go-to-blog-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .go-to-blog-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .go-to-blog-btn span {
+            margin-left: 8px;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 리포스트</h1>
+            <p>블로그 링크를 넣으면 AI가 알맞은 댓글을 자동으로 추천해드립니다</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="blogUrl" 
+                    placeholder="네이버 블로그 URL을 입력하세요 (예: https://blog.naver.com/...)"
+                >
+                <button onclick="analyzeBlog()" id="analyzeBtn">
+                    분석하기
+                </button>
+            </div>
+        </div>
+
+        <div class="error" id="errorMsg"></div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>블로그 내용을 분석하고 있습니다...</p>
+        </div>
+
+        <div class="blog-info" id="blogInfo">
+            <h3 id="blogTitle"></h3>
+            <p id="blogContent"></p>
+        </div>
+
+        <button class="go-to-blog-btn" id="goToBlogBtn" onclick="goToBlog()">
+            📝 블로그로 이동하여 댓글 달기 <span>→</span>
+        </button>
+
+        <div class="comments-section" id="commentsSection">
+            <div class="comments-header">💬 추천 댓글</div>
+            <div id="commentsList"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">복사되었습니다! ✓</div>
+
+    <script>
+        // 현재 블로그 URL 저장
+        let currentBlogUrl = '';
+
+        // Enter 키로 분석 실행
+        document.getElementById('blogUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeBlog();
+            }
+        });
+
+        // 블로그로 이동하는 함수
+        function goToBlog() {
+            if (currentBlogUrl) {
+                window.open(currentBlogUrl, '_blank');
+            }
+        }
+
+        async function analyzeBlog() {
+            const url = document.getElementById('blogUrl').value.trim();
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const loading = document.getElementById('loading');
+            const errorMsg = document.getElementById('errorMsg');
+            const blogInfo = document.getElementById('blogInfo');
+            const commentsSection = document.getElementById('commentsSection');
+            const goToBlogBtn = document.getElementById('goToBlogBtn');
+
+            // 초기화
+            errorMsg.classList.remove('show');
+            blogInfo.classList.remove('show');
+            commentsSection.classList.remove('show');
+            goToBlogBtn.classList.remove('show');
+
+            if (!url) {
+                showError('URL을 입력해주세요.');
+                return;
+            }
+
+            // 로딩 시작
+            loading.classList.add('show');
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '분석 중...';
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '오류가 발생했습니다.');
+                }
+
+                // 현재 블로그 URL 저장
+                currentBlogUrl = url;
+
+                // 블로그 정보 표시
+                document.getElementById('blogTitle').textContent = data.blog.title;
+                document.getElementById('blogContent').textContent = data.blog.content.substring(0, 200) + '...';
+                blogInfo.classList.add('show');
+
+                // 블로그 이동 버튼 표시
+                goToBlogBtn.classList.add('show');
+
+                // 댓글 목록 표시
+                displayComments(data.comments);
+                commentsSection.classList.add('show');
+
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                loading.classList.remove('show');
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '분석하기';
+            }
+        }
+
+        function displayComments(comments) {
+            const commentsList = document.getElementById('commentsList');
+            commentsList.innerHTML = '';
+
+            comments.forEach((comment, index) => {
+                const commentItem = document.createElement('div');
+                commentItem.className = 'comment-item';
+                commentItem.innerHTML = `
+                    <div class="comment-text">${comment}</div>
+                    <button class="copy-btn" onclick="copyComment('${escapeHtml(comment)}', this)">
+                        복사
+                    </button>
+                `;
+                commentsList.appendChild(commentItem);
+            });
+        }
+
+        function copyComment(text, button) {
+            // 클립보드에 복사
+            navigator.clipboard.writeText(text).then(() => {
+                // 버튼 상태 변경
+                const originalText = button.textContent;
+                button.textContent = '복사됨!';
+                button.classList.add('copied');
+
+                // 토스트 메시지 표시
+                showToast();
+
+                // 2초 후 원래 상태로
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                alert('복사에 실패했습니다: ' + err);
+            });
+        }
+
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = message;
+            errorMsg.classList.add('show');
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
+
