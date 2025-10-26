@@ -4,11 +4,15 @@ import requests
 from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+# OpenAI 클라이언트 초기화
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY')) if os.getenv('OPENAI_API_KEY') else None
 
 def scrape_blog_content(url):
     """네이버 블로그 내용 스크래핑"""
@@ -81,11 +85,60 @@ def scrape_blog_content(url):
             'url': url
         }
 
+def generate_comments_with_ai(title, content):
+    """OpenAI를 사용하여 블로그 내용 기반 댓글 생성"""
+    try:
+        if not client:
+            return None
+        
+        # 블로그 내용 요약 (너무 길면 잘라내기)
+        content_preview = content[:500] if len(content) > 500 else content
+        
+        prompt = f"""다음은 네이버 블로그 글입니다. 이 글을 실제로 읽은 사람처럼 자연스러운 댓글 8개를 한국어로 작성해주세요.
+
+블로그 제목: {title}
+블로그 내용: {content_preview}
+
+요구사항:
+1. 실제 블로그 내용을 구체적으로 언급하는 댓글
+2. 자연스럽고 친근한 톤
+3. 이모지 적절히 사용
+4. 길이: 짧은 댓글 5개(10-25자), 긴 댓글 3개(30-50자)
+5. 스팸처럼 보이지 않는 진심 어린 댓글
+6. 각 댓글은 서로 다른 스타일로
+
+JSON 형식으로 응답:
+{{"comments": ["댓글1", "댓글2", ...]}}"""
+
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "당신은 블로그 댓글을 작성하는 친근한 한국인입니다. 자연스럽고 진심 어린 댓글을 작성합니다."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.8,
+            max_tokens=500
+        )
+        
+        import json
+        result = json.loads(response.choices[0].message.content)
+        return result.get('comments', [])
+    
+    except Exception as e:
+        print(f"AI 댓글 생성 실패: {e}")
+        return None
+
 def generate_comments(blog_data):
-    """블로그 내용을 기반으로 댓글 추천 생성"""
+    """블로그 내용을 기반으로 댓글 추천 생성 (AI 우선, 실패시 기본 로직)"""
     title = blog_data['title']
     content = blog_data['content']
     
+    # AI 댓글 생성 시도
+    ai_comments = generate_comments_with_ai(title, content)
+    if ai_comments and len(ai_comments) >= 5:
+        return ai_comments[:8]  # 최대 8개
+    
+    # AI 실패시 기본 로직 사용
     comments = []
     text = (title + ' ' + content).lower()
     
