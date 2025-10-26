@@ -2,13 +2,17 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>리포스트 - 블로그 댓글 자동 추천</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -18,7 +22,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 15px;
+            overflow-x: hidden;
         }
 
         .container {
@@ -28,6 +33,7 @@
             max-width: 800px;
             width: 100%;
             padding: 40px;
+            margin: auto;
         }
 
         .header {
@@ -36,14 +42,17 @@
         }
 
         .header h1 {
-            font-size: 2.5em;
+            font-size: clamp(1.8em, 5vw, 2.5em);
             color: #667eea;
             margin-bottom: 10px;
+            word-break: keep-all;
         }
 
         .header p {
             color: #666;
-            font-size: 1.1em;
+            font-size: clamp(0.9em, 3vw, 1.1em);
+            line-height: 1.5;
+            word-break: keep-all;
         }
 
         .input-section {
@@ -61,8 +70,10 @@
             padding: 15px 20px;
             border: 2px solid #e0e0e0;
             border-radius: 10px;
-            font-size: 1em;
+            font-size: clamp(0.9em, 3vw, 1em);
             transition: all 0.3s;
+            min-width: 0;
+            width: 100%;
         }
 
         input[type="text"]:focus {
@@ -77,10 +88,13 @@
             color: white;
             border: none;
             border-radius: 10px;
-            font-size: 1em;
+            font-size: clamp(0.9em, 3vw, 1em);
             font-weight: bold;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+            min-height: 48px;
+            touch-action: manipulation;
         }
 
         button:hover {
@@ -129,6 +143,8 @@
             border-radius: 10px;
             margin-bottom: 20px;
             display: none;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         .blog-info.show {
@@ -138,11 +154,14 @@
         .blog-info h3 {
             color: #333;
             margin-bottom: 10px;
+            font-size: clamp(1.1em, 4vw, 1.3em);
+            word-break: keep-all;
         }
 
         .blog-info p {
             color: #666;
             line-height: 1.6;
+            font-size: clamp(0.9em, 3vw, 1em);
         }
 
         .comments-section {
@@ -154,7 +173,7 @@
         }
 
         .comments-header {
-            font-size: 1.3em;
+            font-size: clamp(1.1em, 4vw, 1.3em);
             color: #333;
             margin-bottom: 15px;
             font-weight: bold;
@@ -162,41 +181,48 @@
 
         .comment-item {
             background: #f8f9fa;
-            padding: 15px 20px;
+            padding: 15px;
             border-radius: 10px;
             margin-bottom: 10px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 10px;
             transition: all 0.2s;
             cursor: pointer;
+            word-break: break-word;
         }
 
-        .comment-item:hover {
+        .comment-item:active {
             background: #e9ecef;
-            transform: translateX(5px);
+            transform: scale(0.98);
         }
 
         .comment-text {
             flex: 1;
             color: #333;
-            font-size: 1em;
+            font-size: clamp(0.9em, 3vw, 1em);
+            line-height: 1.5;
+            word-break: keep-all;
         }
 
         .copy-btn {
-            padding: 8px 16px;
+            padding: 12px 20px;
             background: #667eea;
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 0.9em;
+            border-radius: 8px;
+            font-size: clamp(0.85em, 3vw, 0.95em);
             cursor: pointer;
             transition: all 0.2s;
+            width: 100%;
+            min-height: 44px;
+            font-weight: 600;
+            touch-action: manipulation;
         }
 
-        .copy-btn:hover {
+        .copy-btn:active {
             background: #5568d3;
-            transform: scale(1.05);
+            transform: scale(0.98);
         }
 
         .copy-btn.copied {
@@ -243,26 +269,24 @@
             color: white;
             border: none;
             border-radius: 12px;
-            font-size: 1.1em;
+            font-size: clamp(1em, 4vw, 1.1em);
             font-weight: bold;
             cursor: pointer;
             margin: 20px 0;
             transition: all 0.3s;
             box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
             display: none;
+            min-height: 56px;
+            touch-action: manipulation;
         }
 
         .go-to-blog-btn.show {
             display: block;
         }
 
-        .go-to-blog-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-        }
-
         .go-to-blog-btn:active {
-            transform: translateY(-1px);
+            transform: scale(0.98);
+            box-shadow: 0 2px 10px rgba(40, 167, 69, 0.3);
         }
 
         .go-to-blog-btn span {
@@ -270,21 +294,134 @@
             font-size: 1.2em;
         }
 
+        /* 태블릿 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                align-items: flex-start;
+            }
+
+            .container {
+                padding: 25px;
+                border-radius: 15px;
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+
+            .header {
+                margin-bottom: 25px;
+            }
+
+            .input-section {
+                margin-bottom: 25px;
+            }
+
+            .comment-item {
+                padding: 12px;
+            }
+        }
+
+        /* 모바일 */
         @media (max-width: 600px) {
+            body {
+                padding: 5px;
+            }
+
             .container {
                 padding: 20px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            }
+
+            .header {
+                margin-bottom: 20px;
             }
 
             .header h1 {
-                font-size: 2em;
+                margin-bottom: 8px;
+            }
+
+            .input-section {
+                margin-bottom: 20px;
             }
 
             .input-group {
                 flex-direction: column;
+                gap: 10px;
+            }
+
+            input[type="text"] {
+                padding: 14px 16px;
             }
 
             button {
                 width: 100%;
+                padding: 14px 20px;
+            }
+
+            .blog-info {
+                padding: 15px;
+            }
+
+            .go-to-blog-btn {
+                padding: 16px;
+                margin: 15px 0;
+            }
+
+            .comment-item {
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .copy-btn {
+                padding: 12px 16px;
+            }
+
+            .toast {
+                bottom: 20px;
+                right: 20px;
+                left: 20px;
+                text-align: center;
+            }
+        }
+
+        /* 작은 모바일 */
+        @media (max-width: 380px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.6em;
+            }
+
+            input[type="text"] {
+                padding: 12px 14px;
+                font-size: 0.95em;
+            }
+
+            button {
+                padding: 12px 16px;
+                font-size: 0.95em;
+            }
+        }
+
+        /* 가로 모드 (모바일) */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                align-items: flex-start;
+            }
+
+            .container {
+                margin: 10px auto;
+            }
+
+            .header {
+                margin-bottom: 15px;
+            }
+
+            .input-section {
+                margin-bottom: 15px;
             }
         }
     </style>
