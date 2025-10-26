@@ -181,20 +181,24 @@
 
         .comment-item {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 15px 20px;
             border-radius: 10px;
             margin-bottom: 10px;
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
             transition: all 0.2s;
             cursor: pointer;
             word-break: break-word;
         }
 
+        .comment-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
         .comment-item:active {
             background: #e9ecef;
-            transform: scale(0.98);
         }
 
         .comment-text {
@@ -203,21 +207,28 @@
             font-size: clamp(0.9em, 3vw, 1em);
             line-height: 1.5;
             word-break: keep-all;
+            padding-right: 15px;
         }
 
         .copy-btn {
-            padding: 12px 20px;
+            padding: 8px 16px;
             background: #667eea;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: clamp(0.85em, 3vw, 0.95em);
+            border-radius: 6px;
+            font-size: clamp(0.85em, 3vw, 0.9em);
             cursor: pointer;
             transition: all 0.2s;
-            width: 100%;
-            min-height: 44px;
+            min-height: 36px;
             font-weight: 600;
             touch-action: manipulation;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+            transform: scale(1.05);
         }
 
         .copy-btn:active {
@@ -369,12 +380,18 @@
             }
 
             .comment-item {
-                padding: 12px;
-                gap: 8px;
+                padding: 12px 15px;
+                flex-wrap: wrap;
+            }
+
+            .comment-text {
+                padding-right: 10px;
+                min-width: 200px;
             }
 
             .copy-btn {
-                padding: 12px 16px;
+                padding: 10px 14px;
+                min-height: 40px;
             }
 
             .toast {
