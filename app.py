@@ -136,7 +136,10 @@ def generate_comments(blog_data):
     # AI 댓글 생성 시도
     ai_comments = generate_comments_with_ai(title, content)
     if ai_comments and len(ai_comments) >= 5:
+        print("✅ AI 댓글 생성 성공!")
         return ai_comments[:8]  # 최대 8개
+    
+    print("⚠️ AI 댓글 생성 실패 - 기본 템플릿 사용")
     
     # AI 실패시 기본 로직 사용
     comments = []
