@@ -305,9 +305,4 @@ def analyze_blog():
 if __name__ == '__main__':
     # 로컬 개발용
     app.run(debug=True, port=5001)
-else:
-    # 배포 환경용
-    import os
-    port = int(os.environ.get('PORT', 5001))
-    app.run(host='0.0.0.0', port=port)
 
