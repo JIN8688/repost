@@ -6,7 +6,22 @@
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- SEO & Open Graph -->
     <title>리포스트 - 블로그 댓글 자동 추천</title>
+    <meta name="description" content="네이버 블로그 링크를 넣으면 AI가 알맞은 댓글을 자동으로 추천해드립니다. 간편하게 댓글을 작성하세요!">
+    <meta property="og:title" content="리포스트 - 블로그 댓글 자동 추천">
+    <meta property="og:description" content="블로그 링크만 넣으면 AI가 자동으로 댓글을 추천해드립니다">
+    <meta property="og:image" content="{{ url_for('static', filename='images/logo.png') }}">
+    <meta property="og:url" content="https://repost.kr">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="리포스트 - 블로그 댓글 자동 추천">
+    <meta name="twitter:description" content="블로그 링크만 넣으면 AI가 자동으로 댓글을 추천해드립니다">
+    <meta name="twitter:image" content="{{ url_for('static', filename='images/logo.png') }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
     <style>
         * {
             margin: 0;
@@ -39,6 +54,14 @@
         .header {
             text-align: center;
             margin-bottom: 30px;
+        }
+
+        .header .logo {
+            max-width: 400px;
+            width: 80%;
+            height: auto;
+            margin: 0 auto 20px;
+            display: block;
         }
 
         .header h1 {
@@ -460,7 +483,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔄 리포스트</h1>
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Repost 로고" class="logo">
             <p>블로그 링크를 넣으면 AI가 알맞은 댓글을 자동으로 추천해드립니다</p>
         </div>
 
