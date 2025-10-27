@@ -89,6 +89,7 @@ def generate_comments_with_ai(title, content):
     """OpenAI를 사용하여 블로그 내용 기반 댓글 생성"""
     try:
         if not client:
+            print("❌ OpenAI API 키가 설정되지 않았습니다!")
             return None
         
         # 블로그 내용 요약 (너무 길면 잘라내기)
