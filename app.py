@@ -12,7 +12,9 @@ app = Flask(__name__)
 CORS(app)
 
 # OpenAI 클라이언트 초기화
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY')) if os.getenv('OPENAI_API_KEY') else None
+api_key = os.getenv('OPENAI_API_KEY')
+print(f"🔑 환경변수 확인: OPENAI_API_KEY={'있음 ('+api_key[:10]+'...)' if api_key else '❌ 없음'}")
+client = OpenAI(api_key=api_key) if api_key else None
 
 def scrape_blog_content(url):
     """네이버 블로그 내용 스크래핑"""
