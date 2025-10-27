@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
+from urllib.parse import urlparse, parse_qs
 
 # 로컬 개발 환경에서만 .env 파일 로드
 if os.path.exists('.env'):
@@ -39,22 +40,41 @@ def scrape_blog_content(url):
             'Cache-Control': 'max-age=0',
             'Referer': 'https://www.naver.com/'
         }
-        response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
-        response.raise_for_status()
+        # 네이버 블로그 URL 파싱 (모바일/데스크톱 모두 지원)
+        blog_id = None
+        log_no = None
         
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # 네이버 블로그의 iframe 구조 처리
-        if 'blog.naver.com' in url:
-            # iframe 내용이 있는 경우
-            blog_id = url.split('blog.naver.com/')[1].split('/')[0] if 'blog.naver.com/' in url else None
-            log_no = url.split('/')[-1] if '/' in url else None
+        if 'blog.naver.com' in url or 'm.blog.naver.com' in url:
+            # URL 파싱
+            parsed_url = urlparse(url)
+            query_params = parse_qs(parsed_url.query)
             
+            # 1. 쿼리 파라미터에서 추출 (모바일 URL)
+            if 'blogId' in query_params and 'logNo' in query_params:
+                blog_id = query_params['blogId'][0]
+                log_no = query_params['logNo'][0]
+                print(f"📱 모바일 URL 감지: blogId={blog_id}, logNo={log_no}")
+            
+            # 2. 경로에서 추출 (데스크톱 URL)
+            elif '/' in parsed_url.path:
+                path_parts = parsed_url.path.strip('/').split('/')
+                if len(path_parts) >= 2:
+                    blog_id = path_parts[0]
+                    log_no = path_parts[-1]
+                    print(f"🖥️ 데스크톱 URL 감지: blogId={blog_id}, logNo={log_no}")
+            
+            # blogId와 logNo가 있으면 정규 URL로 접근
             if blog_id and log_no:
-                # 실제 콘텐츠 URL
                 content_url = f'https://blog.naver.com/PostView.naver?blogId={blog_id}&logNo={log_no}'
+                print(f"🔗 변환된 URL: {content_url}")
                 response = requests.get(content_url, headers=headers, timeout=10, allow_redirects=True)
-                soup = BeautifulSoup(response.text, 'html.parser')
+            else:
+                response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+        else:
+            response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+        
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
         
         # 제목 추출
         title = ''
