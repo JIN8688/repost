@@ -6,14 +6,20 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv()
+# 로컬 개발 환경에서만 .env 파일 로드
+if os.path.exists('.env'):
+    load_dotenv()
+    print("📁 .env 파일 로드됨 (로컬 개발 모드)")
+else:
+    print("☁️ 배포 환경 - 시스템 환경변수 사용")
 
 app = Flask(__name__)
 CORS(app)
 
 # OpenAI 클라이언트 초기화
-api_key = os.getenv('OPENAI_API_KEY')
+api_key = os.environ.get('OPENAI_API_KEY')  # os.getenv 대신 os.environ.get 사용
 print(f"🔑 환경변수 확인: OPENAI_API_KEY={'있음 ('+api_key[:10]+'...)' if api_key else '❌ 없음'}")
+print(f"🔍 디버깅: 전체 환경변수 키 목록: {list(os.environ.keys())[:10]}...")  # 처음 10개만
 client = OpenAI(api_key=api_key) if api_key else None
 
 def scrape_blog_content(url):
