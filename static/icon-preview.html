@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리포스트 아이콘 선택</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+        }
+        
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .icon-option {
+            text-align: center;
+            padding: 20px;
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .icon-option:hover {
+            border-color: #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            transform: translateY(-5px);
+        }
+        
+        .icon-option img {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 15px;
+        }
+        
+        .icon-option h3 {
+            color: #333;
+            font-size: 1em;
+            margin: 0;
+        }
+        
+        .icon-option p {
+            color: #999;
+            font-size: 0.85em;
+            margin: 10px 0 0 0;
+        }
+        
+        .note {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin-top: 30px;
+        }
+        
+        .note strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 리포스트 아이콘 선택</h1>
+        <p>마음에 드는 아이콘을 골라주세요!</p>
+        
+        <div class="icon-grid">
+            <div class="icon-option">
+                <img src="images/icon-option-1.svg" alt="옵션 1">
+                <h3>옵션 1</h3>
+                <p>회전 화살표 + 말풍선</p>
+            </div>
+            
+            <div class="icon-option">
+                <img src="images/icon-option-2.svg" alt="옵션 2">
+                <h3>옵션 2</h3>
+                <p>리트윗 스타일</p>
+            </div>
+            
+            <div class="icon-option">
+                <img src="images/icon-option-3.svg" alt="옵션 3">
+                <h3>옵션 3</h3>
+                <p>원형 새로고침</p>
+            </div>
+            
+            <div class="icon-option">
+                <img src="images/icon-option-4.svg" alt="옵션 4">
+                <h3>옵션 4</h3>
+                <p>댓글 복사</p>
+            </div>
+            
+            <div class="icon-option">
+                <img src="images/icon-option-5.svg" alt="옵션 5">
+                <h3>옵션 5</h3>
+                <p>공유 네트워크</p>
+            </div>
+            
+            <div class="icon-option">
+                <img src="images/icon-option-6.svg" alt="옵션 6">
+                <h3>옵션 6</h3>
+                <p>순환 화살표</p>
+            </div>
+        </div>
+        
+        <div class="note">
+            <strong>💡 선택 방법:</strong><br>
+            마음에 드는 아이콘 번호를 알려주시면, 해당 아이콘으로 로고를 업데이트해드립니다!<br>
+            예: "옵션 3이 좋아요!"
+        </div>
+    </div>
+</body>
+</html>
+
