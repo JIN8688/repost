@@ -26,9 +26,20 @@ def scrape_blog_content(url):
     """네이버 블로그 내용 스크래핑"""
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Cache-Control': 'max-age=0',
+            'Referer': 'https://www.naver.com/'
         }
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
         response.raise_for_status()
         
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -42,7 +53,7 @@ def scrape_blog_content(url):
             if blog_id and log_no:
                 # 실제 콘텐츠 URL
                 content_url = f'https://blog.naver.com/PostView.naver?blogId={blog_id}&logNo={log_no}'
-                response = requests.get(content_url, headers=headers, timeout=10)
+                response = requests.get(content_url, headers=headers, timeout=10, allow_redirects=True)
                 soup = BeautifulSoup(response.text, 'html.parser')
         
         # 제목 추출
