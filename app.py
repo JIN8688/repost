@@ -18,10 +18,20 @@ app = Flask(__name__)
 CORS(app)
 
 # OpenAI 클라이언트 초기화
-api_key = os.environ.get('OPENAI_API_KEY')  # os.getenv 대신 os.environ.get 사용
+api_key = os.environ.get('OPENAI_API_KEY')
 print(f"🔑 환경변수 확인: OPENAI_API_KEY={'있음 ('+api_key[:10]+'...)' if api_key else '❌ 없음'}")
-print(f"🔍 디버깅: 전체 환경변수 키 목록: {list(os.environ.keys())[:10]}...")  # 처음 10개만
-client = OpenAI(api_key=api_key) if api_key else None
+
+# 클라이언트 초기화 (에러 핸들링 추가)
+client = None
+if api_key:
+    try:
+        client = OpenAI(api_key=api_key)
+        print("✅ OpenAI 클라이언트 초기화 성공!")
+    except Exception as e:
+        print(f"❌ OpenAI 클라이언트 초기화 실패: {e}")
+        client = None
+else:
+    print("⚠️ API 키가 없어서 기본 템플릿 사용")
 
 def scrape_blog_content(url):
     """네이버 블로그 내용 스크래핑"""
