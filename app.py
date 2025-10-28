@@ -135,14 +135,19 @@ def scrape_blog_content(url):
         }
 
 def generate_comments_with_ai(title, content):
-    """OpenAI를 사용하여 블로그 내용 기반 댓글 생성"""
+    """OpenAI를 사용하여 블로그 내용 기반 댓글 생성 (프로덕션 레벨)"""
     try:
         if not client:
-            print("❌ OpenAI API 키가 설정되지 않았습니다!")
+            print("⚠️ OpenAI 클라이언트가 초기화되지 않음")
             return None
         
-        # 블로그 내용 요약 (너무 길면 잘라내기)
+        # 블로그 내용 요약 및 정제
         content_preview = content[:500] if len(content) > 500 else content
+        content_preview = content_preview.strip()
+        
+        if not content_preview:
+            print("⚠️ 블로그 내용이 비어있음")
+            return None
         
         prompt = f"""다음은 네이버 블로그 글입니다. 이 글을 실제로 읽은 사람처럼 자연스러운 댓글 8개를 한국어로 작성해주세요.
 
@@ -157,25 +162,59 @@ def generate_comments_with_ai(title, content):
 5. 스팸처럼 보이지 않는 진심 어린 댓글
 6. 각 댓글은 서로 다른 스타일로
 
-JSON 형식으로 응답:
-{{"comments": ["댓글1", "댓글2", ...]}}"""
+반드시 JSON 형식으로만 응답하세요:
+{{"comments": ["댓글1", "댓글2", "댓글3", "댓글4", "댓글5", "댓글6", "댓글7", "댓글8"]}}"""
 
+        # OpenAI API 호출 (JSON 모드 강제)
+        print("🤖 AI 댓글 생성 시작...")
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-3.5-turbo-1106",
             messages=[
-                {"role": "system", "content": "당신은 블로그 댓글을 작성하는 친근한 한국인입니다. 자연스럽고 진심 어린 댓글을 작성합니다."},
+                {"role": "system", "content": "당신은 블로그 댓글을 작성하는 친근한 한국인입니다. 반드시 JSON 형식으로만 응답하세요."},
                 {"role": "user", "content": prompt}
             ],
+            response_format={"type": "json_object"},
             temperature=0.8,
-            max_tokens=500
+            max_tokens=600
         )
         
+        # 응답 검증
+        if not response.choices or not response.choices[0].message.content:
+            print("❌ AI 응답이 비어있음")
+            return None
+        
+        # JSON 파싱 (안전하게)
         import json
-        result = json.loads(response.choices[0].message.content)
-        return result.get('comments', [])
+        response_text = response.choices[0].message.content.strip()
+        print(f"📝 AI 응답: {response_text[:100]}...")
+        
+        try:
+            result = json.loads(response_text)
+        except json.JSONDecodeError as je:
+            print(f"❌ JSON 파싱 실패: {je}")
+            print(f"응답 내용: {response_text[:200]}")
+            return None
+        
+        # 댓글 배열 검증
+        comments = result.get('comments', [])
+        if not isinstance(comments, list) or len(comments) == 0:
+            print(f"❌ 댓글 형식 오류: {type(comments)}, 길이: {len(comments) if isinstance(comments, list) else 0}")
+            return None
+        
+        # 유효한 댓글만 필터링
+        valid_comments = [c for c in comments if isinstance(c, str) and len(c.strip()) > 0]
+        
+        if len(valid_comments) < 3:
+            print(f"⚠️ 유효한 댓글이 너무 적음: {len(valid_comments)}개")
+            return None
+        
+        print(f"✅ AI 댓글 생성 성공! ({len(valid_comments)}개)")
+        return valid_comments[:8]
     
     except Exception as e:
-        print(f"AI 댓글 생성 실패: {e}")
+        print(f"❌ AI 댓글 생성 중 예외 발생: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return None
 
 def generate_comments(blog_data):
