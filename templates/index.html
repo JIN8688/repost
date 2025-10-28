@@ -1054,6 +1054,7 @@
             const blogInfo = document.getElementById('blogInfo');
             const commentsSection = document.getElementById('commentsSection');
             const goToBlogBtn = document.getElementById('goToBlogBtn');
+            const features = document.querySelector('.features');
 
             // 초기화
             errorMsg.classList.remove('show');
@@ -1064,6 +1065,11 @@
             if (!url) {
                 showError('URL을 입력해주세요.');
                 return;
+            }
+
+            // 3단 카드 숨기기
+            if (features) {
+                features.style.display = 'none';
             }
 
             // 로딩 시작
