@@ -149,33 +149,36 @@ def generate_comments_with_ai(title, content):
             print("⚠️ 블로그 내용이 비어있음")
             return None
         
-        prompt = f"""다음은 네이버 블로그 글입니다. 이 글을 실제로 읽은 사람처럼 자연스러운 댓글 8개를 한국어로 작성해주세요.
+        prompt = f"""다음은 네이버 블로그 글입니다. 이 글을 실제로 읽은 사람처럼 자연스러운 댓글을 **정확히 8개** 한국어로 작성해주세요.
 
 블로그 제목: {title}
 블로그 내용: {content_preview}
 
 요구사항:
-1. 실제 블로그 내용을 구체적으로 언급하는 댓글
-2. 자연스럽고 친근한 톤
-3. 이모지 적절히 사용
-4. 길이: 짧은 댓글 5개(10-25자), 긴 댓글 3개(30-50자)
-5. 스팸처럼 보이지 않는 진심 어린 댓글
-6. 각 댓글은 서로 다른 스타일로
+1. **반드시 정확히 8개의 댓글을 생성해야 합니다** (중요!)
+2. 실제 블로그 내용을 구체적으로 언급하는 댓글
+3. 자연스럽고 친근한 톤
+4. 이모지 적절히 사용
+5. 길이: 짧은 댓글 5개(10-25자), 긴 댓글 3개(30-50자)
+6. 스팸처럼 보이지 않는 진심 어린 댓글
+7. 각 댓글은 서로 다른 스타일로
 
 반드시 JSON 형식으로만 응답하세요:
-{{"comments": ["댓글1", "댓글2", "댓글3", "댓글4", "댓글5", "댓글6", "댓글7", "댓글8"]}}"""
+{{"comments": ["댓글1", "댓글2", "댓글3", "댓글4", "댓글5", "댓글6", "댓글7", "댓글8"]}}
 
-        # OpenAI API 호출 (JSON 모드 강제)
+주의: 댓글이 8개가 안 되면 안 됩니다! 반드시 8개를 채워주세요!"""
+
+        # OpenAI API 호출 (JSON 모드 강제, 토큰 증가)
         print("🤖 AI 댓글 생성 시작...")
         response = client.chat.completions.create(
             model="gpt-3.5-turbo-1106",
             messages=[
-                {"role": "system", "content": "당신은 블로그 댓글을 작성하는 친근한 한국인입니다. 반드시 JSON 형식으로만 응답하세요."},
+                {"role": "system", "content": "당신은 블로그 댓글을 작성하는 친근한 한국인입니다. 반드시 JSON 형식으로만 응답하고, 정확히 8개의 댓글을 생성해야 합니다."},
                 {"role": "user", "content": prompt}
             ],
             response_format={"type": "json_object"},
             temperature=0.8,
-            max_tokens=600
+            max_tokens=1000
         )
         
         # 응답 검증
@@ -217,20 +220,8 @@ def generate_comments_with_ai(title, content):
         traceback.print_exc()
         return None
 
-def generate_comments(blog_data):
-    """블로그 내용을 기반으로 댓글 추천 생성 (AI 우선, 실패시 기본 로직)"""
-    title = blog_data['title']
-    content = blog_data['content']
-    
-    # AI 댓글 생성 시도
-    ai_comments = generate_comments_with_ai(title, content)
-    if ai_comments and len(ai_comments) >= 5:
-        print("✅ AI 댓글 생성 성공!")
-        return ai_comments[:8]  # 최대 8개
-    
-    print("⚠️ AI 댓글 생성 실패 - 기본 템플릿 사용")
-    
-    # AI 실패시 기본 로직 사용
+def generate_template_comments(title, content, count=8):
+    """기본 템플릿을 사용하여 댓글 생성 (내부 함수)"""
     comments = []
     text = (title + ' ' + content).lower()
     
@@ -469,6 +460,54 @@ def generate_comments(blog_data):
                 comments.append(comment)
     
     return comments
+
+def generate_comments(blog_data):
+    """블로그 내용을 기반으로 댓글 추천 생성 (AI 우선, 부족하면 템플릿 보충)"""
+    title = blog_data['title']
+    content = blog_data['content']
+    
+    # AI 댓글 생성 시도
+    ai_comments = generate_comments_with_ai(title, content)
+    
+    # AI 댓글이 8개 이상이면 그대로 반환
+    if ai_comments and len(ai_comments) >= 8:
+        print(f"✅ AI 댓글 생성 완료! ({len(ai_comments)}개)")
+        return ai_comments[:8]
+    
+    # AI 댓글이 1개 이상 8개 미만이면 템플릿으로 보충
+    if ai_comments and len(ai_comments) > 0:
+        needed_count = 8 - len(ai_comments)
+        print(f"⚠️ AI 댓글 {len(ai_comments)}개 생성됨 - 템플릿 {needed_count}개 추가 생성")
+        
+        # 템플릿 댓글 생성
+        template_comments = generate_template_comments(title, content, count=needed_count)
+        
+        # AI 댓글과 템플릿 댓글 합치기
+        final_comments = ai_comments + template_comments[:needed_count]
+        
+        # 중복 제거 (혹시 모를 경우 대비)
+        final_comments = list(dict.fromkeys(final_comments))
+        
+        # 여전히 8개가 안 되면 더 추가
+        if len(final_comments) < 8:
+            additional = [
+                '블로그 자주 방문할게요! 좋은 글 감사합니다!',
+                '유익한 정보 공유해주셔서 감사해요! 다음 글도 기대할게요!',
+                '정말 유용한 내용이네요! 주변에도 공유하겠습니다!',
+                '이런 양질의 콘텐츠 감사합니다! 구독하고 갑니다!',
+                '포스팅 잘 봤습니다! 도움이 많이 됐어요 👍',
+            ]
+            for comment in additional:
+                if comment not in final_comments and len(final_comments) < 8:
+                    final_comments.append(comment)
+        
+        print(f"✅ 최종 댓글 {len(final_comments)}개 생성 완료! (AI {len(ai_comments)}개 + 템플릿 {len(final_comments)-len(ai_comments)}개)")
+        return final_comments[:8]
+    
+    # AI 댓글이 없으면 템플릿만 사용
+    print("⚠️ AI 댓글 생성 실패 - 기본 템플릿만 사용")
+    template_comments = generate_template_comments(title, content, count=8)
+    return template_comments[:8]
 
 @app.route('/')
 def index():
