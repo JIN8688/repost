@@ -568,8 +568,156 @@
 
         // 블로그로 이동하는 함수
         function goToBlog() {
-            if (currentBlogUrl) {
+            if (!currentBlogUrl) return;
+            
+            // 카카오톡/인앱 브라우저 감지
+            const isInAppBrowser = /KAKAOTALK|Messenger|Instagram|Line|NAVER/.test(navigator.userAgent);
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            if (isInAppBrowser && isMobile) {
+                // 인앱 브라우저일 경우 - 사용자에게 선택 옵션 제공
+                showBrowserOptions(currentBlogUrl);
+            } else {
+                // 일반 브라우저 - 그냥 새 탭으로 열기
                 window.open(currentBlogUrl, '_blank');
+            }
+        }
+        
+        function showBrowserOptions(url) {
+            // 커스텀 알림 생성
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                padding: 20px;
+            `;
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white;
+                border-radius: 20px;
+                padding: 30px;
+                max-width: 400px;
+                width: 100%;
+                text-align: center;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            `;
+            
+            modal.innerHTML = `
+                <div style="font-size: 2em; margin-bottom: 15px;">🔓</div>
+                <h3 style="color: #333; margin-bottom: 15px; font-size: 1.2em;">
+                    로그인 상태 유지하기
+                </h3>
+                <p style="color: #666; margin-bottom: 25px; line-height: 1.6;">
+                    카카오톡에서는 네이버 로그인이 풀릴 수 있습니다.<br>
+                    편하게 댓글을 달려면 아래 방법을 선택하세요!
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button onclick="openInNaver('${url}')" style="
+                        background: linear-gradient(135deg, #00C73C 0%, #00B533 100%);
+                        color: white;
+                        border: none;
+                        padding: 15px 20px;
+                        border-radius: 12px;
+                        font-size: 1em;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: transform 0.2s;
+                    " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        📱 네이버 앱으로 열기 (추천)
+                    </button>
+                    <button onclick="openInExternalBrowser('${url}')" style="
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        border: none;
+                        padding: 15px 20px;
+                        border-radius: 12px;
+                        font-size: 1em;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: transform 0.2s;
+                    " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        🌐 Safari/Chrome으로 열기
+                    </button>
+                    <button onclick="openInCurrentTab('${url}')" style="
+                        background: #f0f0f0;
+                        color: #666;
+                        border: none;
+                        padding: 12px 20px;
+                        border-radius: 12px;
+                        font-size: 0.95em;
+                        cursor: pointer;
+                    ">
+                        그냥 여기서 열기
+                    </button>
+                    <button onclick="closeBrowserModal()" style="
+                        background: transparent;
+                        color: #999;
+                        border: none;
+                        padding: 10px;
+                        font-size: 0.9em;
+                        cursor: pointer;
+                    ">
+                        닫기
+                    </button>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            overlay.id = 'browserModal';
+            
+            // 오버레이 클릭 시 닫기
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closeBrowserModal();
+                }
+            });
+        }
+        
+        function openInNaver(url) {
+            // 네이버 앱 딥링크로 시도
+            const naverAppUrl = 'naversearchapp://inappbrowser?url=' + encodeURIComponent(url);
+            window.location.href = naverAppUrl;
+            
+            // 1초 후 앱이 안 열리면 일반 링크로
+            setTimeout(() => {
+                closeBrowserModal();
+            }, 1000);
+        }
+        
+        function openInExternalBrowser(url) {
+            // 외부 브라우저로 열기 안내
+            const message = 'URL이 복사되었습니다!\n\nSafari나 Chrome을 열어서 붙여넣기 해주세요:\n' + url;
+            
+            // URL 클립보드에 복사
+            navigator.clipboard.writeText(url).then(() => {
+                alert(message);
+                closeBrowserModal();
+            }).catch(() => {
+                // 복사 실패 시 프롬프트로 표시
+                prompt('이 URL을 복사해서 Safari/Chrome에 붙여넣으세요:', url);
+                closeBrowserModal();
+            });
+        }
+        
+        function openInCurrentTab(url) {
+            window.open(url, '_blank');
+            closeBrowserModal();
+        }
+        
+        function closeBrowserModal() {
+            const modal = document.getElementById('browserModal');
+            if (modal) {
+                modal.remove();
             }
         }
 
