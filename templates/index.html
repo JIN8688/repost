@@ -165,7 +165,7 @@
 
         .loading {
             text-align: center;
-            padding: 20px;
+            padding: 40px 20px;
             display: none;
         }
 
@@ -173,6 +173,111 @@
             display: block;
         }
 
+        /* 귀여운 로봇 애니메이션 */
+        .loading-animation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .cute-robot {
+            font-size: 3em;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .thinking-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .thinking-dots span {
+            font-size: 1.5em;
+            animation: float 1.5s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .thinking-dots span:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .thinking-dots span:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .thinking-dots span:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                opacity: 0; 
+                transform: translateY(0);
+            }
+            50% { 
+                opacity: 1; 
+                transform: translateY(-10px);
+            }
+        }
+
+        /* 프로그레스 바 */
+        .loading-progress {
+            width: 100%;
+            max-width: 300px;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0 auto 20px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+            background-size: 200% 100%;
+            border-radius: 10px;
+            animation: progress 2s ease-in-out infinite;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        @keyframes progress {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        /* 로딩 텍스트 */
+        .loading-step {
+            color: #667eea;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 10px 0;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .loading-tip {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 15px;
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            max-width: 400px;
+            margin: 15px auto 0;
+        }
+
+        /* 구형 스피너 (백업용) */
         .spinner {
             border: 3px solid #f3f3f3;
             border-top: 3px solid #667eea;
@@ -181,6 +286,7 @@
             height: 40px;
             animation: spin 1s linear infinite;
             margin: 0 auto 10px;
+            display: none;
         }
 
         @keyframes spin {
@@ -534,8 +640,19 @@
         <div class="error" id="errorMsg"></div>
 
         <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>블로그 내용을 분석하고 있습니다...</p>
+            <div class="loading-animation">
+                <div class="cute-robot">🤖</div>
+                <div class="thinking-dots">
+                    <span>💭</span>
+                    <span>✨</span>
+                    <span>📝</span>
+                </div>
+            </div>
+            <div class="loading-progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <p class="loading-step" id="loadingStep">블로그 내용을 읽고 있어요...</p>
+            <p class="loading-tip" id="loadingTip">💡 댓글을 복사한 후 바로 블로그로 이동할 수 있어요!</p>
         </div>
 
         <div class="blog-info" id="blogInfo">
@@ -745,6 +862,9 @@
             loading.classList.add('show');
             analyzeBtn.disabled = true;
             analyzeBtn.textContent = '분석 중...';
+            
+            // 로딩 애니메이션 시작
+            startLoadingAnimation();
 
             try {
                 const response = await fetch('/api/analyze', {
@@ -779,6 +899,8 @@
             } catch (error) {
                 showError(error.message);
             } finally {
+                // 로딩 애니메이션 중지
+                stopLoadingAnimation();
                 loading.classList.remove('show');
                 analyzeBtn.disabled = false;
                 analyzeBtn.textContent = '분석하기';
@@ -823,6 +945,73 @@
             });
         }
 
+        // 로딩 애니메이션 제어
+        let loadingInterval;
+        let progressInterval;
+        
+        function startLoadingAnimation() {
+            const tips = [
+                '💡 댓글을 복사한 후 바로 블로그로 이동할 수 있어요!',
+                '✨ AI가 블로그 내용을 꼼꼼히 읽고 있어요!',
+                '🎯 자연스러운 댓글로 블로거와 소통해보세요!',
+                '📝 여러 댓글 중 마음에 드는 것을 골라보세요!',
+                '🚀 모바일에서도 편하게 사용할 수 있어요!',
+                '💬 진심 어린 댓글이 가장 좋은 댓글이에요!',
+                '⭐ 블로그 내용을 반영한 맞춤 댓글을 만들고 있어요!'
+            ];
+            
+            const steps = [
+                '블로그 내용을 읽고 있어요... 📖',
+                'AI가 내용을 분석하고 있어요... 🤔',
+                '자연스러운 댓글을 만들고 있어요... ✍️',
+                '마지막 손질 중이에요... ✨'
+            ];
+            
+            // 랜덤 팁 표시
+            const randomTip = tips[Math.floor(Math.random() * tips.length)];
+            document.getElementById('loadingTip').textContent = randomTip;
+            
+            // 단계별 메시지 변경
+            let stepIndex = 0;
+            document.getElementById('loadingStep').textContent = steps[stepIndex];
+            
+            loadingInterval = setInterval(() => {
+                stepIndex = (stepIndex + 1) % steps.length;
+                document.getElementById('loadingStep').textContent = steps[stepIndex];
+            }, 2000);
+            
+            // 프로그레스 바 애니메이션
+            const progressBar = document.getElementById('progressBar');
+            let progress = 0;
+            
+            progressInterval = setInterval(() => {
+                if (progress < 90) {
+                    progress += Math.random() * 15;
+                    if (progress > 90) progress = 90;
+                    progressBar.style.width = progress + '%';
+                }
+            }, 500);
+        }
+        
+        function stopLoadingAnimation() {
+            if (loadingInterval) {
+                clearInterval(loadingInterval);
+                loadingInterval = null;
+            }
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            
+            // 프로그레스 바 완료
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = '100%';
+            
+            setTimeout(() => {
+                progressBar.style.width = '0%';
+            }, 500);
+        }
+        
         function showError(message) {
             const errorMsg = document.getElementById('errorMsg');
             errorMsg.textContent = message;
