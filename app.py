@@ -3,35 +3,42 @@ from flask_cors import CORS
 import requests
 from bs4 import BeautifulSoup
 import os
+import sys
 from dotenv import load_dotenv
 from openai import OpenAI
 from urllib.parse import urlparse, parse_qs
 
+# Vercel Serverless 환경에서도 로그가 보이도록 설정
+def log(message):
+    """Vercel에서도 보이는 로그 출력"""
+    print(message, flush=True)
+    sys.stdout.flush()
+
 # 로컬 개발 환경에서만 .env 파일 로드
 if os.path.exists('.env'):
     load_dotenv()
-    print("📁 .env 파일 로드됨 (로컬 개발 모드)")
+    log("📁 .env 파일 로드됨 (로컬 개발 모드)")
 else:
-    print("☁️ 배포 환경 - 시스템 환경변수 사용")
+    log("☁️ 배포 환경 - 시스템 환경변수 사용")
 
 app = Flask(__name__)
 CORS(app)
 
 # OpenAI 클라이언트 초기화
 api_key = os.environ.get('OPENAI_API_KEY')
-print(f"🔑 환경변수 확인: OPENAI_API_KEY={'있음 ('+api_key[:10]+'...)' if api_key else '❌ 없음'}")
+log(f"🔑 환경변수 확인: OPENAI_API_KEY={'있음 ('+api_key[:10]+'...)' if api_key else '❌ 없음'}")
 
 # 클라이언트 초기화 (에러 핸들링 추가)
 client = None
 if api_key:
     try:
         client = OpenAI(api_key=api_key)
-        print("✅ OpenAI 클라이언트 초기화 성공!")
+        log("✅ OpenAI 클라이언트 초기화 성공!")
     except Exception as e:
-        print(f"❌ OpenAI 클라이언트 초기화 실패: {e}")
+        log(f"❌ OpenAI 클라이언트 초기화 실패: {e}")
         client = None
 else:
-    print("⚠️ API 키가 없어서 기본 템플릿 사용")
+    log("⚠️ API 키가 없어서 기본 템플릿 사용")
 
 def scrape_blog_content(url):
     """네이버 블로그 내용 스크래핑"""
@@ -138,7 +145,7 @@ def generate_comments_with_ai(title, content):
     """OpenAI를 사용하여 블로그 내용 기반 댓글 생성 (프로덕션 레벨)"""
     try:
         if not client:
-            print("⚠️ OpenAI 클라이언트가 초기화되지 않음")
+            log("⚠️ OpenAI 클라이언트가 초기화되지 않음")
             return None
         
         # 블로그 내용 요약 및 정제
@@ -146,7 +153,7 @@ def generate_comments_with_ai(title, content):
         content_preview = content_preview.strip()
         
         if not content_preview:
-            print("⚠️ 블로그 내용이 비어있음")
+            log("⚠️ 블로그 내용이 비어있음")
             return None
         
         prompt = f"""다음은 네이버 블로그 글입니다. 이 글을 실제로 읽은 사람처럼 자연스러운 댓글을 **정확히 8개** 한국어로 작성해주세요.
@@ -169,7 +176,7 @@ def generate_comments_with_ai(title, content):
 주의: 댓글이 8개가 안 되면 안 됩니다! 반드시 8개를 채워주세요!"""
 
         # OpenAI API 호출 (JSON 모드 강제, 토큰 증가)
-        print("🤖 AI 댓글 생성 시작...")
+        log("🤖 AI 댓글 생성 시작...")
         response = client.chat.completions.create(
             model="gpt-3.5-turbo-1106",
             messages=[
@@ -183,39 +190,39 @@ def generate_comments_with_ai(title, content):
         
         # 응답 검증
         if not response.choices or not response.choices[0].message.content:
-            print("❌ AI 응답이 비어있음")
+            log("❌ AI 응답이 비어있음")
             return None
         
         # JSON 파싱 (안전하게)
         import json
         response_text = response.choices[0].message.content.strip()
-        print(f"📝 AI 응답: {response_text[:100]}...")
+        log(f"📝 AI 응답: {response_text[:100]}...")
         
         try:
             result = json.loads(response_text)
         except json.JSONDecodeError as je:
-            print(f"❌ JSON 파싱 실패: {je}")
-            print(f"응답 내용: {response_text[:200]}")
+            log(f"❌ JSON 파싱 실패: {je}")
+            log(f"응답 내용: {response_text[:200]}")
             return None
         
         # 댓글 배열 검증
         comments = result.get('comments', [])
         if not isinstance(comments, list) or len(comments) == 0:
-            print(f"❌ 댓글 형식 오류: {type(comments)}, 길이: {len(comments) if isinstance(comments, list) else 0}")
+            log(f"❌ 댓글 형식 오류: {type(comments)}, 길이: {len(comments) if isinstance(comments, list) else 0}")
             return None
         
         # 유효한 댓글만 필터링
         valid_comments = [c for c in comments if isinstance(c, str) and len(c.strip()) > 0]
         
         if len(valid_comments) < 3:
-            print(f"⚠️ 유효한 댓글이 너무 적음: {len(valid_comments)}개")
+            log(f"⚠️ 유효한 댓글이 너무 적음: {len(valid_comments)}개")
             return None
         
-        print(f"✅ AI 댓글 생성 성공! ({len(valid_comments)}개)")
+        log(f"✅ AI 댓글 생성 성공! ({len(valid_comments)}개)")
         return valid_comments[:8]
     
     except Exception as e:
-        print(f"❌ AI 댓글 생성 중 예외 발생: {type(e).__name__}: {str(e)}")
+        log(f"❌ AI 댓글 생성 중 예외 발생: {type(e).__name__}: {str(e)}")
         import traceback
         traceback.print_exc()
         return None
@@ -467,17 +474,18 @@ def generate_comments(blog_data):
     content = blog_data['content']
     
     # AI 댓글 생성 시도
+    log(f"📋 댓글 생성 시작 - 제목: {title[:30]}...")
     ai_comments = generate_comments_with_ai(title, content)
     
     # AI 댓글이 8개 이상이면 그대로 반환
     if ai_comments and len(ai_comments) >= 8:
-        print(f"✅ AI 댓글 생성 완료! ({len(ai_comments)}개)")
+        log(f"✅ AI 댓글 생성 완료! ({len(ai_comments)}개)")
         return ai_comments[:8]
     
     # AI 댓글이 1개 이상 8개 미만이면 템플릿으로 보충
     if ai_comments and len(ai_comments) > 0:
         needed_count = 8 - len(ai_comments)
-        print(f"⚠️ AI 댓글 {len(ai_comments)}개 생성됨 - 템플릿 {needed_count}개 추가 생성")
+        log(f"⚠️ AI 댓글 {len(ai_comments)}개 생성됨 - 템플릿 {needed_count}개 추가 생성")
         
         # 템플릿 댓글 생성
         template_comments = generate_template_comments(title, content, count=needed_count)
@@ -501,11 +509,11 @@ def generate_comments(blog_data):
                 if comment not in final_comments and len(final_comments) < 8:
                     final_comments.append(comment)
         
-        print(f"✅ 최종 댓글 {len(final_comments)}개 생성 완료! (AI {len(ai_comments)}개 + 템플릿 {len(final_comments)-len(ai_comments)}개)")
+        log(f"✅ 최종 댓글 {len(final_comments)}개 생성 완료! (AI {len(ai_comments)}개 + 템플릿 {len(final_comments)-len(ai_comments)}개)")
         return final_comments[:8]
     
     # AI 댓글이 없으면 템플릿만 사용
-    print("⚠️ AI 댓글 생성 실패 - 기본 템플릿만 사용")
+    log("⚠️ AI 댓글 생성 실패 - 기본 템플릿만 사용")
     template_comments = generate_template_comments(title, content, count=8)
     return template_comments[:8]
 
@@ -534,11 +542,15 @@ def analyze_blog():
         if not blog_url:
             return jsonify({'error': 'URL을 입력해주세요.'}), 400
         
+        log(f"🔍 블로그 분석 요청: {blog_url}")
+        
         # 블로그 내용 스크래핑
         blog_data = scrape_blog_content(blog_url)
         
         # 댓글 생성
         comments = generate_comments(blog_data)
+        
+        log(f"🎉 분석 완료! 댓글 {len(comments)}개 생성됨")
         
         return jsonify({
             'success': True,
