@@ -220,10 +220,10 @@
 
         input[type="text"] {
             flex: 1;
-            padding: 18px 24px;
+            padding: 20px 28px;
             border: none;
             border-radius: 50px;
-            font-size: clamp(0.95em, 3vw, 1.05em);
+            font-size: clamp(0.95em, 3vw, 1.1em);
             transition: all 0.3s ease;
             min-width: 0;
             width: 100%;
@@ -243,17 +243,17 @@
         }
 
         button {
-            padding: 18px 35px;
+            padding: 20px 40px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 50px;
-            font-size: clamp(0.95em, 3vw, 1.05em);
+            font-size: clamp(0.95em, 3vw, 1.1em);
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
             white-space: nowrap;
-            min-height: 56px;
+            min-height: 60px;
             touch-action: manipulation;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
             position: relative;
@@ -795,6 +795,10 @@
                 padding: 14px 16px;
             }
 
+            input[type="text"]::placeholder {
+                font-size: 0.85em;
+            }
+
             button {
                 width: 100%;
                 padding: 14px 20px;
@@ -897,6 +901,10 @@
             input[type="text"] {
                 padding: 12px 14px;
                 font-size: 0.95em;
+            }
+
+            input[type="text"]::placeholder {
+                font-size: 0.8em;
             }
 
             button {
