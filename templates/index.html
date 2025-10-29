@@ -1245,6 +1245,21 @@
                 return;
             }
 
+            // 네이버 블로그 URL 형식 검증 (무료 버전)
+            const naverBlogPattern = /^https?:\/\/(m\.)?blog\.naver\.com\/.+/i;
+            
+            if (!naverBlogPattern.test(url)) {
+                showError('올바른 네이버 블로그 URL을 입력해주세요.\n예시: https://blog.naver.com/아이디/글번호');
+                return;
+            }
+
+            // 🔒 유료 버전에서 확장 가능한 플랫폼 (백엔드 구현 필요)
+            // - 티스토리: /^https?:\/\/[^\/]+\.tistory\.com\/.+/i
+            // - 워드프레스: /^https?:\/\/[^\/]+\.wordpress\.com\/.+/i
+            // - 브런치: /^https?:\/\/brunch\.co\.kr\/@[^\/]+\/.+/i
+            // - Velog: /^https?:\/\/velog\.io\/@[^\/]+\/.+/i
+            // - Medium: /^https?:\/\/medium\.com\/@[^\/]+\/.+/i
+
             // 3단 카드 숨기기
             if (features) {
                 features.style.display = 'none';
