@@ -514,6 +514,16 @@ def index():
     """메인 페이지"""
     return render_template('index.html')
 
+@app.route('/terms')
+def terms():
+    """이용약관 페이지"""
+    return render_template('terms.html')
+
+@app.route('/privacy')
+def privacy():
+    """개인정보처리방침 페이지"""
+    return render_template('privacy.html')
+
 @app.route('/api/analyze', methods=['POST'])
 def analyze_blog():
     """블로그 분석 및 댓글 추천 API"""

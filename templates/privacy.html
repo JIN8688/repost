@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>개인정보처리방침 - Repost</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: 
+                radial-gradient(at 27% 37%, rgba(102, 126, 234, 0.8) 0px, transparent 50%),
+                radial-gradient(at 97% 21%, rgba(125, 235, 200, 0.7) 0px, transparent 50%),
+                radial-gradient(at 52% 99%, rgba(244, 107, 153, 0.7) 0px, transparent 50%),
+                radial-gradient(at 10% 29%, rgba(118, 75, 162, 0.8) 0px, transparent 50%),
+                #1a1a2e;
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 60px 50px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .logo {
+            font-size: 2em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a78bfa 0%, #ec4899 50%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+
+        .page-title {
+            font-size: 1.8em;
+            color: #2d3748;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .updated-date {
+            color: #718096;
+            font-size: 0.95em;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 30px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .content {
+            color: #2d3748;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.4em;
+            color: #2d3748;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-left: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .article {
+            margin-bottom: 30px;
+        }
+
+        .article-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 12px;
+        }
+
+        .article-content {
+            color: #4a5568;
+            padding-left: 20px;
+            line-height: 1.8;
+        }
+
+        .article-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .article-content li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .article-content li:before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            left: 5px;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .info-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .info-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            margin: 20px 0;
+        }
+
+        .warning {
+            background: linear-gradient(135deg, rgba(244, 107, 153, 0.1), rgba(236, 72, 153, 0.1));
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #ec4899;
+            margin: 20px 0;
+        }
+
+        .contact-info {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .contact-info h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .contact-info p {
+            color: #4a5568;
+            margin: 8px 0;
+        }
+
+        .contact-info a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 25px;
+                border-radius: 20px;
+            }
+
+            .page-title {
+                font-size: 1.5em;
+            }
+
+            .section-title {
+                font-size: 1.2em;
+            }
+
+            .article-title {
+                font-size: 1em;
+            }
+
+            body {
+                padding: 20px 10px;
+            }
+
+            .info-table {
+                font-size: 0.9em;
+            }
+
+            .info-table th,
+            .info-table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← 메인으로 돌아가기</a>
+        
+        <div class="header">
+            <h1 class="logo">Repost</h1>
+            <h2 class="page-title">개인정보처리방침</h2>
+            <p class="updated-date">최종 수정일: 2025년 10월 10일</p>
+        </div>
+
+        <div class="content">
+            <div class="highlight">
+                <strong>개인정보 보호를 최우선으로 생각합니다</strong><br>
+                Repost는 이용자의 개인정보를 소중히 다루며, 「개인정보 보호법」 및 관련 법령을 준수하고 있습니다. 본 방침을 통해 이용자의 개인정보가 어떻게 수집, 이용, 보관, 파기되는지 알려드립니다.
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">제1조 (개인정보의 수집 항목 및 방법)</h3>
+                <div class="article">
+                    <p class="article-title">1. 수집하는 개인정보 항목</p>
+                    <div class="article-content">
+                        Repost는 현재 <strong>회원가입 없이</strong> 서비스를 제공하고 있어, 별도의 개인정보를 수집하지 않습니다.
+                        <br><br>
+                        다만, 서비스 이용 과정에서 다음의 정보가 자동으로 생성되어 수집될 수 있습니다:
+                        <ul>
+                            <li><strong>서비스 이용 기록:</strong> 접속 IP 주소, 쿠키, 서비스 이용 기록, 접속 로그</li>
+                            <li><strong>입력 정보:</strong> 이용자가 분석을 요청한 블로그 URL (일시적으로만 처리되며 저장되지 않음)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="article">
+                    <p class="article-title">2. 개인정보 수집 방법</p>
+                    <div class="article-content">
+                        <ul>
+                            <li>서비스 이용 과정에서 자동으로 생성되어 수집</li>
+                            <li>웹 브라우저를 통한 자동 수집</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">제2조 (개인정보의 수집 및 이용 목적)</h3>
+                <div class="article">
+                    <div class="article-content">
+                        수집된 정보는 다음의 목적을 위해 활용됩니다:
+                        <table class="info-table">
+                            <tr>
+                                <th style="width: 30%;">수집 항목</th>
+                                <th>이용 목적</th>
+                            </tr>
+                            <tr>
+                                <td>서비스 이용 기록</td>
+                                <td>서비스 개선, 통계 분석, 보안 및 부정 이용 방지</td>
+                            </tr>
+                            <tr>
+                                <td>블로그 URL</td>
+                                <td>블로그 콘텐츠 분석 및 맞춤형 댓글 추천 (처리 즉시 삭제)</td>
+                            </tr>
+                            <tr>
+                                <td>접속 로그, IP 주소</td>
+                                <td>시스템 장애 대응, 악의적 사용자 차단</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">제3조 (개인정보의 보유 및 이용 기간)</h3>
+                <div class="article">
+                    <div class="article-content">
+                        <ul>
+                            <li><strong>블로그 URL:</strong> 분석 처리 완료 즉시 삭제 (저장하지 않음)</li>
+                            <li><strong>서비스 이용 기록:</strong> 수집일로부터 1년간 보관 후 파기</li>
+                            <li><strong>통계 데이터:</strong> 익명화 처리 후 서비스 개선 목적으로 보관</li>
+                        </ul>
+                        <br>
+                        <div class="warning">
+                            <strong>⚠️ 중요:</strong> 법령에서 정한 경우 또는 수사기관의 요청이 있는 경우 관련 법령에서 정한 기간 동안 보관할 수 있습니다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">제4조 (개인정보의 파기 절차 및 방법)</h3>
+                <div class="article">
+                    <p class="article-title">1. 파기 절차</p>
+                    <div class="article-content">
+                        이용자의 개인정보는 목적이 달성된 후 별도의 DB로 옮겨져 내부 방침 및 관련 법령에 따라 일정 기간 저장된 후 파기됩니다.
+                    </div>
+                </div>
+                <div class="article">
+                    <p class="article-title">2. 파기 방법</p>
+                    <div class="article-content">
+                        <ul>
+                            <li><strong>전자적 파일:</strong> 기술적 방법을 사용하여 복구 불가능하게 영구 삭제</li>
+                            <li><strong>종이 문서:</strong> 분쇄기로 분쇄하거나 소각</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">제5조 (개인정보의 제3자 제공)</h3>
+                <div class="article">
+                    <div class="article-content">
+                        <strong>Repost는 원칙적으로 이용자의 개인정보를 제3자에게 제공하지 않습니다.</strong>
+                        <br><br>
+                        다만, 다음의 경우에는 예외로 합니다:
+                        <ul>
+                            <li>법령의 규정에 의거하거나, 수사 목적으로 법령에 정해진 절차와 방법에 따라 수사기관의 요구가 있는 경우</li>
+                            <li>이용자가 사전에 동의한 경우</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">제6조 (개인정보 처리의 위탁)</h3>
+                <div class="article">
+                    <div class="article-content">
+                        Repost는 서비스 제공을 위해 다음과 같이 개인정보 처리 업무를 위탁하고 있습니다:
+                        <table class="info-table">
+                            <tr>
+                                <th style="width: 30%;">수탁업체</th>
+                                <th>위탁 업무 내용</th>
+                            </tr>
+                            <tr>
+                                <td>OpenAI (ChatGPT)</td>
+                                <td>AI 기반 댓글 생성 서비스 (블로그 내용 분석)</td>
+                            </tr>
+                            <tr>
+                                <td>Render.com</td>
+                                <td>웹 호스팅 및 서버 인프라 제공</td>
+                            </tr>
+                        </table>
+                        <br>
+                        회사는 위탁계약 체결 시 개인정보 보호법에 따라 위탁업무 수행 목적 외 개인정보 처리 금지, 기술적·관리적 보호조치, 재위탁 제한, 수탁자에 대한 관리·감독, 손해배상 등 책임에 관한 사항을 명확히 규정하고 있습니다.
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">제7조 (이용자의 권리와 행사 방법)</h3>
+                <div class="article">
+                    <div class="article-content">
+                        이용자는 언제든지 다음과 같은 권리를 행사할 수 있습니다:
+                        <ul>
+                            <li>개인정보 열람 요구</li>
+                            <li>개인정보 정정·삭제 요구</li>
+                            <li>개인정보 처리정지 요구</li>
+                        </ul>
+                        <br>
+                        권리 행사는 서면, 전자우편 등을 통하여 하실 수 있으며, 회사는 이에 대해 지체 없이 조치하겠습니다.
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">제8조 (개인정보 보호를 위한 기술적·관리적 대책)</h3>
+                <div class="article">
+                    <p class="article-title">1. 기술적 대책</p>
+                    <div class="article-content">
+                        <ul>
+                            <li>개인정보는 암호화되어 저장 및 관리되고 있습니다.</li>
+                            <li>HTTPS 프로토콜을 통한 데이터 전송 보안 적용</li>
+                            <li>백업 시스템 운영으로 데이터 손실 방지</li>
+                            <li>방화벽을 이용한 외부 침입 차단</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="article">
+                    <p class="article-title">2. 관리적 대책</p>
+                    <div class="article-content">
+                        <ul>
+                            <li>개인정보 처리 직원을 최소한으로 제한</li>
+                            <li>정기적인 내부 감사 실시</li>
+                            <li>개인정보 보호 교육 실시</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">제9조 (쿠키의 운영 및 거부)</h3>
+                <div class="article">
+                    <p class="article-title">1. 쿠키의 사용 목적</p>
+                    <div class="article-content">
+                        회사는 이용자에게 최적화된 서비스를 제공하기 위해 쿠키(Cookie)를 사용합니다. 쿠키는 서비스 이용 패턴 분석, 방문 기록 등을 파악하여 맞춤형 서비스를 제공하는 데 사용됩니다.
+                    </div>
+                </div>
+                <div class="article">
+                    <p class="article-title">2. 쿠키의 설치·운영 및 거부</p>
+                    <div class="article-content">
+                        이용자는 웹 브라우저 설정을 통해 쿠키 허용, 차단 등을 설정할 수 있습니다. 다만, 쿠키 설치를 거부할 경우 일부 서비스 이용에 어려움이 있을 수 있습니다.
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">제10조 (개인정보 보호책임자)</h3>
+                <div class="article">
+                    <div class="article-content">
+                        Repost는 개인정보 처리에 관한 업무를 총괄해서 책임지고, 개인정보 처리와 관련한 정보주체의 불만처리 및 피해구제 등을 위하여 아래와 같이 개인정보 보호책임자를 지정하고 있습니다.
+                        <br><br>
+                        <div class="highlight">
+                            <strong>개인정보 보호책임자</strong><br>
+                            - 이메일: contact@repost.kr<br>
+                            - 처리시간: 평일 09:00 - 18:00 (주말 및 공휴일 제외)<br>
+                            <br>
+                            개인정보 침해에 대한 신고나 상담이 필요한 경우 아래 기관에 문의하실 수 있습니다:<br>
+                            - 개인정보침해신고센터: (국번없이) 118 (privacy.kisa.or.kr)<br>
+                            - 대검찰청 사이버수사과: (국번없이) 1301 (www.spo.go.kr)<br>
+                            - 경찰청 사이버안전국: (국번없이) 182 (cyberbureau.police.go.kr)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title">제11조 (개인정보처리방침의 변경)</h3>
+                <div class="article">
+                    <div class="article-content">
+                        본 개인정보처리방침은 법령·정책 또는 보안기술의 변경에 따라 내용의 추가·삭제 및 수정이 있을 시에는 변경되는 개인정보처리방침을 시행하기 최소 7일 전에 홈페이지를 통해 변경 사유 및 내용 등을 공지하도록 하겠습니다.
+                        <br><br>
+                        <strong>공고일자:</strong> 2025년 10월 10일<br>
+                        <strong>시행일자:</strong> 2025년 10월 10일
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-info">
+                <h3>🔒 개인정보 보호 문의</h3>
+                <p>개인정보 처리와 관련하여 궁금하신 사항이 있으시면 언제든지 문의해 주세요.</p>
+                <p><strong>이메일:</strong> <a href="mailto:contact@repost.kr">contact@repost.kr</a></p>
+                <p><strong>운영시간:</strong> 평일 09:00 - 18:00 (주말 및 공휴일 제외)</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
