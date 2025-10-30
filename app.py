@@ -575,16 +575,15 @@ def favicon():
 
 @app.route('/robots.txt')
 def robots():
-    """robots.txt 제공"""
+    """robots.txt 제공 (네이버 검색 최적화)"""
     robots_txt = """User-agent: *
 Allow: /
 
-# Sitemap
+User-agent: Yeti
+Allow: /
+
 Sitemap: https://repost.kr/sitemap.xml
 Sitemap: https://www.repost.kr/sitemap.xml
-
-# 크롤링 제외
-Disallow: /api/
 """
     return robots_txt, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
