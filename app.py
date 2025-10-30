@@ -576,12 +576,53 @@ def favicon():
 @app.route('/robots.txt')
 def robots():
     """robots.txt 제공"""
-    return app.send_static_file('robots.txt')
+    robots_txt = """User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://repost.kr/sitemap.xml
+Sitemap: https://www.repost.kr/sitemap.xml
+
+# 크롤링 제외
+Disallow: /api/
+"""
+    return robots_txt, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 @app.route('/sitemap.xml')
 def sitemap():
     """sitemap.xml 제공"""
-    return app.send_static_file('sitemap.xml')
+    sitemap_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+    
+    <!-- 메인 페이지 -->
+    <url>
+        <loc>https://repost.kr/</loc>
+        <lastmod>2025-10-30</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+    
+    <!-- 이용약관 -->
+    <url>
+        <loc>https://repost.kr/terms</loc>
+        <lastmod>2025-10-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    
+    <!-- 개인정보처리방침 -->
+    <url>
+        <loc>https://repost.kr/privacy</loc>
+        <lastmod>2025-10-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    
+</urlset>"""
+    return sitemap_xml, 200, {'Content-Type': 'application/xml; charset=utf-8'}
 
 @app.route('/terms')
 def terms():
