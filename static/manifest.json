@@ -1,0 +1,21 @@
+{
+  "name": "리포스트 - 블로그 댓글 자동 추천",
+  "short_name": "Repost",
+  "description": "네이버 블로그 링크를 넣으면 AI가 알맞은 댓글을 자동으로 추천해드립니다",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/images/logo-og.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "social", "utilities"],
+  "lang": "ko-KR"
+}
+

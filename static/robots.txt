@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://repost.kr/sitemap.xml
+Sitemap: https://www.repost.kr/sitemap.xml
+
+# 크롤링 제외 (있다면)
+Disallow: /api/
+
