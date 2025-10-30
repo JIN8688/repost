@@ -1,4 +1,21 @@
 {
+  "version": 2,
+  "builds": [
+    {
+      "src": "app.py",
+      "use": "@vercel/python",
+      "config": { 
+        "maxLambdaSize": "15mb", 
+        "runtime": "python3.11" 
+      }
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/app.py"
+    }
+  ],
   "headers": [
     {
       "source": "/static/(.*)",
@@ -34,5 +51,9 @@
         }
       ]
     }
-  ]
+  ],
+  "env": {
+    "OPENAI_API_KEY": "@openai_api_key",
+    "PYTHONUNBUFFERED": "1"
+  }
 }
