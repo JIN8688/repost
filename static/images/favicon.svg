@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- 빨간색 R 글자 (배경 없음) -->
+  <text 
+    x="50" 
+    y="75" 
+    font-family="Arial, sans-serif" 
+    font-size="80" 
+    font-weight="bold" 
+    fill="#FF3B3B" 
+    text-anchor="middle">R</text>
+</svg>
+

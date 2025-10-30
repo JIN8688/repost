@@ -9,10 +9,13 @@ from openai import OpenAI
 from urllib.parse import urlparse, parse_qs
 
 # Vercel Serverless 환경에서도 로그가 보이도록 설정
-def log(message):
+def log(message, level="INFO"):
     """Vercel에서도 보이는 로그 출력"""
-    print(message, flush=True)
+    timestamp = __import__('datetime').datetime.now().strftime('%H:%M:%S')
+    formatted_message = f"[{timestamp}] {level}: {message}"
+    print(formatted_message, flush=True)
     sys.stdout.flush()
+    sys.stderr.flush()
 
 # 로컬 개발 환경에서만 .env 파일 로드
 if os.path.exists('.env'):
@@ -143,18 +146,27 @@ def scrape_blog_content(url):
 
 def generate_comments_with_ai(title, content):
     """OpenAI를 사용하여 블로그 내용 기반 댓글 생성 (프로덕션 레벨)"""
+    log("=" * 60)
+    log("🤖 AI 댓글 생성 함수 시작", "AI")
+    log("=" * 60)
+    
     try:
         if not client:
-            log("⚠️ OpenAI 클라이언트가 초기화되지 않음")
+            log("❌ OpenAI 클라이언트가 초기화되지 않음 → 템플릿 사용", "WARNING")
             return None
+        
+        log("✅ OpenAI 클라이언트 확인 완료", "AI")
         
         # 블로그 내용 요약 및 정제
         content_preview = content[:500] if len(content) > 500 else content
         content_preview = content_preview.strip()
         
         if not content_preview:
-            log("⚠️ 블로그 내용이 비어있음")
+            log("❌ 블로그 내용이 비어있음 → 템플릿 사용", "WARNING")
             return None
+        
+        log(f"📝 블로그 제목: {title[:50]}...", "AI")
+        log(f"📝 내용 길이: {len(content)}자 (미리보기: {len(content_preview)}자)", "AI")
         
         prompt = f"""다음은 네이버 블로그 글입니다. 이 글을 실제로 읽은 사람처럼 자연스러운 댓글을 **정확히 8개** 한국어로 작성해주세요.
 
@@ -176,7 +188,9 @@ def generate_comments_with_ai(title, content):
 주의: 댓글이 8개가 안 되면 안 됩니다! 반드시 8개를 채워주세요!"""
 
         # OpenAI API 호출 (JSON 모드 강제, 토큰 증가)
-        log("🤖 AI 댓글 생성 시작...")
+        log("🚀 OpenAI API 호출 시작...", "AI")
+        log(f"   모델: gpt-3.5-turbo-1106, max_tokens: 1000", "AI")
+        
         response = client.chat.completions.create(
             model="gpt-3.5-turbo-1106",
             messages=[
@@ -188,41 +202,60 @@ def generate_comments_with_ai(title, content):
             max_tokens=1000
         )
         
+        log("✅ OpenAI API 응답 수신 완료", "AI")
+        
         # 응답 검증
         if not response.choices or not response.choices[0].message.content:
-            log("❌ AI 응답이 비어있음")
+            log("❌ AI 응답이 비어있음 → 템플릿 사용", "ERROR")
             return None
         
         # JSON 파싱 (안전하게)
         import json
         response_text = response.choices[0].message.content.strip()
-        log(f"📝 AI 응답: {response_text[:100]}...")
+        log(f"📥 AI 응답 받음 (길이: {len(response_text)}자)", "AI")
+        log(f"   내용 미리보기: {response_text[:150]}...", "AI")
         
         try:
             result = json.loads(response_text)
+            log("✅ JSON 파싱 성공", "AI")
         except json.JSONDecodeError as je:
-            log(f"❌ JSON 파싱 실패: {je}")
-            log(f"응답 내용: {response_text[:200]}")
+            log(f"❌ JSON 파싱 실패: {je} → 템플릿 사용", "ERROR")
+            log(f"   응답 내용: {response_text[:200]}", "ERROR")
             return None
         
         # 댓글 배열 검증
         comments = result.get('comments', [])
+        log(f"📊 댓글 배열 추출: {len(comments)}개 받음", "AI")
+        
         if not isinstance(comments, list) or len(comments) == 0:
-            log(f"❌ 댓글 형식 오류: {type(comments)}, 길이: {len(comments) if isinstance(comments, list) else 0}")
+            log(f"❌ 댓글 형식 오류: 타입={type(comments)}, 길이={len(comments) if isinstance(comments, list) else 0} → 템플릿 사용", "ERROR")
             return None
         
         # 유효한 댓글만 필터링
         valid_comments = [c for c in comments if isinstance(c, str) and len(c.strip()) > 0]
+        log(f"✅ 유효한 댓글 필터링: {len(valid_comments)}개", "AI")
         
         if len(valid_comments) < 3:
-            log(f"⚠️ 유효한 댓글이 너무 적음: {len(valid_comments)}개")
+            log(f"⚠️ 유효한 댓글이 너무 적음: {len(valid_comments)}개 → 템플릿 사용", "WARNING")
             return None
         
-        log(f"✅ AI 댓글 생성 성공! ({len(valid_comments)}개)")
+        # 댓글 내용 미리보기
+        for i, comment in enumerate(valid_comments[:3], 1):
+            log(f"   💬 댓글 {i}: {comment[:30]}...", "AI")
+        
+        log("=" * 60, "AI")
+        log(f"🎉 AI 댓글 생성 최종 성공! 총 {len(valid_comments)}개 반환", "SUCCESS")
+        log("=" * 60, "AI")
+        
         return valid_comments[:8]
     
     except Exception as e:
-        log(f"❌ AI 댓글 생성 중 예외 발생: {type(e).__name__}: {str(e)}")
+        log("=" * 60, "ERROR")
+        log(f"❌ AI 댓글 생성 중 예외 발생", "ERROR")
+        log(f"   예외 타입: {type(e).__name__}", "ERROR")
+        log(f"   예외 메시지: {str(e)}", "ERROR")
+        log("   → 템플릿 댓글로 대체합니다", "ERROR")
+        log("=" * 60, "ERROR")
         import traceback
         traceback.print_exc()
         return None
@@ -473,19 +506,28 @@ def generate_comments(blog_data):
     title = blog_data['title']
     content = blog_data['content']
     
+    log("━" * 60)
+    log(f"📋 댓글 생성 프로세스 시작", "COMMENT")
+    log(f"   블로그 제목: {title[:50]}...", "COMMENT")
+    log("━" * 60)
+    
     # AI 댓글 생성 시도
-    log(f"📋 댓글 생성 시작 - 제목: {title[:30]}...")
     ai_comments = generate_comments_with_ai(title, content)
     
     # AI 댓글이 8개 이상이면 그대로 반환
     if ai_comments and len(ai_comments) >= 8:
-        log(f"✅ AI 댓글 생성 완료! ({len(ai_comments)}개)")
+        log("━" * 60, "SUCCESS")
+        log(f"🎉 100% AI 댓글 생성 완료! ({len(ai_comments)}개)", "SUCCESS")
+        log("   템플릿 사용: 0개", "SUCCESS")
+        log("━" * 60, "SUCCESS")
         return ai_comments[:8]
     
     # AI 댓글이 1개 이상 8개 미만이면 템플릿으로 보충
     if ai_comments and len(ai_comments) > 0:
         needed_count = 8 - len(ai_comments)
-        log(f"⚠️ AI 댓글 {len(ai_comments)}개 생성됨 - 템플릿 {needed_count}개 추가 생성")
+        log("━" * 60, "HYBRID")
+        log(f"🔀 하이브리드 모드: AI {len(ai_comments)}개 + 템플릿 {needed_count}개", "HYBRID")
+        log("━" * 60, "HYBRID")
         
         # 템플릿 댓글 생성
         template_comments = generate_template_comments(title, content, count=needed_count)
@@ -509,11 +551,15 @@ def generate_comments(blog_data):
                 if comment not in final_comments and len(final_comments) < 8:
                     final_comments.append(comment)
         
-        log(f"✅ 최종 댓글 {len(final_comments)}개 생성 완료! (AI {len(ai_comments)}개 + 템플릿 {len(final_comments)-len(ai_comments)}개)")
+        log(f"✅ 하이브리드 댓글 생성 완료: 총 {len(final_comments)}개", "HYBRID")
+        log(f"   구성: AI {len(ai_comments)}개 + 템플릿 {len(final_comments)-len(ai_comments)}개", "HYBRID")
+        log("━" * 60, "HYBRID")
         return final_comments[:8]
     
     # AI 댓글이 없으면 템플릿만 사용
-    log("⚠️ AI 댓글 생성 실패 - 기본 템플릿만 사용")
+    log("━" * 60, "TEMPLATE")
+    log("⚠️ AI 생성 실패 → 100% 템플릿 댓글 사용", "TEMPLATE")
+    log("━" * 60, "TEMPLATE")
     template_comments = generate_template_comments(title, content, count=8)
     return template_comments[:8]
 
@@ -542,15 +588,22 @@ def analyze_blog():
         if not blog_url:
             return jsonify({'error': 'URL을 입력해주세요.'}), 400
         
-        log(f"🔍 블로그 분석 요청: {blog_url}")
+        log("═" * 60)
+        log("🚀 새로운 블로그 분석 요청 시작", "API")
+        log(f"   URL: {blog_url}", "API")
+        log("═" * 60)
         
         # 블로그 내용 스크래핑
+        log("📡 블로그 스크래핑 시작...", "SCRAPE")
         blog_data = scrape_blog_content(blog_url)
+        log(f"✅ 스크래핑 완료: {blog_data['title'][:50]}...", "SCRAPE")
         
         # 댓글 생성
         comments = generate_comments(blog_data)
         
-        log(f"🎉 분석 완료! 댓글 {len(comments)}개 생성됨")
+        log("═" * 60, "API")
+        log(f"🎉 전체 분석 완료! 댓글 {len(comments)}개 생성", "API")
+        log("═" * 60, "API")
         
         return jsonify({
             'success': True,
