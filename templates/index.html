@@ -22,8 +22,11 @@
     <meta name="twitter:description" content="블로그 링크만 넣으면 AI가 자동으로 댓글을 추천해드립니다">
     <meta name="twitter:image" content="{{ url_for('static', filename='images/logo-og.png', _external=True) }}">
     
-    <!-- Favicon -->
+    <!-- Favicon (다양한 브라우저 지원) -->
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
+    <link rel="icon" type="image/svg+xml" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.svg') }}">
+    <link rel="icon" type="image/svg+xml" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.svg') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.svg') }}">
     <style>
         * {
             margin: 0;
