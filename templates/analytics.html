@@ -488,7 +488,7 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>📊 Analytics Dashboard</h1>
+            <h1>Analytics Dashboard</h1>
             <p>실시간 사용자 통계 및 인사이트</p>
             <div class="header-actions">
                 <button class="btn btn-primary" onclick="location.reload()">
@@ -501,18 +501,43 @@
         </div>
 
         {% if stats.total_analyses == 0 %}
-        <!-- Empty State -->
+        <!-- Vercel 서버리스 안내 -->
         <div class="glass-card">
             <div class="empty-state">
-                <div class="empty-icon">📭</div>
-                <h2 class="empty-title">아직 데이터가 없습니다</h2>
+                <div class="empty-icon">☁️</div>
+                <h2 class="empty-title">Vercel 서버리스 환경 안내</h2>
                 <p class="empty-description">
-                    사용자가 블로그를 분석하면 여기에 통계가 표시됩니다.<br>
-                    지금 바로 시작해보세요!
+                    현재 Vercel 서버리스 환경에서는 파일 저장이 불가능합니다.<br>
+                    모든 사용자 통계는 <strong>Google Analytics 4 (GA4)</strong>에 실시간으로 기록되고 있습니다!
                 </p>
-                <button class="btn btn-primary" onclick="window.location.href='/'">
-                    🚀 지금 시작하기
-                </button>
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 30px;">
+                    <button class="btn btn-primary" onclick="window.open('https://analytics.google.com/analytics/web/#/p469726812/reports/intelligenthome', '_blank')">
+                        📊 GA4 대시보드 열기
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.location.href='/'">
+                        🏠 홈으로 돌아가기
+                    </button>
+                </div>
+                
+                <div style="margin-top: 40px; padding: 25px; background: rgba(102, 126, 234, 0.1); border-radius: 16px; border: 1px solid rgba(102, 126, 234, 0.3);">
+                    <h3 style="margin-bottom: 15px; color: #667eea;">📈 GA4에서 확인 가능한 데이터</h3>
+                    <ul style="text-align: left; max-width: 600px; margin: 0 auto; color: var(--text-secondary); line-height: 1.8;">
+                        <li>✅ 실시간 사용자 수</li>
+                        <li>✅ 블로그 분석 횟수 (blog_analyzed 이벤트)</li>
+                        <li>✅ 댓글 복사 횟수 (comment_copied 이벤트)</li>
+                        <li>✅ 블로그 이동 횟수 (blog_visit 이벤트)</li>
+                        <li>✅ 시간대별/일별 사용 패턴</li>
+                        <li>✅ 디바이스/브라우저 분포</li>
+                        <li>✅ 전환율 퍼널 분석</li>
+                    </ul>
+                </div>
+
+                <div style="margin-top: 30px; padding: 20px; background: rgba(245, 158, 11, 0.1); border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                    <h4 style="color: #f59e0b; margin-bottom: 10px;">💡 향후 업그레이드 계획</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.95em;">
+                        커스텀 대시보드를 위해 <strong>Vercel KV (Redis)</strong> 또는 <strong>MongoDB Atlas</strong> 연동을 준비 중입니다.
+                    </p>
+                </div>
             </div>
         </div>
         {% else %}

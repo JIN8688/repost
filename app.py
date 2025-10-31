@@ -19,53 +19,27 @@ def log(message, level="INFO"):
     sys.stdout.flush()
     sys.stderr.flush()
 
-# 📊 프로덕션급 Analytics 로깅 시스템
+# 📊 Analytics 로깅 시스템 (Vercel 서버리스용 - GA4 전용)
 def log_analytics(action, data=None, success=True, error_message=None):
     """
-    사용자 행동 로깅 (개인정보보호 준수)
+    사용자 행동 로깅 - Vercel 서버리스 환경에서는 GA4만 사용
     
     Args:
         action: 액션 유형 ('blog_analyzed', 'comment_copied', 'blog_visited')
         data: 추가 데이터 (dict)
         success: 성공 여부
         error_message: 실패 시 에러 메시지
+    
+    Note:
+        Vercel 서버리스 환경에서는 파일 저장이 불가능하므로
+        모든 통계는 클라이언트 사이드의 GA4로 기록됩니다.
     """
     try:
-        # 로그 디렉토리 생성
-        log_dir = 'logs'
-        if not os.path.exists(log_dir):
-            os.makedirs(log_dir)
+        # 서버 로그에만 출력 (Vercel 로그 확인용)
+        log(f"📊 Analytics: {action} | success={success} | data={data}", "ANALYTICS")
         
-        # 날짜별 로그 파일
-        today = datetime.now().strftime('%Y-%m-%d')
-        log_file = os.path.join(log_dir, f'analytics_{today}.json')
-        
-        # 로그 엔트리 생성
-        log_entry = {
-            'timestamp': datetime.now().isoformat(),
-            'action': action,
-            'success': success,
-            'data': data or {},
-            'error': error_message
-        }
-        
-        # 기존 로그 읽기 (있다면)
-        logs = []
-        if os.path.exists(log_file):
-            try:
-                with open(log_file, 'r', encoding='utf-8') as f:
-                    logs = json.load(f)
-            except:
-                logs = []
-        
-        # 새 로그 추가
-        logs.append(log_entry)
-        
-        # 로그 파일 저장
-        with open(log_file, 'w', encoding='utf-8') as f:
-            json.dump(logs, f, ensure_ascii=False, indent=2)
-        
-        log(f"📊 Analytics logged: {action} (success={success})", "ANALYTICS")
+        if error_message:
+            log(f"⚠️ Error: {error_message}", "ERROR")
         
     except Exception as e:
         log(f"⚠️ Analytics logging failed: {e}", "WARNING")
