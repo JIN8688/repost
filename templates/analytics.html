@@ -3,8 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Repost Analytics 대시보드</title>
+    <title>Repost Analytics Dashboard</title>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-dark: #0f172a;
+            --bg-card: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,344 +29,847 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             min-height: 100vh;
+            color: var(--text-primary);
             padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: bgPulse 15s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
+            animation: fadeIn 0.6s ease-out;
         }
 
-        .header {
-            background: white;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Glass morphism card */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
             padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 40px;
+            text-align: center;
         }
 
         .header h1 {
-            font-size: 2.5em;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-size: clamp(2.5em, 6vw, 4em);
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #ec4899 50%, #f59e0b 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            animation: gradient 8s ease-in-out infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         .header p {
-            color: #666;
-            font-size: 1.1em;
+            color: var(--text-secondary);
+            font-size: clamp(1em, 2vw, 1.3em);
+            margin-bottom: 20px;
         }
 
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 50px;
+            border: none;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
         }
 
         .stat-card {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        .stat-card:hover {
-            transform: translateY(-5px);
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
-        .stat-card .label {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 10px;
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.95em;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            font-weight: 600;
         }
 
-        .stat-card .value {
-            font-size: 3em;
+        .stat-value {
+            font-size: clamp(2.5em, 5vw, 3.5em);
             font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+
+        .stat-change {
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-change.positive {
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            color: var(--error);
+        }
+
+        /* Charts Container */
+        .charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            min-height: 400px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .chart-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .chart-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        /* Conversion Funnel */
+        .funnel-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .funnel-step {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .funnel-step::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.2) 0%, transparent 100%);
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .funnel-step:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(5px);
+        }
+
+        .funnel-icon {
+            font-size: 2em;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(102, 126, 234, 0.15);
+            border-radius: 16px;
+            flex-shrink: 0;
+        }
+
+        .funnel-info {
+            flex: 1;
+        }
+
+        .funnel-label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .funnel-count {
+            font-size: 2em;
+            font-weight: 800;
+            background: var(--primary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .stat-card .description {
-            color: #999;
-            font-size: 0.85em;
-            margin-top: 10px;
+        .funnel-rate {
+            font-size: 0.9em;
+            color: var(--success);
+            margin-top: 5px;
         }
 
-        .chart-container {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
+        /* Activity Log */
+        .activity-log {
+            max-height: 600px;
+            overflow-y: auto;
         }
 
-        .chart-container h2 {
-            margin-bottom: 20px;
-            color: #333;
+        .activity-log::-webkit-scrollbar {
+            width: 8px;
         }
 
-        .bar-chart {
-            display: flex;
-            align-items: flex-end;
-            height: 200px;
-            gap: 10px;
-            padding: 20px 0;
+        .activity-log::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
         }
 
-        .bar {
-            flex: 1;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px 10px 0 0;
-            position: relative;
-            min-height: 10px;
-            transition: all 0.3s ease;
+        .activity-log::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
         }
 
-        .bar:hover {
-            opacity: 0.8;
-        }
-
-        .bar-label {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.75em;
-            color: #666;
-            white-space: nowrap;
-        }
-
-        .bar-value {
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.85em;
-            font-weight: 700;
-            color: #667eea;
-        }
-
-        .logs-container {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .logs-container h2 {
-            margin-bottom: 20px;
-            color: #333;
+        .activity-log::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .log-entry {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            transition: background 0.2s ease;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+            display: flex;
+            gap: 15px;
+            align-items: start;
         }
 
         .log-entry:hover {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.03);
+            padding-left: 25px;
         }
 
-        .log-entry:last-child {
-            border-bottom: none;
+        .log-status {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            flex-shrink: 0;
+        }
+
+        .log-status.success {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .log-status.error {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .log-content {
+            flex: 1;
         }
 
         .log-time {
-            color: #999;
+            color: var(--text-secondary);
             font-size: 0.85em;
             margin-bottom: 5px;
         }
 
         .log-action {
+            color: var(--text-primary);
             font-weight: 600;
-            color: #333;
             margin-bottom: 5px;
         }
 
         .log-details {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 0.9em;
         }
 
-        .success {
-            color: #10b981;
-        }
-
-        .failed {
-            color: #ef4444;
-        }
-
-        .refresh-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1em;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
+        /* Empty State */
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
-            color: #999;
+            padding: 80px 20px;
         }
 
-        .empty-state .icon {
-            font-size: 4em;
+        .empty-icon {
+            font-size: 5em;
             margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .empty-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .empty-description {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8em;
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
 
-            .stat-card .value {
+            .header h1 {
                 font-size: 2em;
             }
 
-            .stats-grid {
-                grid-template-columns: 1fr;
+            .stat-value {
+                font-size: 2.5em;
+            }
+
+            .glass-card {
+                padding: 20px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
-            <h1>📊 Repost Analytics</h1>
-            <p>실시간 사용자 통계 및 활동 모니터링</p>
-            <button class="refresh-btn" onclick="location.reload()">🔄 새로고침</button>
+            <h1>📊 Analytics Dashboard</h1>
+            <p>실시간 사용자 통계 및 인사이트</p>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="location.reload()">
+                    🔄 새로고침
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='/'">
+                    🏠 홈으로
+                </button>
+            </div>
         </div>
 
         {% if stats.total_analyses == 0 %}
-        <div class="chart-container">
+        <!-- Empty State -->
+        <div class="glass-card">
             <div class="empty-state">
-                <div class="icon">📭</div>
-                <h2>아직 데이터가 없습니다</h2>
-                <p>사용자가 블로그를 분석하면 여기에 통계가 표시됩니다.</p>
-                <p style="margin-top: 10px;">
-                    <a href="/" style="color: #667eea; text-decoration: none; font-weight: 600;">
-                        메인 페이지로 가기 →
-                    </a>
+                <div class="empty-icon">📭</div>
+                <h2 class="empty-title">아직 데이터가 없습니다</h2>
+                <p class="empty-description">
+                    사용자가 블로그를 분석하면 여기에 통계가 표시됩니다.<br>
+                    지금 바로 시작해보세요!
                 </p>
+                <button class="btn btn-primary" onclick="window.location.href='/'">
+                    🚀 지금 시작하기
+                </button>
             </div>
         </div>
         {% else %}
-        <!-- 주요 지표 -->
+
+        <!-- Main Stats -->
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="label">오늘 분석</div>
-                <div class="value">{{ stats.today_analyses }}</div>
-                <div class="description">Today's Analyses</div>
+            <div class="glass-card stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-label">오늘 분석</div>
+                <div class="stat-value">{{ stats.today_analyses }}</div>
+                <div class="stat-change {% if stats.yesterday_analyses %}{{ 'positive' if stats.today_analyses > stats.yesterday_analyses else 'negative' }}{% endif %}">
+                    {% if stats.yesterday_analyses %}
+                        {% set change = ((stats.today_analyses - stats.yesterday_analyses) / stats.yesterday_analyses * 100) if stats.yesterday_analyses > 0 else 0 %}
+                        {{ '↗' if change > 0 else '↘' }} {{ '%+.1f'|format(change) }}% 어제 대비
+                    {% else %}
+                        📈 첫 데이터
+                    {% endif %}
+                </div>
             </div>
 
-            <div class="stat-card">
-                <div class="label">전체 분석</div>
-                <div class="value">{{ stats.total_analyses }}</div>
-                <div class="description">Total Analyses (30일)</div>
+            <div class="glass-card stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-label">주간 분석</div>
+                <div class="stat-value">{{ stats.week_analyses }}</div>
+                <div class="stat-change positive">
+                    📅 최근 7일
+                </div>
             </div>
 
-            <div class="stat-card">
-                <div class="label">성공률</div>
-                <div class="value">{{ stats.success_rate }}%</div>
-                <div class="description">Success Rate</div>
+            <div class="glass-card stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-label">월간 분석</div>
+                <div class="stat-value">{{ stats.month_analyses }}</div>
+                <div class="stat-change positive">
+                    📆 최근 30일
+                </div>
             </div>
 
-            <div class="stat-card">
-                <div class="label">실패</div>
-                <div class="value">{{ stats.failed_analyses }}</div>
-                <div class="description">Failed Requests</div>
+            <div class="glass-card stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-label">성공률</div>
+                <div class="stat-value">{{ stats.success_rate }}%</div>
+                <div class="stat-change {{ 'positive' if stats.success_rate >= 90 else 'negative' }}">
+                    {{ stats.success_analyses }}/{{ stats.total_analyses }} 성공
+                </div>
+            </div>
+
+            <div class="glass-card stat-card">
+                <div class="stat-icon">💬</div>
+                <div class="stat-label">평균 댓글 수</div>
+                <div class="stat-value">{{ stats.avg_comments_count }}</div>
+                <div class="stat-change positive">
+                    개당 평균
+                </div>
+            </div>
+
+            <div class="glass-card stat-card">
+                <div class="stat-icon">❌</div>
+                <div class="stat-label">실패 건수</div>
+                <div class="stat-value">{{ stats.failed_analyses }}</div>
+                <div class="stat-change {{ 'negative' if stats.failed_analyses > 0 else 'positive' }}">
+                    {{ '%.1f'|format((stats.failed_analyses / stats.total_analyses * 100) if stats.total_analyses > 0 else 0) }}% 실패율
+                </div>
             </div>
         </div>
 
-        <!-- 시간대별 사용 패턴 -->
-        {% if stats.hourly_stats %}
-        <div class="chart-container">
-            <h2>⏰ 오늘의 시간대별 사용 패턴</h2>
-            <div class="bar-chart">
-                {% for hour in range(24) %}
-                    {% set hour_str = '%02d'|format(hour) %}
-                    {% set count = stats.hourly_stats.get(hour_str, 0) %}
-                    {% set max_count = stats.hourly_stats.values()|max if stats.hourly_stats.values() else 1 %}
-                    {% set height = (count / max_count * 100) if count > 0 else 0 %}
-                    <div class="bar" style="height: {{ height }}%;">
-                        {% if count > 0 %}
-                        <span class="bar-value">{{ count }}</span>
-                        {% endif %}
-                        <span class="bar-label">{{ hour_str }}시</span>
+        <!-- Charts Row -->
+        <div class="charts-row">
+            <!-- Hourly Activity Chart -->
+            <div class="glass-card chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h2 class="chart-title">⏰ 시간대별 활동</h2>
+                        <p class="chart-subtitle">오늘의 사용 패턴</p>
                     </div>
-                {% endfor %}
+                </div>
+                <canvas id="hourlyChart"></canvas>
+            </div>
+
+            <!-- Conversion Funnel -->
+            <div class="glass-card chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h2 class="chart-title">🎯 전환율 퍼널</h2>
+                        <p class="chart-subtitle">사용자 여정 분석</p>
+                    </div>
+                </div>
+                <div class="funnel-container">
+                    <div class="funnel-step">
+                        <div class="funnel-icon">👥</div>
+                        <div class="funnel-info">
+                            <div class="funnel-label">방문자</div>
+                            <div class="funnel-count">{{ stats.month_analyses }}</div>
+                            <div class="funnel-rate">100%</div>
+                        </div>
+                    </div>
+                    <div class="funnel-step">
+                        <div class="funnel-icon">🔍</div>
+                        <div class="funnel-info">
+                            <div class="funnel-label">분석 시도</div>
+                            <div class="funnel-count">{{ stats.conversion_funnel.analyses }}</div>
+                            <div class="funnel-rate">{{ '%.1f'|format((stats.conversion_funnel.analyses / stats.month_analyses * 100) if stats.month_analyses > 0 else 0) }}% 전환</div>
+                        </div>
+                    </div>
+                    <div class="funnel-step">
+                        <div class="funnel-icon">📋</div>
+                        <div class="funnel-info">
+                            <div class="funnel-label">댓글 복사</div>
+                            <div class="funnel-count">-</div>
+                            <div class="funnel-rate">향후 추적 예정</div>
+                        </div>
+                    </div>
+                    <div class="funnel-step">
+                        <div class="funnel-icon">🚀</div>
+                        <div class="funnel-info">
+                            <div class="funnel-label">블로그 이동</div>
+                            <div class="funnel-count">-</div>
+                            <div class="funnel-rate">향후 추적 예정</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        {% endif %}
 
-        <!-- 최근 활동 로그 -->
-        <div class="logs-container">
-            <h2>📋 최근 활동 로그</h2>
-            {% if stats.recent_logs %}
-                {% for log in stats.recent_logs[:10] %}
-                <div class="log-entry">
-                    <div class="log-time">{{ log.timestamp }}</div>
-                    <div class="log-action">
-                        {% if log.success %}
-                        <span class="success">✅ 분석 성공</span>
-                        {% else %}
-                        <span class="failed">❌ 분석 실패</span>
-                        {% endif %}
-                    </div>
-                    {% if log.data %}
-                    <div class="log-details">
-                        {% if log.data.title %}
-                        제목: {{ log.data.title[:50] }}...
-                        {% endif %}
-                        {% if log.data.comments_count %}
-                        (댓글 {{ log.data.comments_count }}개 생성)
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                    {% if log.error %}
-                    <div class="log-details" style="color: #ef4444;">
-                        오류: {{ log.error }}
-                    </div>
-                    {% endif %}
+        <!-- Daily Trend Chart -->
+        <div class="glass-card chart-card" style="margin-bottom: 40px;">
+            <div class="chart-header">
+                <div>
+                    <h2 class="chart-title">📅 일별 추이</h2>
+                    <p class="chart-subtitle">최근 30일간 활동</p>
                 </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">
-                    <p>로그가 없습니다.</p>
+            </div>
+            <canvas id="dailyChart"></canvas>
+        </div>
+
+        <!-- Platform Stats & Activity Log -->
+        <div class="charts-row">
+            <!-- Platform Distribution -->
+            {% if stats.top_blog_domains %}
+            <div class="glass-card chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h2 class="chart-title">🔥 플랫폼 분포</h2>
+                        <p class="chart-subtitle">블로그 플랫폼별 사용</p>
+                    </div>
                 </div>
+                <canvas id="platformChart"></canvas>
+            </div>
             {% endif %}
+
+            <!-- Recent Activity Log -->
+            <div class="glass-card chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h2 class="chart-title">📋 최근 활동</h2>
+                        <p class="chart-subtitle">실시간 로그</p>
+                    </div>
+                </div>
+                <div class="activity-log">
+                    {% if stats.recent_logs %}
+                        {% for log in stats.recent_logs[:20] %}
+                        <div class="log-entry">
+                            <div class="log-status {{ 'success' if log.success else 'error' }}">
+                                {{ '✅' if log.success else '❌' }}
+                            </div>
+                            <div class="log-content">
+                                <div class="log-time">{{ log.timestamp }}</div>
+                                <div class="log-action">
+                                    {{ '분석 성공' if log.success else '분석 실패' }}
+                                </div>
+                                {% if log.data %}
+                                <div class="log-details">
+                                    {% if log.data.title %}
+                                    📝 {{ log.data.title[:50] }}...
+                                    {% endif %}
+                                    {% if log.data.comments_count %}
+                                    💬 {{ log.data.comments_count }}개 댓글 생성
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                {% if log.error %}
+                                <div class="log-details" style="color: var(--error);">
+                                    ⚠️ {{ log.error[:100] }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <p>활동 로그가 없습니다.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
+
         {% endif %}
     </div>
 
     <script>
-        // 30초마다 자동 새로고침 (선택사항)
-        // setTimeout(() => location.reload(), 30000);
-        
-        console.log('📊 Repost Analytics Dashboard loaded');
+        // Chart.js 설정
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+        Chart.defaults.font.family = 'Inter, sans-serif';
+
+        {% if stats.total_analyses > 0 %}
+
+        // 시간대별 차트
+        const hourlyCtx = document.getElementById('hourlyChart');
+        if (hourlyCtx) {
+            const hourlyData = {{ stats.hourly_stats|tojson }};
+            const hours = Array.from({length: 24}, (_, i) => String(i).padStart(2, '0'));
+            const counts = hours.map(h => hourlyData[h] || 0);
+
+            new Chart(hourlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: hours.map(h => h + '시'),
+                    datasets: [{
+                        label: '분석 횟수',
+                        data: counts,
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        x: { 
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 일별 추이 차트
+        const dailyCtx = document.getElementById('dailyChart');
+        if (dailyCtx) {
+            const dailyData = {{ stats.daily_stats|tojson }};
+            const sortedDates = Object.keys(dailyData).sort();
+            const labels = sortedDates.map(d => {
+                const date = new Date(d);
+                return (date.getMonth() + 1) + '/' + date.getDate();
+            });
+            const values = sortedDates.map(d => dailyData[d]);
+
+            new Chart(dailyCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '일별 분석',
+                        data: values,
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#667eea',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        x: { 
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 플랫폼 분포 차트
+        {% if stats.top_blog_domains %}
+        const platformCtx = document.getElementById('platformChart');
+        if (platformCtx) {
+            const platforms = {{ stats.top_blog_domains|tojson }};
+            
+            new Chart(platformCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(platforms),
+                    datasets: [{
+                        data: Object.values(platforms),
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(236, 72, 153, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                        ],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: { size: 14 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        {% endif %}
+
+        {% endif %}
+
+        // 페이지 애니메이션
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.glass-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+
+        // 퍼널 애니메이션
+        const funnelSteps = document.querySelectorAll('.funnel-step');
+        funnelSteps.forEach((step, index) => {
+            const count = step.querySelector('.funnel-count').textContent;
+            if (count !== '-') {
+                const maxCount = {{ stats.month_analyses if stats.month_analyses > 0 else 1 }};
+                const percentage = (parseInt(count) / maxCount) * 100;
+                step.style.setProperty('--funnel-width', percentage + '%');
+                setTimeout(() => {
+                    step.querySelector('::before').style.width = 'var(--funnel-width)';
+                }, index * 200);
+            }
+        });
+
+        console.log('📊 Repost Analytics Dashboard Pro loaded');
     </script>
 </body>
 </html>
-

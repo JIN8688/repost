@@ -740,10 +740,10 @@ def analyze_blog():
         )
         return jsonify({'error': f'오류가 발생했습니다: {str(e)}'}), 500
 
-# 📊 Analytics 통계 계산 함수
+# 📊 Analytics 통계 계산 함수 (고급)
 def get_analytics_stats(days=7):
     """
-    로그 파일에서 통계 계산
+    로그 파일에서 고급 통계 계산
     
     Args:
         days: 최근 며칠간의 데이터 (기본 7일)
@@ -752,15 +752,31 @@ def get_analytics_stats(days=7):
         dict: 통계 데이터
     """
     from datetime import timedelta
+    from collections import Counter
     
     stats = {
         'total_analyses': 0,
         'success_analyses': 0,
         'failed_analyses': 0,
         'today_analyses': 0,
+        'yesterday_analyses': 0,
+        'week_analyses': 0,
+        'month_analyses': 0,
         'hourly_stats': {},
         'daily_stats': {},
-        'recent_logs': []
+        'weekly_stats': {},
+        'monthly_stats': {},
+        'recent_logs': [],
+        'top_blog_domains': {},
+        'top_hours': {},
+        'conversion_funnel': {
+            'visits': 0,
+            'analyses': 0,
+            'copies': 0,  # 향후 구현
+            'visits_to_blog': 0  # 향후 구현
+        },
+        'error_types': {},
+        'avg_comments_count': 0
     }
     
     try:
@@ -770,6 +786,13 @@ def get_analytics_stats(days=7):
         
         # 최근 N일간의 로그 파일 읽기
         today = datetime.now()
+        yesterday = (today - timedelta(days=1)).strftime('%Y-%m-%d')
+        week_ago = today - timedelta(days=7)
+        month_ago = today - timedelta(days=30)
+        
+        total_comments = 0
+        comments_count_entries = 0
+        
         for i in range(days):
             date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
             log_file = os.path.join(log_dir, f'analytics_{date}.json')
@@ -789,8 +812,24 @@ def get_analytics_stats(days=7):
                             
                             if log_entry.get('success'):
                                 stats['success_analyses'] += 1
+                                stats['conversion_funnel']['analyses'] += 1
+                                
+                                # 댓글 수 평균 계산
+                                if log_entry.get('data', {}).get('comments_count'):
+                                    total_comments += log_entry['data']['comments_count']
+                                    comments_count_entries += 1
                             else:
                                 stats['failed_analyses'] += 1
+                                # 에러 타입 수집
+                                error = log_entry.get('error', 'Unknown')
+                                stats['error_types'][error] = stats['error_types'].get(error, 0) + 1
+                            
+                            # 블로그 도메인 추출
+                            blog_url = log_entry.get('data', {}).get('blog_url', '')
+                            if 'blog.naver.com' in blog_url:
+                                stats['top_blog_domains']['네이버 블로그'] = stats['top_blog_domains'].get('네이버 블로그', 0) + 1
+                            elif 'tistory.com' in blog_url:
+                                stats['top_blog_domains']['티스토리'] = stats['top_blog_domains'].get('티스토리', 0) + 1
                             
                             # 오늘 데이터
                             if date == today.strftime('%Y-%m-%d'):
@@ -801,15 +840,32 @@ def get_analytics_stats(days=7):
                                 if timestamp:
                                     hour = timestamp.split('T')[1][:2] if 'T' in timestamp else '00'
                                     stats['hourly_stats'][hour] = stats['hourly_stats'].get(hour, 0) + 1
+                            
+                            # 어제 데이터
+                            if date == yesterday:
+                                stats['yesterday_analyses'] += 1
+                            
+                            # 주간 데이터
+                            log_date = datetime.strptime(date, '%Y-%m-%d')
+                            if log_date >= week_ago:
+                                stats['week_analyses'] += 1
+                            
+                            # 월간 데이터
+                            if log_date >= month_ago:
+                                stats['month_analyses'] += 1
                         
-                        # 최근 로그 (최대 20개)
-                        if len(stats['recent_logs']) < 20:
+                        # 최근 로그 (최대 50개)
+                        if len(stats['recent_logs']) < 50:
                             stats['recent_logs'].append(log_entry)
                     
                     stats['daily_stats'][date] = daily_count
                     
                 except Exception as e:
                     log(f"로그 파일 읽기 실패: {log_file} - {e}", "WARNING")
+        
+        # 평균 댓글 수 계산
+        if comments_count_entries > 0:
+            stats['avg_comments_count'] = round(total_comments / comments_count_entries, 1)
         
         # 성공률 계산
         if stats['total_analyses'] > 0:
