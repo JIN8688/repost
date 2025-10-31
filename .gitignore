@@ -40,6 +40,8 @@ Thumbs.db
 
 # 로그
 *.log
+logs/
+analytics_*.json
 
 # 테스트
 .pytest_cache/

@@ -4,6 +4,8 @@ import requests
 from bs4 import BeautifulSoup
 import os
 import sys
+import json
+from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI
 from urllib.parse import urlparse, parse_qs
@@ -16,6 +18,57 @@ def log(message, level="INFO"):
     print(formatted_message, flush=True)
     sys.stdout.flush()
     sys.stderr.flush()
+
+# 📊 프로덕션급 Analytics 로깅 시스템
+def log_analytics(action, data=None, success=True, error_message=None):
+    """
+    사용자 행동 로깅 (개인정보보호 준수)
+    
+    Args:
+        action: 액션 유형 ('blog_analyzed', 'comment_copied', 'blog_visited')
+        data: 추가 데이터 (dict)
+        success: 성공 여부
+        error_message: 실패 시 에러 메시지
+    """
+    try:
+        # 로그 디렉토리 생성
+        log_dir = 'logs'
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        
+        # 날짜별 로그 파일
+        today = datetime.now().strftime('%Y-%m-%d')
+        log_file = os.path.join(log_dir, f'analytics_{today}.json')
+        
+        # 로그 엔트리 생성
+        log_entry = {
+            'timestamp': datetime.now().isoformat(),
+            'action': action,
+            'success': success,
+            'data': data or {},
+            'error': error_message
+        }
+        
+        # 기존 로그 읽기 (있다면)
+        logs = []
+        if os.path.exists(log_file):
+            try:
+                with open(log_file, 'r', encoding='utf-8') as f:
+                    logs = json.load(f)
+            except:
+                logs = []
+        
+        # 새 로그 추가
+        logs.append(log_entry)
+        
+        # 로그 파일 저장
+        with open(log_file, 'w', encoding='utf-8') as f:
+            json.dump(logs, f, ensure_ascii=False, indent=2)
+        
+        log(f"📊 Analytics logged: {action} (success={success})", "ANALYTICS")
+        
+    except Exception as e:
+        log(f"⚠️ Analytics logging failed: {e}", "WARNING")
 
 # 로컬 개발 환경에서만 .env 파일 로드
 if os.path.exists('.env'):
@@ -660,6 +713,17 @@ def analyze_blog():
         log(f"🎉 전체 분석 완료! 댓글 {len(comments)}개 생성", "API")
         log("═" * 60, "API")
         
+        # 📊 Analytics 로깅 (성공)
+        log_analytics(
+            action='blog_analyzed',
+            data={
+                'blog_url': blog_url,
+                'title': blog_data.get('title', '')[:100],  # 제목 일부만
+                'comments_count': len(comments)
+            },
+            success=True
+        )
+        
         return jsonify({
             'success': True,
             'blog': blog_data,
@@ -667,6 +731,13 @@ def analyze_blog():
         })
     
     except Exception as e:
+        # 📊 Analytics 로깅 (실패)
+        log_analytics(
+            action='blog_analyzed',
+            data={'blog_url': blog_url if 'blog_url' in locals() else 'unknown'},
+            success=False,
+            error_message=str(e)
+        )
         return jsonify({'error': f'오류가 발생했습니다: {str(e)}'}), 500
 
 if __name__ == '__main__':

@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX', {
+            'anonymize_ip': true,  // IP 익명화 (개인정보보호)
+            'cookie_flags': 'SameSite=None;Secure'
+        });
+    </script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="theme-color" content="#667eea">
@@ -1133,6 +1145,15 @@
         function goToBlog() {
             if (!currentBlogUrl) return;
             
+            // 📊 GA4: 블로그 이동 이벤트
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'blog_visit', {
+                    'event_category': 'engagement',
+                    'event_label': 'go_to_blog',
+                    'value': 1
+                });
+            }
+            
             // 카카오톡/인앱 브라우저 감지
             const isInAppBrowser = /KAKAOTALK|Messenger|Instagram|Line|NAVER/.test(navigator.userAgent);
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -1363,8 +1384,26 @@
                 displayComments(data.comments);
                 commentsSection.classList.add('show');
 
+                // 📊 GA4: 분석 성공 이벤트
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'blog_analyzed', {
+                        'event_category': 'engagement',
+                        'event_label': 'success',
+                        'value': 1
+                    });
+                }
+
             } catch (error) {
                 showError(error.message);
+                
+                // 📊 GA4: 분석 실패 이벤트
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'blog_analyze_failed', {
+                        'event_category': 'error',
+                        'event_label': error.message,
+                        'value': 0
+                    });
+                }
             } finally {
                 // 로딩 애니메이션 중지
                 stopLoadingAnimation();
@@ -1402,6 +1441,15 @@
                 // 토스트 메시지 표시
                 showToast();
 
+                // 📊 GA4: 댓글 복사 이벤트
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'comment_copied', {
+                        'event_category': 'engagement',
+                        'event_label': 'copy_success',
+                        'value': 1
+                    });
+                }
+
                 // 2초 후 원래 상태로
                 setTimeout(() => {
                     button.textContent = originalText;
@@ -1409,6 +1457,15 @@
                 }, 2000);
             }).catch(err => {
                 alert('복사에 실패했습니다: ' + err);
+                
+                // 📊 GA4: 댓글 복사 실패 이벤트
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'comment_copy_failed', {
+                        'event_category': 'error',
+                        'event_label': err.message,
+                        'value': 0
+                    });
+                }
             });
         }
 
