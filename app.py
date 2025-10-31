@@ -740,6 +740,100 @@ def analyze_blog():
         )
         return jsonify({'error': f'오류가 발생했습니다: {str(e)}'}), 500
 
+# 📊 Analytics 통계 계산 함수
+def get_analytics_stats(days=7):
+    """
+    로그 파일에서 통계 계산
+    
+    Args:
+        days: 최근 며칠간의 데이터 (기본 7일)
+    
+    Returns:
+        dict: 통계 데이터
+    """
+    from datetime import timedelta
+    
+    stats = {
+        'total_analyses': 0,
+        'success_analyses': 0,
+        'failed_analyses': 0,
+        'today_analyses': 0,
+        'hourly_stats': {},
+        'daily_stats': {},
+        'recent_logs': []
+    }
+    
+    try:
+        log_dir = 'logs'
+        if not os.path.exists(log_dir):
+            return stats
+        
+        # 최근 N일간의 로그 파일 읽기
+        today = datetime.now()
+        for i in range(days):
+            date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
+            log_file = os.path.join(log_dir, f'analytics_{date}.json')
+            
+            if os.path.exists(log_file):
+                try:
+                    with open(log_file, 'r', encoding='utf-8') as f:
+                        logs = json.load(f)
+                    
+                    # 날짜별 통계
+                    daily_count = 0
+                    
+                    for log_entry in logs:
+                        if log_entry.get('action') == 'blog_analyzed':
+                            stats['total_analyses'] += 1
+                            daily_count += 1
+                            
+                            if log_entry.get('success'):
+                                stats['success_analyses'] += 1
+                            else:
+                                stats['failed_analyses'] += 1
+                            
+                            # 오늘 데이터
+                            if date == today.strftime('%Y-%m-%d'):
+                                stats['today_analyses'] += 1
+                                
+                                # 시간대별 통계
+                                timestamp = log_entry.get('timestamp', '')
+                                if timestamp:
+                                    hour = timestamp.split('T')[1][:2] if 'T' in timestamp else '00'
+                                    stats['hourly_stats'][hour] = stats['hourly_stats'].get(hour, 0) + 1
+                        
+                        # 최근 로그 (최대 20개)
+                        if len(stats['recent_logs']) < 20:
+                            stats['recent_logs'].append(log_entry)
+                    
+                    stats['daily_stats'][date] = daily_count
+                    
+                except Exception as e:
+                    log(f"로그 파일 읽기 실패: {log_file} - {e}", "WARNING")
+        
+        # 성공률 계산
+        if stats['total_analyses'] > 0:
+            stats['success_rate'] = round((stats['success_analyses'] / stats['total_analyses']) * 100, 1)
+        else:
+            stats['success_rate'] = 0
+        
+    except Exception as e:
+        log(f"통계 계산 실패: {e}", "ERROR")
+    
+    return stats
+
+@app.route('/admin/analytics')
+def admin_analytics():
+    """📊 Analytics 대시보드"""
+    try:
+        # 통계 계산
+        stats = get_analytics_stats(days=30)  # 최근 30일
+        
+        return render_template('analytics.html', stats=stats)
+    
+    except Exception as e:
+        return f"오류: {str(e)}", 500
+
 if __name__ == '__main__':
     # 로컬 개발용
     app.run(debug=True, port=5001)
