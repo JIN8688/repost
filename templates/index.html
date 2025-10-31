@@ -7,10 +7,23 @@
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
+        
+        // GA4 설정 (디버그 모드 활성화)
         gtag('config', 'G-PWN8T3SZYW', {
-            'anonymize_ip': true,  // IP 익명화 (개인정보보호)
-            'cookie_flags': 'SameSite=None;Secure'
+            'debug_mode': true,  // 디버그 모드 (콘솔에서 확인 가능)
+            'send_page_view': true  // 페이지뷰 자동 전송
         });
+        
+        // GA4 로딩 확인
+        console.log('✅ GA4 초기화 완료: G-PWN8T3SZYW');
+        
+        // 즉시 테스트 이벤트 전송
+        gtag('event', 'page_load', {
+            'event_category': 'engagement',
+            'event_label': 'initial_load',
+            'value': 1
+        });
+        console.log('📊 GA4 테스트 이벤트 전송: page_load');
     </script>
     
     <meta charset="UTF-8">
@@ -1152,6 +1165,7 @@
                     'event_label': 'go_to_blog',
                     'value': 1
                 });
+                console.log('📊 GA4 이벤트 전송: blog_visit (블로그 이동)');
             }
             
             // 카카오톡/인앱 브라우저 감지
@@ -1391,6 +1405,9 @@
                         'event_label': 'success',
                         'value': 1
                     });
+                    console.log('📊 GA4 이벤트 전송: blog_analyzed (성공)');
+                } else {
+                    console.error('❌ GA4가 로드되지 않았습니다!');
                 }
 
             } catch (error) {
@@ -1403,6 +1420,7 @@
                         'event_label': error.message,
                         'value': 0
                     });
+                    console.log('📊 GA4 이벤트 전송: blog_analyze_failed (실패)', error.message);
                 }
             } finally {
                 // 로딩 애니메이션 중지
@@ -1448,6 +1466,7 @@
                         'event_label': 'copy_success',
                         'value': 1
                     });
+                    console.log('📊 GA4 이벤트 전송: comment_copied (복사 성공)');
                 }
 
                 // 2초 후 원래 상태로
