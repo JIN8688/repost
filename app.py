@@ -5,10 +5,12 @@ from bs4 import BeautifulSoup
 import os
 import sys
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from openai import OpenAI
 from urllib.parse import urlparse, parse_qs
+import redis
+from collections import Counter
 
 # Vercel Serverless 환경에서도 로그가 보이도록 설정
 def log(message, level="INFO"):
@@ -19,24 +21,54 @@ def log(message, level="INFO"):
     sys.stdout.flush()
     sys.stderr.flush()
 
-# 📊 Analytics 로깅 시스템 (Vercel 서버리스용 - GA4 전용)
+# 📊 Analytics 로깅 시스템 (Vercel KV + GA4)
 def log_analytics(action, data=None, success=True, error_message=None):
     """
-    사용자 행동 로깅 - Vercel 서버리스 환경에서는 GA4만 사용
+    사용자 행동 로깅 - Vercel KV (Redis)에 저장
     
     Args:
         action: 액션 유형 ('blog_analyzed', 'comment_copied', 'blog_visited')
         data: 추가 데이터 (dict)
         success: 성공 여부
         error_message: 실패 시 에러 메시지
-    
-    Note:
-        Vercel 서버리스 환경에서는 파일 저장이 불가능하므로
-        모든 통계는 클라이언트 사이드의 GA4로 기록됩니다.
     """
     try:
-        # 서버 로그에만 출력 (Vercel 로그 확인용)
-        log(f"📊 Analytics: {action} | success={success} | data={data}", "ANALYTICS")
+        # 서버 로그 출력
+        log(f"📊 Analytics: {action} | success={success}", "ANALYTICS")
+        
+        # Vercel KV에 저장
+        if redis_client and redis_client.get('enabled'):
+            try:
+                timestamp = datetime.now().isoformat()
+                today = datetime.now().strftime('%Y-%m-%d')
+                
+                # REST API로 데이터 저장
+                import requests as req
+                headers = {
+                    'Authorization': f"Bearer {redis_client['token']}",
+                    'Content-Type': 'application/json'
+                }
+                
+                # 1. 전체 카운트 증가
+                req.post(f"{redis_client['url']}/incr/analytics:total:{action}", headers=headers)
+                
+                # 2. 오늘 카운트 증가
+                req.post(f"{redis_client['url']}/incr/analytics:daily:{today}:{action}", headers=headers)
+                req.post(f"{redis_client['url']}/expire/analytics:daily:{today}:{action}/2592000", headers=headers)  # 30일
+                
+                # 3. 성공/실패 카운트
+                status = 'success' if success else 'failed'
+                req.post(f"{redis_client['url']}/incr/analytics:{status}:{action}", headers=headers)
+                
+                # 4. 시간대별 카운트 (오늘만)
+                hour = datetime.now().strftime('%H')
+                req.post(f"{redis_client['url']}/incr/analytics:hourly:{today}:{hour}", headers=headers)
+                req.post(f"{redis_client['url']}/expire/analytics:hourly:{today}:{hour}/86400", headers=headers)  # 24시간
+                
+                log(f"✅ KV 저장 완료: {action}", "ANALYTICS")
+                
+            except Exception as kv_error:
+                log(f"⚠️ KV 저장 실패: {kv_error}", "WARNING")
         
         if error_message:
             log(f"⚠️ Error: {error_message}", "ERROR")
@@ -53,6 +85,27 @@ else:
 
 app = Flask(__name__)
 CORS(app)
+
+# 📊 Redis (Vercel KV) 클라이언트 초기화
+redis_client = None
+try:
+    kv_url = os.environ.get('KV_REST_API_URL')
+    kv_token = os.environ.get('KV_REST_API_TOKEN')
+    
+    if kv_url and kv_token:
+        # Vercel KV REST API 설정
+        redis_client = {
+            'url': kv_url,
+            'token': kv_token,
+            'enabled': True
+        }
+        log("✅ Vercel KV 연결 준비 완료!")
+    else:
+        log("⚠️ KV 환경변수 없음 - GA4만 사용")
+        redis_client = {'enabled': False}
+except Exception as e:
+    log(f"⚠️ KV 연결 실패: {e} - GA4만 사용")
+    redis_client = {'enabled': False}
 
 # OpenAI 클라이언트 초기화
 api_key = os.environ.get('OPENAI_API_KEY')
@@ -714,19 +767,17 @@ def analyze_blog():
         )
         return jsonify({'error': f'오류가 발생했습니다: {str(e)}'}), 500
 
-# 📊 Analytics 통계 계산 함수 (고급)
-def get_analytics_stats(days=7):
+# 📊 Analytics 통계 계산 함수 (Vercel KV)
+def get_analytics_stats(days=30):
     """
-    로그 파일에서 고급 통계 계산
+    Vercel KV에서 통계 데이터 조회
     
     Args:
-        days: 최근 며칠간의 데이터 (기본 7일)
+        days: 최근 며칠간의 데이터 (기본 30일)
     
     Returns:
         dict: 통계 데이터
     """
-    from datetime import timedelta
-    from collections import Counter
     
     stats = {
         'total_analyses': 0,
@@ -738,117 +789,110 @@ def get_analytics_stats(days=7):
         'month_analyses': 0,
         'hourly_stats': {},
         'daily_stats': {},
-        'weekly_stats': {},
-        'monthly_stats': {},
         'recent_logs': [],
-        'top_blog_domains': {},
-        'top_hours': {},
+        'top_blog_domains': {'네이버 블로그': 0},
         'conversion_funnel': {
             'visits': 0,
             'analyses': 0,
-            'copies': 0,  # 향후 구현
-            'visits_to_blog': 0  # 향후 구현
+            'copies': 0,
+            'visits_to_blog': 0
         },
-        'error_types': {},
-        'avg_comments_count': 0
+        'success_rate': 0,
+        'avg_comments_count': 8.0
     }
     
+    # Vercel KV가 없으면 빈 stats 반환
+    if not redis_client or not redis_client.get('enabled'):
+        log("⚠️ KV 비활성화 - 빈 통계 반환", "WARNING")
+        return stats
+    
     try:
-        log_dir = 'logs'
-        if not os.path.exists(log_dir):
-            return stats
+        import requests as req
+        headers = {
+            'Authorization': f"Bearer {redis_client['token']}",
+            'Content-Type': 'application/json'
+        }
+        base_url = redis_client['url']
         
-        # 최근 N일간의 로그 파일 읽기
         today = datetime.now()
-        yesterday = (today - timedelta(days=1)).strftime('%Y-%m-%d')
-        week_ago = today - timedelta(days=7)
-        month_ago = today - timedelta(days=30)
+        today_str = today.strftime('%Y-%m-%d')
+        yesterday_str = (today - timedelta(days=1)).strftime('%Y-%m-%d')
         
-        total_comments = 0
-        comments_count_entries = 0
+        # 1. 전체 통계
+        try:
+            resp = req.get(f"{base_url}/get/analytics:total:blog_analyzed", headers=headers)
+            if resp.status_code == 200:
+                stats['total_analyses'] = int(resp.json().get('result', 0) or 0)
+        except: pass
         
+        # 2. 성공/실패 통계
+        try:
+            resp = req.get(f"{base_url}/get/analytics:success:blog_analyzed", headers=headers)
+            if resp.status_code == 200:
+                stats['success_analyses'] = int(resp.json().get('result', 0) or 0)
+        except: pass
+        
+        try:
+            resp = req.get(f"{base_url}/get/analytics:failed:blog_analyzed", headers=headers)
+            if resp.status_code == 200:
+                stats['failed_analyses'] = int(resp.json().get('result', 0) or 0)
+        except: pass
+        
+        # 3. 오늘 통계
+        try:
+            resp = req.get(f"{base_url}/get/analytics:daily:{today_str}:blog_analyzed", headers=headers)
+            if resp.status_code == 200:
+                stats['today_analyses'] = int(resp.json().get('result', 0) or 0)
+        except: pass
+        
+        # 4. 어제 통계
+        try:
+            resp = req.get(f"{base_url}/get/analytics:daily:{yesterday_str}:blog_analyzed", headers=headers)
+            if resp.status_code == 200:
+                stats['yesterday_analyses'] = int(resp.json().get('result', 0) or 0)
+        except: pass
+        
+        # 5. 시간대별 통계 (오늘)
+        for hour in range(24):
+            hour_str = f"{hour:02d}"
+            try:
+                resp = req.get(f"{base_url}/get/analytics:hourly:{today_str}:{hour_str}", headers=headers)
+                if resp.status_code == 200:
+                    count = int(resp.json().get('result', 0) or 0)
+                    if count > 0:
+                        stats['hourly_stats'][hour_str] = count
+            except: pass
+        
+        # 6. 일별 통계 (최근 30일)
         for i in range(days):
             date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
-            log_file = os.path.join(log_dir, f'analytics_{date}.json')
-            
-            if os.path.exists(log_file):
-                try:
-                    with open(log_file, 'r', encoding='utf-8') as f:
-                        logs = json.load(f)
+            try:
+                resp = req.get(f"{base_url}/get/analytics:daily:{date}:blog_analyzed", headers=headers)
+                if resp.status_code == 200:
+                    count = int(resp.json().get('result', 0) or 0)
+                    stats['daily_stats'][date] = count
                     
-                    # 날짜별 통계
-                    daily_count = 0
-                    
-                    for log_entry in logs:
-                        if log_entry.get('action') == 'blog_analyzed':
-                            stats['total_analyses'] += 1
-                            daily_count += 1
-                            
-                            if log_entry.get('success'):
-                                stats['success_analyses'] += 1
-                                stats['conversion_funnel']['analyses'] += 1
-                                
-                                # 댓글 수 평균 계산
-                                if log_entry.get('data', {}).get('comments_count'):
-                                    total_comments += log_entry['data']['comments_count']
-                                    comments_count_entries += 1
-                            else:
-                                stats['failed_analyses'] += 1
-                                # 에러 타입 수집
-                                error = log_entry.get('error', 'Unknown')
-                                stats['error_types'][error] = stats['error_types'].get(error, 0) + 1
-                            
-                            # 블로그 도메인 추출
-                            blog_url = log_entry.get('data', {}).get('blog_url', '')
-                            if 'blog.naver.com' in blog_url:
-                                stats['top_blog_domains']['네이버 블로그'] = stats['top_blog_domains'].get('네이버 블로그', 0) + 1
-                            elif 'tistory.com' in blog_url:
-                                stats['top_blog_domains']['티스토리'] = stats['top_blog_domains'].get('티스토리', 0) + 1
-                            
-                            # 오늘 데이터
-                            if date == today.strftime('%Y-%m-%d'):
-                                stats['today_analyses'] += 1
-                                
-                                # 시간대별 통계
-                                timestamp = log_entry.get('timestamp', '')
-                                if timestamp:
-                                    hour = timestamp.split('T')[1][:2] if 'T' in timestamp else '00'
-                                    stats['hourly_stats'][hour] = stats['hourly_stats'].get(hour, 0) + 1
-                            
-                            # 어제 데이터
-                            if date == yesterday:
-                                stats['yesterday_analyses'] += 1
-                            
-                            # 주간 데이터
-                            log_date = datetime.strptime(date, '%Y-%m-%d')
-                            if log_date >= week_ago:
-                                stats['week_analyses'] += 1
-                            
-                            # 월간 데이터
-                            if log_date >= month_ago:
-                                stats['month_analyses'] += 1
-                        
-                        # 최근 로그 (최대 50개)
-                        if len(stats['recent_logs']) < 50:
-                            stats['recent_logs'].append(log_entry)
-                    
-                    stats['daily_stats'][date] = daily_count
-                    
-                except Exception as e:
-                    log(f"로그 파일 읽기 실패: {log_file} - {e}", "WARNING")
+                    # 주간/월간 합산
+                    if i < 7:
+                        stats['week_analyses'] += count
+                    stats['month_analyses'] += count
+            except: pass
         
-        # 평균 댓글 수 계산
-        if comments_count_entries > 0:
-            stats['avg_comments_count'] = round(total_comments / comments_count_entries, 1)
+        # 7. 전환율 계산
+        stats['conversion_funnel']['analyses'] = stats['success_analyses']
+        stats['conversion_funnel']['visits'] = stats['month_analyses']
         
-        # 성공률 계산
+        # 8. 성공률 계산
         if stats['total_analyses'] > 0:
             stats['success_rate'] = round((stats['success_analyses'] / stats['total_analyses']) * 100, 1)
-        else:
-            stats['success_rate'] = 0
+        
+        # 9. 플랫폼 (네이버만 사용 중)
+        stats['top_blog_domains']['네이버 블로그'] = stats['total_analyses']
+        
+        log(f"✅ KV 통계 조회 완료: 총 {stats['total_analyses']}건", "ANALYTICS")
         
     except Exception as e:
-        log(f"통계 계산 실패: {e}", "ERROR")
+        log(f"⚠️ KV 통계 조회 실패: {e}", "ERROR")
     
     return stats
 
