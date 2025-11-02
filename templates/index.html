@@ -1754,7 +1754,12 @@
                 }
                 
                 // 📊 백엔드: 댓글 복사 이벤트
-                trackEvent('comment_copied', { comment: comment.slice(0, 50) });
+                trackEvent('comment_copied', { comment: text.slice(0, 50) });
+
+                // 💬 댓글 복사 후 3초 뒤 피드백 위젯 표시
+                setTimeout(() => {
+                    showFeedbackWidget();
+                }, 3000);
 
                 // 2초 후 원래 상태로
                 setTimeout(() => {
@@ -1928,17 +1933,7 @@
             }
         }
 
-        // 30초 후 자동 표시
-        setTimeout(showFeedbackWidget, 30000);
-
-        // 스크롤 시 표시
-        let scrolled = false;
-        window.addEventListener('scroll', () => {
-            if (!scrolled && window.scrollY > 500) {
-                scrolled = true;
-                showFeedbackWidget();
-            }
-        });
+        // 댓글 복사 후 피드백 위젯 표시 (copyComment 함수에서 트리거)
 
         // Quick 피드백 제출
         function submitQuickFeedback(rating) {

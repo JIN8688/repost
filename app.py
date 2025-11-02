@@ -78,6 +78,11 @@ def log_analytics(action, data=None, success=True, error_message=None):
                     if 'os' in data:
                         redis_client.incr(f"analytics:os:{data['os']}")
                 
+                # 6. 피드백 통계 (rating별 카운트)
+                if action == 'quick_feedback' and data and 'rating' in data:
+                    rating = data['rating']
+                    redis_client.incr(f"analytics:feedback:rating_{rating}")
+                
                 log(f"✅ KV 저장 완료: {action}", "ANALYTICS")
                 
             except Exception as kv_error:
@@ -1016,6 +1021,25 @@ def get_analytics_stats(days=30):
                 if count > 0:
                     stats['os_stats'][os] = count
             except: pass
+        
+        # 18. 피드백 통계 (rating별)
+        stats['feedback_stats'] = {}
+        stats['total_feedbacks'] = 0
+        for rating in [5, 4, 3, 2]:
+            try:
+                val = redis_client.get(f"analytics:feedback:rating_{rating}")
+                count = int(val) if val else 0
+                if count > 0:
+                    stats['feedback_stats'][rating] = count
+                    stats['total_feedbacks'] += count
+            except: pass
+        
+        # 평균 만족도 계산
+        if stats['total_feedbacks'] > 0:
+            weighted_sum = sum(rating * count for rating, count in stats['feedback_stats'].items())
+            stats['avg_rating'] = round(weighted_sum / stats['total_feedbacks'], 2)
+        else:
+            stats['avg_rating'] = 0
         
         log(f"✅ KV 통계 조회 완료: 총 {stats['total_analyses']}건", "ANALYTICS")
         
