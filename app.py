@@ -718,6 +718,40 @@ def privacy():
     """개인정보처리방침 페이지"""
     return render_template('privacy.html')
 
+@app.route('/analytics')
+def analytics():
+    """Analytics 대시보드 페이지"""
+    try:
+        stats = get_analytics_stats()
+        return render_template('analytics.html', stats=stats)
+    except Exception as e:
+        log(f"⚠️ Analytics 페이지 로드 실패: {e}", "ERROR")
+        # 에러 발생 시 빈 stats로 렌더링
+        empty_stats = {
+            'total_analyses': 0,
+            'success_analyses': 0,
+            'failed_analyses': 0,
+            'total_page_views': 0,
+            'total_comment_copies': 0,
+            'total_blog_visits': 0,
+            'today_page_views': 0,
+            'today_analyses': 0,
+            'today_comment_copies': 0,
+            'today_blog_visits': 0,
+            'week_page_views': 0,
+            'week_comment_copies': 0,
+            'week_blog_visits': 0,
+            'conversion_to_copy': 0,
+            'conversion_to_visit': 0,
+            'conversion_to_action': 0,
+            'hourly_stats': {},
+            'daily_page_views': {},
+            'daily_comment_copies': {},
+            'daily_blog_visits': {},
+            'platform_stats': {'naver': 0}
+        }
+        return render_template('analytics.html', stats=empty_stats)
+
 @app.route('/api/analyze', methods=['POST'])
 def analyze_blog():
     """블로그 분석 및 댓글 추천 API"""
