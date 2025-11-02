@@ -240,13 +240,20 @@
         /* Charts Container */
         .charts-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
             gap: 25px;
             margin-bottom: 40px;
         }
 
         .chart-card {
-            min-height: 400px;
+            min-height: 420px;
+            position: relative;
+        }
+        
+        .chart-canvas-wrapper {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
         }
 
         .chart-header {
@@ -458,6 +465,30 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+        
+        .badge.success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        
+        .badge.warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .charts-row {
@@ -467,6 +498,10 @@
 
         @media (max-width: 768px) {
             .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-row {
                 grid-template-columns: 1fr;
             }
 
@@ -480,6 +515,33 @@
 
             .glass-card {
                 padding: 20px;
+            }
+            
+            .chart-card {
+                min-height: 350px;
+            }
+            
+            .chart-canvas-wrapper {
+                height: 250px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .glass-card {
+                padding: 15px;
+            }
+            
+            .funnel-step {
+                flex-direction: column;
+                text-align: center;
             }
         }
     </style>
@@ -613,8 +675,11 @@
                         <h2 class="chart-title">⏰ 시간대별 활동</h2>
                         <p class="chart-subtitle">오늘의 사용 패턴</p>
                     </div>
+                    <span class="badge">실시간</span>
                 </div>
-                <canvas id="hourlyChart"></canvas>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="hourlyChart"></canvas>
+                </div>
             </div>
 
             <!-- Conversion Funnel -->
@@ -624,6 +689,7 @@
                         <h2 class="chart-title">🎯 전환율 퍼널</h2>
                         <p class="chart-subtitle">사용자 여정 분석</p>
                     </div>
+                    <span class="badge success">{{ stats.success_rate|round|int }}%</span>
                 </div>
                 <div class="funnel-container">
                     <div class="funnel-step">
@@ -669,8 +735,11 @@
                     <h2 class="chart-title">📅 일별 추이</h2>
                     <p class="chart-subtitle">최근 30일간 활동</p>
                 </div>
+                <span class="badge">30일</span>
             </div>
-            <canvas id="dailyChart"></canvas>
+            <div class="chart-canvas-wrapper">
+                <canvas id="dailyChart"></canvas>
+            </div>
         </div>
 
         <!-- Platform Stats & Activity Log -->
@@ -683,8 +752,11 @@
                         <h2 class="chart-title">🔥 플랫폼 분포</h2>
                         <p class="chart-subtitle">블로그 플랫폼별 사용</p>
                     </div>
+                    <span class="badge warning">네이버</span>
                 </div>
-                <canvas id="platformChart"></canvas>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="platformChart"></canvas>
+                </div>
             </div>
             {% endif %}
 
@@ -695,6 +767,7 @@
                         <h2 class="chart-title">📋 최근 활동</h2>
                         <p class="chart-subtitle">실시간 로그</p>
                     </div>
+                    <span class="badge">최근 20건</span>
                 </div>
                 <div class="activity-log">
                     {% if stats.recent_logs %}
@@ -760,25 +833,59 @@
                     datasets: [{
                         label: '분석 횟수',
                         data: counts,
-                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
-                        borderColor: 'rgba(102, 126, 234, 1)',
+                        backgroundColor: counts.map(c => 
+                            c > 0 ? 'rgba(102, 126, 234, 0.8)' : 'rgba(102, 126, 234, 0.2)'
+                        ),
+                        borderColor: counts.map(c => 
+                            c > 0 ? 'rgba(102, 126, 234, 1)' : 'rgba(102, 126, 234, 0.4)'
+                        ),
                         borderWidth: 2,
-                        borderRadius: 8,
+                        borderRadius: 10,
+                        hoverBackgroundColor: 'rgba(102, 126, 234, 1)',
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeInOutQuart'
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#94a3b8',
+                            borderColor: 'rgba(102, 126, 234, 0.5)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                title: (items) => items[0].label,
+                                label: (item) => `${item.raw}회 분석`
+                            }
+                        }
                     },
                     scales: {
                         y: { 
                             beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                            grid: { 
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                color: '#94a3b8'
+                            }
                         },
                         x: { 
-                            grid: { display: false }
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
                         }
                     }
                 }
@@ -804,28 +911,73 @@
                         label: '일별 분석',
                         data: values,
                         borderColor: 'rgba(102, 126, 234, 1)',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        backgroundColor: (context) => {
+                            const ctx = context.chart.ctx;
+                            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.3)');
+                            gradient.addColorStop(1, 'rgba(102, 126, 234, 0)');
+                            return gradient;
+                        },
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
                         pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#667eea',
+                        pointHoverBorderWidth: 3,
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutQuart'
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#94a3b8',
+                            borderColor: 'rgba(102, 126, 234, 0.5)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: (item) => `${item.raw}회 분석`
+                            }
+                        }
                     },
                     scales: {
                         y: { 
                             beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                            grid: { 
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                color: '#94a3b8'
+                            }
                         },
                         x: { 
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                            grid: { 
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: { 
+                                color: '#94a3b8',
+                                maxTicksLimit: 15
+                            }
                         }
                     }
                 }
@@ -845,23 +997,53 @@
                     datasets: [{
                         data: Object.values(platforms),
                         backgroundColor: [
-                            'rgba(102, 126, 234, 0.8)',
-                            'rgba(236, 72, 153, 0.8)',
-                            'rgba(245, 158, 11, 0.8)',
-                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(102, 126, 234, 0.9)',
+                            'rgba(236, 72, 153, 0.9)',
+                            'rgba(245, 158, 11, 0.9)',
+                            'rgba(16, 185, 129, 0.9)',
                         ],
-                        borderWidth: 0,
+                        borderWidth: 3,
+                        borderColor: 'rgba(15, 23, 42, 0.5)',
+                        hoverBorderColor: '#fff',
+                        hoverBorderWidth: 4,
+                        hoverOffset: 15,
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeInOutQuart'
+                    },
                     plugins: {
                         legend: {
                             position: 'bottom',
                             labels: {
                                 padding: 20,
-                                font: { size: 14 }
+                                font: { 
+                                    size: 14,
+                                    family: 'Inter'
+                                },
+                                color: '#94a3b8',
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#94a3b8',
+                            borderColor: 'rgba(102, 126, 234, 0.5)',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: (item) => {
+                                    const value = item.raw;
+                                    const total = item.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${item.label}: ${value}회 (${percentage}%)`;
+                                }
                             }
                         }
                     }
