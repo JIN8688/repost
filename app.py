@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
+from functools import wraps
 import requests
 from bs4 import BeautifulSoup
 import os
@@ -68,6 +69,15 @@ def log_analytics(action, data=None, success=True, error_message=None):
                 redis_client.incr(key_hourly)
                 redis_client.expire(key_hourly, 86400)  # 24시간
                 
+                # 5. 브라우저/디바이스/OS 통계 (page_view 이벤트에서만)
+                if action == 'page_view' and data:
+                    if 'browser' in data:
+                        redis_client.incr(f"analytics:browser:{data['browser']}")
+                    if 'deviceType' in data:
+                        redis_client.incr(f"analytics:device:{data['deviceType']}")
+                    if 'os' in data:
+                        redis_client.incr(f"analytics:os:{data['os']}")
+                
                 log(f"✅ KV 저장 완료: {action}", "ANALYTICS")
                 
             except Exception as kv_error:
@@ -88,6 +98,27 @@ else:
 
 app = Flask(__name__)
 CORS(app)
+
+# 🔐 세션 보안 설정
+app.secret_key = os.environ.get('SECRET_KEY', 'repost-admin-secret-key-change-this-in-production')
+# HTTPS 환경에서만 Secure Cookie 사용 (로컬 테스트 시 http 허용)
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
+
+# 🔐 관리자 계정 설정 (환경변수에서 가져오기)
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'repost2025!')
+
+# 🔐 로그인 필수 데코레이터
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_logged_in' not in session:
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # 📊 Redis (Vercel KV) 클라이언트 초기화
 redis_client = None
@@ -956,6 +987,36 @@ def get_analytics_stats(days=30):
         # 14. 플랫폼 (네이버만 사용 중)
         stats['top_blog_domains']['네이버 블로그'] = stats['total_analyses']
         
+        # 15. 브라우저 분포
+        stats['browser_stats'] = {}
+        for browser in ['Chrome', 'Safari', 'Edge', 'Firefox', 'Other']:
+            try:
+                val = redis_client.get(f"analytics:browser:{browser}")
+                count = int(val) if val else 0
+                if count > 0:
+                    stats['browser_stats'][browser] = count
+            except: pass
+        
+        # 16. 디바이스 분포
+        stats['device_stats'] = {}
+        for device in ['Desktop', 'Mobile', 'Tablet']:
+            try:
+                val = redis_client.get(f"analytics:device:{device}")
+                count = int(val) if val else 0
+                if count > 0:
+                    stats['device_stats'][device] = count
+            except: pass
+        
+        # 17. OS 분포
+        stats['os_stats'] = {}
+        for os in ['Windows', 'macOS', 'iOS', 'Android', 'Linux', 'Other']:
+            try:
+                val = redis_client.get(f"analytics:os:{os}")
+                count = int(val) if val else 0
+                if count > 0:
+                    stats['os_stats'][os] = count
+            except: pass
+        
         log(f"✅ KV 통계 조회 완료: 총 {stats['total_analyses']}건", "ANALYTICS")
         
     except Exception as e:
@@ -975,7 +1036,13 @@ def track_event():
         
         # 이벤트별 로깅
         if event_type == 'page_view':
-            log_analytics('page_view', success=True)
+            # 브라우저/디바이스 정보 포함
+            device_data = {
+                'browser': data.get('browser', 'Other'),
+                'deviceType': data.get('deviceType', 'Desktop'),
+                'os': data.get('os', 'Other')
+            }
+            log_analytics('page_view', data=device_data, success=True)
         elif event_type == 'comment_copied':
             log_analytics('comment_copied', data={'comment': data.get('comment', '')[:50]}, success=True)
         elif event_type == 'blog_visit':
@@ -989,9 +1056,47 @@ def track_event():
         log(f"⚠️ Track event failed: {e}", "ERROR")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/admin/analytics')
-def admin_analytics():
-    """📊 Analytics 대시보드"""
+# ============================
+# 🔐 관리자 로그인/로그아웃
+# ============================
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    """관리자 로그인 페이지"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['admin_logged_in'] = True
+            session.permanent = True
+            log(f"✅ 관리자 로그인 성공: {username}", "ADMIN")
+            return redirect(url_for('admin_dashboard'))
+        else:
+            log(f"⚠️ 로그인 실패 시도: {username}", "WARNING")
+            return render_template('login.html', error='아이디 또는 비밀번호가 잘못되었습니다.')
+    
+    # 이미 로그인된 경우 대시보드로
+    if 'admin_logged_in' in session:
+        return redirect(url_for('admin_dashboard'))
+    
+    return render_template('login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    """관리자 로그아웃"""
+    session.pop('admin_logged_in', None)
+    log("👋 관리자 로그아웃", "ADMIN")
+    return redirect(url_for('admin_login'))
+
+# ============================
+# 📊 관리자 대시보드
+# ============================
+
+@app.route('/admin')
+@login_required
+def admin_dashboard():
+    """📊 Analytics 대시보드 (로그인 필수)"""
     try:
         # 통계 계산
         stats = get_analytics_stats(days=30)  # 최근 30일
@@ -999,6 +1104,7 @@ def admin_analytics():
         return render_template('analytics.html', stats=stats)
     
     except Exception as e:
+        log(f"⚠️ 대시보드 로드 실패: {e}", "ERROR")
         return f"오류: {str(e)}", 500
 
 if __name__ == '__main__':

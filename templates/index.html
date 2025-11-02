@@ -1879,9 +1879,38 @@
             }
         }
 
-        // 📊 페이지 로드 시 방문자 추적
+        // 📱 브라우저 & 디바이스 감지
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            
+            // 디바이스 타입 감지
+            let deviceType = 'Desktop';
+            if (/mobile/i.test(ua)) deviceType = 'Mobile';
+            else if (/tablet|ipad/i.test(ua)) deviceType = 'Tablet';
+            
+            // 브라우저 감지
+            let browser = 'Other';
+            if (/edg/i.test(ua)) browser = 'Edge';
+            else if (/chrome/i.test(ua) && !/edg/i.test(ua)) browser = 'Chrome';
+            else if (/safari/i.test(ua) && !/chrome/i.test(ua)) browser = 'Safari';
+            else if (/firefox/i.test(ua)) browser = 'Firefox';
+            else if (/msie|trident/i.test(ua)) browser = 'IE';
+            
+            // OS 감지
+            let os = 'Other';
+            if (/windows/i.test(ua)) os = 'Windows';
+            else if (/macintosh|mac os x/i.test(ua)) os = 'macOS';
+            else if (/linux/i.test(ua)) os = 'Linux';
+            else if (/android/i.test(ua)) os = 'Android';
+            else if (/iphone|ipad|ipod/i.test(ua)) os = 'iOS';
+            
+            return { deviceType, browser, os };
+        }
+
+        // 📊 페이지 로드 시 방문자 추적 (브라우저/디바이스 정보 포함)
         window.addEventListener('load', () => {
-            trackEvent('page_view');
+            const deviceInfo = getDeviceInfo();
+            trackEvent('page_view', deviceInfo);
         });
 
         // 💬 Quick 피드백 시스템
