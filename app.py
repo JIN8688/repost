@@ -11,11 +11,19 @@ from openai import OpenAI
 from urllib.parse import urlparse, parse_qs
 import redis
 from collections import Counter
+import pytz
+
+# 🇰🇷 한국 시간대 설정
+KST = pytz.timezone('Asia/Seoul')
+
+def get_kst_now():
+    """한국 시간(KST) 현재 시각 반환"""
+    return datetime.now(KST)
 
 # Vercel Serverless 환경에서도 로그가 보이도록 설정
 def log(message, level="INFO"):
     """Vercel에서도 보이는 로그 출력"""
-    timestamp = __import__('datetime').datetime.now().strftime('%H:%M:%S')
+    timestamp = get_kst_now().strftime('%H:%M:%S')
     formatted_message = f"[{timestamp}] {level}: {message}"
     print(formatted_message, flush=True)
     sys.stdout.flush()
@@ -39,8 +47,9 @@ def log_analytics(action, data=None, success=True, error_message=None):
         # Vercel KV에 저장 (Redis 프로토콜)
         if redis_client:
             try:
-                today = datetime.now().strftime('%Y-%m-%d')
-                hour = datetime.now().strftime('%H')
+                now_kst = get_kst_now()
+                today = now_kst.strftime('%Y-%m-%d')
+                hour = now_kst.strftime('%H')
                 status = 'success' if success else 'failed'
                 
                 # 1. 전체 카운트 증가
@@ -794,7 +803,20 @@ def get_analytics_stats(days=30):
             'visits_to_blog': 0
         },
         'success_rate': 0,
-        'avg_comments_count': 8.0
+        'avg_comments_count': 8.0,
+        # 새로운 통계
+        'total_page_views': 0,
+        'total_comment_copies': 0,
+        'total_blog_visits': 0,
+        'today_page_views': 0,
+        'today_comment_copies': 0,
+        'today_blog_visits': 0,
+        'week_page_views': 0,
+        'week_comment_copies': 0,
+        'week_blog_visits': 0,
+        'daily_page_views': {},
+        'daily_comment_copies': {},
+        'daily_blog_visits': {}
     }
     
     # Vercel KV가 없으면 빈 stats 반환
@@ -803,7 +825,7 @@ def get_analytics_stats(days=30):
         return stats
     
     try:
-        today = datetime.now()
+        today = get_kst_now()
         today_str = today.strftime('%Y-%m-%d')
         yesterday_str = (today - timedelta(days=1)).strftime('%Y-%m-%d')
         
@@ -860,15 +882,78 @@ def get_analytics_stats(days=30):
                 stats['month_analyses'] += count
             except: pass
         
-        # 7. 전환율 계산
-        stats['conversion_funnel']['analyses'] = stats['success_analyses']
-        stats['conversion_funnel']['visits'] = stats['month_analyses']
+        # 7. 페이지 뷰 통계
+        try:
+            val = redis_client.get("analytics:total:page_view")
+            stats['total_page_views'] = int(val) if val else 0
+        except: pass
         
-        # 8. 성공률 계산
+        try:
+            val = redis_client.get(f"analytics:daily:{today_str}:page_view")
+            stats['today_page_views'] = int(val) if val else 0
+        except: pass
+        
+        # 8. 댓글 복사 통계
+        try:
+            val = redis_client.get("analytics:total:comment_copied")
+            stats['total_comment_copies'] = int(val) if val else 0
+        except: pass
+        
+        try:
+            val = redis_client.get(f"analytics:daily:{today_str}:comment_copied")
+            stats['today_comment_copies'] = int(val) if val else 0
+        except: pass
+        
+        # 9. 블로그 이동 통계
+        try:
+            val = redis_client.get("analytics:total:blog_visit")
+            stats['total_blog_visits'] = int(val) if val else 0
+        except: pass
+        
+        try:
+            val = redis_client.get(f"analytics:daily:{today_str}:blog_visit")
+            stats['today_blog_visits'] = int(val) if val else 0
+        except: pass
+        
+        # 10. 주간 통계 (page_view, comment_copied, blog_visit)
+        for i in range(7):
+            date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
+            try:
+                val = redis_client.get(f"analytics:daily:{date}:page_view")
+                stats['week_page_views'] += int(val) if val else 0
+                
+                val = redis_client.get(f"analytics:daily:{date}:comment_copied")
+                stats['week_comment_copies'] += int(val) if val else 0
+                
+                val = redis_client.get(f"analytics:daily:{date}:blog_visit")
+                stats['week_blog_visits'] += int(val) if val else 0
+            except: pass
+        
+        # 11. 일별 통계 (30일)
+        for i in range(days):
+            date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
+            try:
+                val = redis_client.get(f"analytics:daily:{date}:page_view")
+                stats['daily_page_views'][date] = int(val) if val else 0
+                
+                val = redis_client.get(f"analytics:daily:{date}:comment_copied")
+                stats['daily_comment_copies'][date] = int(val) if val else 0
+                
+                val = redis_client.get(f"analytics:daily:{date}:blog_visit")
+                stats['daily_blog_visits'][date] = int(val) if val else 0
+            except: pass
+        
+        # 12. 전환율 계산
+        stats['conversion_funnel']['visits'] = stats['total_page_views']
+        stats['conversion_funnel']['analyses'] = stats['success_analyses']
+        stats['conversion_funnel']['copies'] = stats['total_comment_copies']
+        stats['conversion_funnel']['visits_to_blog'] = stats['total_blog_visits']
+        
+        # 13. 성공률 계산
         if stats['total_analyses'] > 0:
             stats['success_rate'] = round((stats['success_analyses'] / stats['total_analyses']) * 100, 1)
         
-        # 9. 플랫폼 (네이버만 사용 중)
+        # 14. 플랫폼 (네이버만 사용 중)
         stats['top_blog_domains']['네이버 블로그'] = stats['total_analyses']
         
         log(f"✅ KV 통계 조회 완료: 총 {stats['total_analyses']}건", "ANALYTICS")
@@ -877,6 +962,32 @@ def get_analytics_stats(days=30):
         log(f"⚠️ KV 통계 조회 실패: {e}", "ERROR")
     
     return stats
+
+@app.route('/api/track', methods=['POST'])
+def track_event():
+    """사용자 이벤트 트래킹 API"""
+    try:
+        data = request.json
+        event_type = data.get('event')  # 'page_view', 'comment_copied', 'blog_visit'
+        
+        if not event_type:
+            return jsonify({'error': 'event type required'}), 400
+        
+        # 이벤트별 로깅
+        if event_type == 'page_view':
+            log_analytics('page_view', success=True)
+        elif event_type == 'comment_copied':
+            log_analytics('comment_copied', data={'comment': data.get('comment', '')[:50]}, success=True)
+        elif event_type == 'blog_visit':
+            log_analytics('blog_visit', data={'url': data.get('url', '')[:100]}, success=True)
+        elif event_type == 'quick_feedback':
+            log_analytics('quick_feedback', data={'rating': data.get('rating', 0)}, success=True)
+        
+        return jsonify({'success': True}), 200
+    
+    except Exception as e:
+        log(f"⚠️ Track event failed: {e}", "ERROR")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/admin/analytics')
 def admin_analytics():

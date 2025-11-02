@@ -27,6 +27,11 @@
             padding: 0;
             box-sizing: border-box;
         }
+        
+        html {
+            overflow-x: hidden;
+            width: 100%;
+        }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -35,6 +40,8 @@
             color: var(--text-primary);
             padding: 20px;
             overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
         }
 
         /* Animated Background */
@@ -62,6 +69,8 @@
             max-width: 1600px;
             margin: 0 auto;
             animation: fadeIn 0.6s ease-out;
+            width: 100%;
+            overflow-x: hidden;
         }
 
         @keyframes fadeIn {
@@ -165,9 +174,10 @@
         /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
             gap: 25px;
             margin-bottom: 40px;
+            width: 100%;
         }
 
         .stat-card {
@@ -240,7 +250,7 @@
         /* Charts Container */
         .charts-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr));
             gap: 25px;
             margin-bottom: 40px;
         }
@@ -248,12 +258,21 @@
         .chart-card {
             min-height: 420px;
             position: relative;
+            width: 100%;
+            overflow: hidden;
         }
         
         .chart-canvas-wrapper {
             position: relative;
             height: 300px;
             margin-top: 20px;
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        .chart-canvas-wrapper canvas {
+            max-width: 100%;
+            height: auto !important;
         }
 
         .chart-header {
@@ -261,6 +280,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .chart-title {
@@ -348,82 +369,99 @@
             margin-top: 5px;
         }
 
-        /* Activity Log */
-        .activity-log {
-            max-height: 600px;
-            overflow-y: auto;
+        /* Activity Summary */
+        .activity-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+            gap: 20px;
+            padding: 10px 0;
         }
 
-        .activity-log::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .activity-log::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-        }
-
-        .activity-log::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-        }
-
-        .activity-log::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .log-entry {
-            padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.2s ease;
+        .summary-item {
             display: flex;
+            align-items: center;
             gap: 15px;
-            align-items: start;
-        }
-
-        .log-entry:hover {
+            padding: 20px;
             background: rgba(255, 255, 255, 0.03);
-            padding-left: 25px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
         }
 
-        .log-status {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+        .summary-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .summary-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .summary-icon {
+            font-size: 2.5em;
+            width: 70px;
+            height: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.3em;
+            background: rgba(102, 126, 234, 0.15);
+            border-radius: 16px;
             flex-shrink: 0;
         }
 
-        .log-status.success {
-            background: rgba(16, 185, 129, 0.2);
-        }
-
-        .log-status.error {
-            background: rgba(239, 68, 68, 0.2);
-        }
-
-        .log-content {
+        .summary-info {
             flex: 1;
         }
 
-        .log-time {
-            color: var(--text-secondary);
-            font-size: 0.85em;
-            margin-bottom: 5px;
-        }
-
-        .log-action {
-            color: var(--text-primary);
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .log-details {
+        .summary-label {
             color: var(--text-secondary);
             font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .summary-value {
+            font-size: 2.5em;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .summary-detail {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .summary-footer {
+            grid-column: 1 / -1;
+            padding: 20px;
+            text-align: center;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .summary-footer p {
+            color: var(--text-secondary);
+            font-size: 0.95em;
+            margin: 0;
+        }
+
+        .summary-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .summary-footer a:hover {
+            color: #764ba2;
+            text-decoration: underline;
         }
 
         /* Empty State */
@@ -497,16 +535,42 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 15px;
+                overflow-x: hidden;
+            }
+            
+            .container {
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+            
             .stats-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
             }
             
             .charts-row {
                 grid-template-columns: 1fr;
+                gap: 20px;
             }
 
             .header h1 {
                 font-size: 2em;
+            }
+            
+            .header p {
+                font-size: 0.95em;
+            }
+            
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .header-actions .btn {
+                width: 100%;
+                justify-content: center;
             }
 
             .stat-value {
@@ -515,33 +579,180 @@
 
             .glass-card {
                 padding: 20px;
+                border-radius: 16px;
             }
             
             .chart-card {
-                min-height: 350px;
+                min-height: 320px;
+                overflow: hidden;
             }
             
             .chart-canvas-wrapper {
-                height: 250px;
+                height: 240px;
+            }
+            
+            .chart-title {
+                font-size: 1.2em;
+            }
+            
+            .chart-subtitle {
+                font-size: 0.85em;
+            }
+            
+            .badge {
+                font-size: 0.75em;
+                padding: 4px 12px;
+            }
+            
+            .activity-summary {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .summary-item {
+                padding: 15px;
+            }
+            
+            .summary-icon {
+                font-size: 2em;
+                width: 60px;
+                height: 60px;
+            }
+            
+            .summary-value {
+                font-size: 2em;
             }
         }
         
         @media (max-width: 480px) {
             body {
-                padding: 15px;
+                padding: 10px;
             }
             
             .header h1 {
-                font-size: 1.8em;
+                font-size: 1.6em;
+            }
+            
+            .header p {
+                font-size: 0.9em;
             }
             
             .glass-card {
                 padding: 15px;
+                border-radius: 12px;
+            }
+            
+            .stat-icon {
+                font-size: 2em;
+            }
+            
+            .stat-label {
+                font-size: 0.8em;
+            }
+            
+            .stat-value {
+                font-size: 2em;
+            }
+            
+            .stat-change {
+                font-size: 0.8em;
+            }
+            
+            .chart-card {
+                min-height: 300px;
+            }
+            
+            .chart-canvas-wrapper {
+                height: 220px;
+            }
+            
+            .chart-title {
+                font-size: 1.1em;
+            }
+            
+            .chart-subtitle {
+                font-size: 0.8em;
             }
             
             .funnel-step {
                 flex-direction: column;
                 text-align: center;
+                padding: 15px;
+                gap: 10px;
+            }
+            
+            .funnel-icon {
+                font-size: 1.5em;
+                width: 50px;
+                height: 50px;
+            }
+            
+            .funnel-label {
+                font-size: 1em;
+            }
+            
+            .funnel-count {
+                font-size: 1.5em;
+            }
+            
+            .funnel-rate {
+                font-size: 0.85em;
+            }
+            
+            .summary-item {
+                flex-direction: column;
+                text-align: center;
+                padding: 15px;
+            }
+            
+            .summary-icon {
+                font-size: 1.8em;
+                width: 50px;
+                height: 50px;
+            }
+            
+            .summary-value {
+                font-size: 1.8em;
+            }
+            
+            .summary-label {
+                font-size: 0.85em;
+            }
+            
+            .summary-detail {
+                font-size: 0.85em;
+            }
+            
+            .summary-footer p {
+                font-size: 0.85em;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            body {
+                padding: 8px;
+            }
+            
+            .header h1 {
+                font-size: 1.4em;
+            }
+            
+            .stat-value {
+                font-size: 1.8em;
+            }
+            
+            .chart-canvas-wrapper {
+                height: 200px;
+            }
+            
+            .summary-value {
+                font-size: 1.6em;
+            }
+            
+            .summary-icon {
+                font-size: 1.5em;
+                width: 45px;
+                height: 45px;
             }
         }
     </style>
@@ -712,16 +923,16 @@
                         <div class="funnel-icon">📋</div>
                         <div class="funnel-info">
                             <div class="funnel-label">댓글 복사</div>
-                            <div class="funnel-count">-</div>
-                            <div class="funnel-rate">향후 추적 예정</div>
+                            <div class="funnel-count">{{ stats.conversion_funnel.copies }}</div>
+                            <div class="funnel-rate">{{ '%.1f'|format((stats.conversion_funnel.copies / stats.conversion_funnel.analyses * 100) if stats.conversion_funnel.analyses > 0 else 0) }}% 전환</div>
                         </div>
                     </div>
                     <div class="funnel-step">
                         <div class="funnel-icon">🚀</div>
                         <div class="funnel-info">
                             <div class="funnel-label">블로그 이동</div>
-                            <div class="funnel-count">-</div>
-                            <div class="funnel-rate">향후 추적 예정</div>
+                            <div class="funnel-count">{{ stats.conversion_funnel.visits_to_blog }}</div>
+                            <div class="funnel-rate">{{ '%.1f'|format((stats.conversion_funnel.visits_to_blog / stats.conversion_funnel.copies * 100) if stats.conversion_funnel.copies > 0 else 0) }}% 전환</div>
                         </div>
                     </div>
                 </div>
@@ -739,6 +950,37 @@
             </div>
             <div class="chart-canvas-wrapper">
                 <canvas id="dailyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- User Engagement Charts -->
+        <div class="charts-row">
+            <!-- Comment Copies & Blog Visits -->
+            <div class="glass-card chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h2 class="chart-title">💬 댓글 복사 & 블로그 이동</h2>
+                        <p class="chart-subtitle">최근 30일간 사용자 행동</p>
+                    </div>
+                    <span class="badge success">전환율</span>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="engagementChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Visitor Stats -->
+            <div class="glass-card chart-card">
+                <div class="chart-header">
+                    <div>
+                        <h2 class="chart-title">👥 방문자 통계</h2>
+                        <p class="chart-subtitle">일별/주별/월별 페이지뷰</p>
+                    </div>
+                    <span class="badge">{{ stats.total_page_views }}회</span>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="visitorChart"></canvas>
+                </div>
             </div>
         </div>
 
@@ -760,50 +1002,97 @@
             </div>
             {% endif %}
 
-            <!-- Recent Activity Log -->
+            <!-- Today's Activity Summary -->
             <div class="glass-card chart-card">
                 <div class="chart-header">
                     <div>
-                        <h2 class="chart-title">📋 최근 활동</h2>
-                        <p class="chart-subtitle">실시간 로그</p>
+                        <h2 class="chart-title">📋 오늘의 활동</h2>
+                        <p class="chart-subtitle">실시간 통계 요약</p>
                     </div>
-                    <span class="badge">최근 20건</span>
+                    <span class="badge success">Today</span>
                 </div>
-                <div class="activity-log">
-                    {% if stats.recent_logs %}
-                        {% for log in stats.recent_logs[:20] %}
-                        <div class="log-entry">
-                            <div class="log-status {{ 'success' if log.success else 'error' }}">
-                                {{ '✅' if log.success else '❌' }}
-                            </div>
-                            <div class="log-content">
-                                <div class="log-time">{{ log.timestamp }}</div>
-                                <div class="log-action">
-                                    {{ '분석 성공' if log.success else '분석 실패' }}
-                                </div>
-                                {% if log.data %}
-                                <div class="log-details">
-                                    {% if log.data.title %}
-                                    📝 {{ log.data.title[:50] }}...
-                                    {% endif %}
-                                    {% if log.data.comments_count %}
-                                    💬 {{ log.data.comments_count }}개 댓글 생성
-                                    {% endif %}
-                                </div>
+                <div class="activity-summary">
+                    <div class="summary-item">
+                        <div class="summary-icon">👥</div>
+                        <div class="summary-info">
+                            <div class="summary-label">페이지 방문</div>
+                            <div class="summary-value">{{ stats.today_page_views }}</div>
+                            <div class="summary-detail">총 {{ stats.total_page_views }}회</div>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <div class="summary-icon">🔍</div>
+                        <div class="summary-info">
+                            <div class="summary-label">블로그 분석</div>
+                            <div class="summary-value">{{ stats.today_analyses }}</div>
+                            <div class="summary-detail">
+                                {% if stats.success_analyses > 0 %}
+                                ✅ {{ stats.success_analyses }}건 성공
+                                {% if stats.failed_analyses > 0 %}
+                                / ❌ {{ stats.failed_analyses }}건 실패
                                 {% endif %}
-                                {% if log.error %}
-                                <div class="log-details" style="color: var(--error);">
-                                    ⚠️ {{ log.error[:100] }}
-                                </div>
+                                {% else %}
+                                아직 분석 없음
                                 {% endif %}
                             </div>
                         </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="empty-state">
-                            <p>활동 로그가 없습니다.</p>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <div class="summary-icon">💬</div>
+                        <div class="summary-info">
+                            <div class="summary-label">댓글 복사</div>
+                            <div class="summary-value">{{ stats.today_comment_copies }}</div>
+                            <div class="summary-detail">
+                                {% if stats.today_analyses > 0 and stats.today_comment_copies > 0 %}
+                                전환율 {{ '%.1f'|format((stats.today_comment_copies / stats.today_analyses * 100)) }}%
+                                {% else %}
+                                총 {{ stats.total_comment_copies }}회
+                                {% endif %}
+                            </div>
                         </div>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <div class="summary-icon">🚀</div>
+                        <div class="summary-info">
+                            <div class="summary-label">블로그 이동</div>
+                            <div class="summary-value">{{ stats.today_blog_visits }}</div>
+                            <div class="summary-detail">
+                                {% if stats.today_comment_copies > 0 and stats.today_blog_visits > 0 %}
+                                전환율 {{ '%.1f'|format((stats.today_blog_visits / stats.today_comment_copies * 100)) }}%
+                                {% else %}
+                                총 {{ stats.total_blog_visits }}회
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if stats.hourly_stats %}
+                    <div class="summary-item full-width">
+                        <div class="summary-icon">⏰</div>
+                        <div class="summary-info">
+                            <div class="summary-label">가장 활발한 시간대</div>
+                            <div class="summary-value">
+                                {% set max_hour = stats.hourly_stats.keys()|list|first %}
+                                {% set max_count = stats.hourly_stats.values()|list|first %}
+                                {% for hour, count in stats.hourly_stats.items() %}
+                                    {% if count > max_count %}
+                                        {% set max_hour = hour %}
+                                        {% set max_count = count %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ max_hour }}시
+                            </div>
+                            <div class="summary-detail">{{ max_count }}회 활동</div>
+                        </div>
+                    </div>
                     {% endif %}
+                    
+                    <div class="summary-footer">
+                        <p>💡 자세한 활동 로그는 <a href="https://analytics.google.com/analytics/web/#/p469726812/reports/intelligenthome" target="_blank" rel="noopener">GA4 대시보드</a>에서 확인하세요</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1051,6 +1340,196 @@
             });
         }
         {% endif %}
+
+        // 💬 댓글 복사 & 블로그 이동 차트
+        const engagementCtx = document.getElementById('engagementChart');
+        if (engagementCtx) {
+            const dailyCopies = {{ stats.daily_comment_copies|tojson }};
+            const dailyVisits = {{ stats.daily_blog_visits|tojson }};
+            const sortedDates = Object.keys(dailyCopies).sort();
+            const labels = sortedDates.map(d => {
+                const date = new Date(d);
+                return (date.getMonth() + 1) + '/' + date.getDate();
+            });
+            const copiesData = sortedDates.map(d => dailyCopies[d] || 0);
+            const visitsData = sortedDates.map(d => dailyVisits[d] || 0);
+
+            new Chart(engagementCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '댓글 복사',
+                            data: copiesData,
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                        },
+                        {
+                            label: '블로그 이동',
+                            data: visitsData,
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: '#f59e0b',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutQuart'
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                padding: 15,
+                                font: { size: 13, family: 'Inter' },
+                                color: '#94a3b8',
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#94a3b8',
+                            borderColor: 'rgba(102, 126, 234, 0.5)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true,
+                            callbacks: {
+                                label: (item) => `${item.dataset.label}: ${item.raw}회`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { 
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: { 
+                            grid: { 
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: { 
+                                color: '#94a3b8',
+                                maxTicksLimit: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 👥 방문자 통계 차트
+        const visitorCtx = document.getElementById('visitorChart');
+        if (visitorCtx) {
+            const dailyViews = {{ stats.daily_page_views|tojson }};
+            const sortedDates = Object.keys(dailyViews).sort();
+            const labels = sortedDates.map(d => {
+                const date = new Date(d);
+                return (date.getMonth() + 1) + '/' + date.getDate();
+            });
+            const viewsData = sortedDates.map(d => dailyViews[d] || 0);
+
+            new Chart(visitorCtx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '페이지뷰',
+                        data: viewsData,
+                        backgroundColor: viewsData.map(v => 
+                            v > 0 ? 'rgba(139, 92, 246, 0.8)' : 'rgba(139, 92, 246, 0.2)'
+                        ),
+                        borderColor: viewsData.map(v => 
+                            v > 0 ? 'rgba(139, 92, 246, 1)' : 'rgba(139, 92, 246, 0.4)'
+                        ),
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        hoverBackgroundColor: 'rgba(139, 92, 246, 1)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeInOutQuart'
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#94a3b8',
+                            borderColor: 'rgba(139, 92, 246, 0.5)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: (item) => `${item.raw}회 방문`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { 
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { 
+                                color: '#94a3b8',
+                                maxTicksLimit: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         {% endif %}
 
