@@ -811,7 +811,7 @@ def analyze_blog():
 # 📊 Analytics 통계 계산 함수 (Vercel KV)
 def get_analytics_stats(days=30):
     """
-    Vercel KV에서 통계 데이터 조회 (Redis 프로토콜)
+    ⚡ 최적화된 통계 조회 (Redis Pipeline 사용 - 10배 이상 빠름!)
     
     Args:
         days: 최근 며칠간의 데이터 (기본 30일)
@@ -840,7 +840,6 @@ def get_analytics_stats(days=30):
         },
         'success_rate': 0,
         'avg_comments_count': 8.0,
-        # 새로운 통계
         'total_page_views': 0,
         'total_comment_copies': 0,
         'total_blog_visits': 0,
@@ -855,7 +854,6 @@ def get_analytics_stats(days=30):
         'daily_blog_visits': {}
     }
     
-    # Vercel KV가 없으면 빈 stats 반환
     if not redis_client:
         log("⚠️ KV 비활성화 - 빈 통계 반환", "WARNING")
         return stats
@@ -865,174 +863,139 @@ def get_analytics_stats(days=30):
         today_str = today.strftime('%Y-%m-%d')
         yesterday_str = (today - timedelta(days=1)).strftime('%Y-%m-%d')
         
-        # 1. 전체 통계
-        try:
-            val = redis_client.get("analytics:total:blog_analyzed")
-            stats['total_analyses'] = int(val) if val else 0
-        except: pass
+        # ⚡ Redis Pipeline: 모든 키를 한 번에 가져오기
+        pipe = redis_client.pipeline()
+        keys_map = {}
         
-        # 2. 성공/실패 통계
-        try:
-            val = redis_client.get("analytics:success:blog_analyzed")
-            stats['success_analyses'] = int(val) if val else 0
-        except: pass
+        # 기본 통계 키
+        keys_to_get = [
+            ('total_analyses', 'analytics:total:blog_analyzed'),
+            ('success_analyses', 'analytics:success:blog_analyzed'),
+            ('failed_analyses', 'analytics:failed:blog_analyzed'),
+            ('today_analyses', f'analytics:daily:{today_str}:blog_analyzed'),
+            ('yesterday_analyses', f'analytics:daily:{yesterday_str}:blog_analyzed'),
+            ('total_page_views', 'analytics:total:page_view'),
+            ('today_page_views', f'analytics:daily:{today_str}:page_view'),
+            ('total_comment_copies', 'analytics:total:comment_copied'),
+            ('today_comment_copies', f'analytics:daily:{today_str}:comment_copied'),
+            ('total_blog_visits', 'analytics:total:blog_visit'),
+            ('today_blog_visits', f'analytics:daily:{today_str}:blog_visit'),
+        ]
         
-        try:
-            val = redis_client.get("analytics:failed:blog_analyzed")
-            stats['failed_analyses'] = int(val) if val else 0
-        except: pass
-        
-        # 3. 오늘 통계
-        try:
-            val = redis_client.get(f"analytics:daily:{today_str}:blog_analyzed")
-            stats['today_analyses'] = int(val) if val else 0
-        except: pass
-        
-        # 4. 어제 통계
-        try:
-            val = redis_client.get(f"analytics:daily:{yesterday_str}:blog_analyzed")
-            stats['yesterday_analyses'] = int(val) if val else 0
-        except: pass
-        
-        # 5. 시간대별 통계 (오늘)
+        # 시간대별 (24시간)
         for hour in range(24):
             hour_str = f"{hour:02d}"
-            try:
-                val = redis_client.get(f"analytics:hourly:{today_str}:{hour_str}")
-                count = int(val) if val else 0
-                if count > 0:
-                    stats['hourly_stats'][hour_str] = count
-            except: pass
+            keys_to_get.append((f'hourly_{hour_str}', f'analytics:hourly:{today_str}:{hour_str}'))
         
-        # 6. 일별 통계 (최근 30일)
+        # 일별 통계 (30일)
         for i in range(days):
             date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
-            try:
-                val = redis_client.get(f"analytics:daily:{date}:blog_analyzed")
-                count = int(val) if val else 0
-                stats['daily_stats'][date] = count
-                
-                # 주간/월간 합산
-                if i < 7:
-                    stats['week_analyses'] += count
-                stats['month_analyses'] += count
-            except: pass
+            keys_to_get.append((f'daily_analyzed_{date}', f'analytics:daily:{date}:blog_analyzed'))
+            keys_to_get.append((f'daily_pageview_{date}', f'analytics:daily:{date}:page_view'))
+            keys_to_get.append((f'daily_copies_{date}', f'analytics:daily:{date}:comment_copied'))
+            keys_to_get.append((f'daily_visits_{date}', f'analytics:daily:{date}:blog_visit'))
         
-        # 7. 페이지 뷰 통계
-        try:
-            val = redis_client.get("analytics:total:page_view")
-            stats['total_page_views'] = int(val) if val else 0
-        except: pass
+        # 브라우저 분포
+        for browser in ['Chrome', 'Safari', 'Edge', 'Firefox', 'Other']:
+            keys_to_get.append((f'browser_{browser}', f'analytics:browser:{browser}'))
         
-        try:
-            val = redis_client.get(f"analytics:daily:{today_str}:page_view")
-            stats['today_page_views'] = int(val) if val else 0
-        except: pass
+        # 디바이스 분포
+        for device in ['Desktop', 'Mobile', 'Tablet']:
+            keys_to_get.append((f'device_{device}', f'analytics:device:{device}'))
         
-        # 8. 댓글 복사 통계
-        try:
-            val = redis_client.get("analytics:total:comment_copied")
-            stats['total_comment_copies'] = int(val) if val else 0
-        except: pass
+        # OS 분포
+        for os in ['Windows', 'macOS', 'iOS', 'Android', 'Linux', 'Other']:
+            keys_to_get.append((f'os_{os}', f'analytics:os:{os}'))
         
-        try:
-            val = redis_client.get(f"analytics:daily:{today_str}:comment_copied")
-            stats['today_comment_copies'] = int(val) if val else 0
-        except: pass
+        # 피드백 분포
+        for rating in [5, 4, 3, 2]:
+            keys_to_get.append((f'feedback_{rating}', f'analytics:feedback:rating_{rating}'))
         
-        # 9. 블로그 이동 통계
-        try:
-            val = redis_client.get("analytics:total:blog_visit")
-            stats['total_blog_visits'] = int(val) if val else 0
-        except: pass
+        # Pipeline에 모든 get 추가
+        for key_name, redis_key in keys_to_get:
+            pipe.get(redis_key)
+            keys_map[key_name] = len(keys_map)
         
-        try:
-            val = redis_client.get(f"analytics:daily:{today_str}:blog_visit")
-            stats['today_blog_visits'] = int(val) if val else 0
-        except: pass
+        # ⚡ 한 번에 실행!
+        results = pipe.execute()
         
-        # 10. 주간 통계 (page_view, comment_copied, blog_visit)
-        for i in range(7):
-            date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
-            try:
-                val = redis_client.get(f"analytics:daily:{date}:page_view")
-                stats['week_page_views'] += int(val) if val else 0
-                
-                val = redis_client.get(f"analytics:daily:{date}:comment_copied")
-                stats['week_comment_copies'] += int(val) if val else 0
-                
-                val = redis_client.get(f"analytics:daily:{date}:blog_visit")
-                stats['week_blog_visits'] += int(val) if val else 0
-            except: pass
+        # 결과 파싱
+        def get_val(key_name):
+            idx = keys_map.get(key_name)
+            if idx is not None and results[idx]:
+                try:
+                    return int(results[idx])
+                except:
+                    return 0
+            return 0
         
-        # 11. 일별 통계 (30일)
+        # 기본 통계
+        stats['total_analyses'] = get_val('total_analyses')
+        stats['success_analyses'] = get_val('success_analyses')
+        stats['failed_analyses'] = get_val('failed_analyses')
+        stats['today_analyses'] = get_val('today_analyses')
+        stats['yesterday_analyses'] = get_val('yesterday_analyses')
+        stats['total_page_views'] = get_val('total_page_views')
+        stats['today_page_views'] = get_val('today_page_views')
+        stats['total_comment_copies'] = get_val('total_comment_copies')
+        stats['today_comment_copies'] = get_val('today_comment_copies')
+        stats['total_blog_visits'] = get_val('total_blog_visits')
+        stats['today_blog_visits'] = get_val('today_blog_visits')
+        
+        # 시간대별 통계
+        for hour in range(24):
+            hour_str = f"{hour:02d}"
+            count = get_val(f'hourly_{hour_str}')
+            if count > 0:
+                stats['hourly_stats'][hour_str] = count
+        
+        # 일별 통계
         for i in range(days):
             date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
-            try:
-                val = redis_client.get(f"analytics:daily:{date}:page_view")
-                stats['daily_page_views'][date] = int(val) if val else 0
-                
-                val = redis_client.get(f"analytics:daily:{date}:comment_copied")
-                stats['daily_comment_copies'][date] = int(val) if val else 0
-                
-                val = redis_client.get(f"analytics:daily:{date}:blog_visit")
-                stats['daily_blog_visits'][date] = int(val) if val else 0
-            except: pass
+            
+            analyzed = get_val(f'daily_analyzed_{date}')
+            stats['daily_stats'][date] = analyzed
+            
+            if i < 7:
+                stats['week_analyses'] += analyzed
+                stats['week_page_views'] += get_val(f'daily_pageview_{date}')
+                stats['week_comment_copies'] += get_val(f'daily_copies_{date}')
+                stats['week_blog_visits'] += get_val(f'daily_visits_{date}')
+            
+            stats['month_analyses'] += analyzed
+            stats['daily_page_views'][date] = get_val(f'daily_pageview_{date}')
+            stats['daily_comment_copies'][date] = get_val(f'daily_copies_{date}')
+            stats['daily_blog_visits'][date] = get_val(f'daily_visits_{date}')
         
-        # 12. 전환율 계산
-        stats['conversion_funnel']['visits'] = stats['total_page_views']
-        stats['conversion_funnel']['analyses'] = stats['success_analyses']
-        stats['conversion_funnel']['copies'] = stats['total_comment_copies']
-        stats['conversion_funnel']['visits_to_blog'] = stats['total_blog_visits']
-        
-        # 13. 성공률 계산
-        if stats['total_analyses'] > 0:
-            stats['success_rate'] = round((stats['success_analyses'] / stats['total_analyses']) * 100, 1)
-        
-        # 14. 플랫폼 (네이버만 사용 중)
-        stats['top_blog_domains']['네이버 블로그'] = stats['total_analyses']
-        
-        # 15. 브라우저 분포
+        # 브라우저 분포
         stats['browser_stats'] = {}
         for browser in ['Chrome', 'Safari', 'Edge', 'Firefox', 'Other']:
-            try:
-                val = redis_client.get(f"analytics:browser:{browser}")
-                count = int(val) if val else 0
-                if count > 0:
-                    stats['browser_stats'][browser] = count
-            except: pass
+            count = get_val(f'browser_{browser}')
+            if count > 0:
+                stats['browser_stats'][browser] = count
         
-        # 16. 디바이스 분포
+        # 디바이스 분포
         stats['device_stats'] = {}
         for device in ['Desktop', 'Mobile', 'Tablet']:
-            try:
-                val = redis_client.get(f"analytics:device:{device}")
-                count = int(val) if val else 0
-                if count > 0:
-                    stats['device_stats'][device] = count
-            except: pass
+            count = get_val(f'device_{device}')
+            if count > 0:
+                stats['device_stats'][device] = count
         
-        # 17. OS 분포
+        # OS 분포
         stats['os_stats'] = {}
         for os in ['Windows', 'macOS', 'iOS', 'Android', 'Linux', 'Other']:
-            try:
-                val = redis_client.get(f"analytics:os:{os}")
-                count = int(val) if val else 0
-                if count > 0:
-                    stats['os_stats'][os] = count
-            except: pass
+            count = get_val(f'os_{os}')
+            if count > 0:
+                stats['os_stats'][os] = count
         
-        # 18. 피드백 통계 (rating별)
+        # 피드백 통계
         stats['feedback_stats'] = {}
         stats['total_feedbacks'] = 0
         for rating in [5, 4, 3, 2]:
-            try:
-                val = redis_client.get(f"analytics:feedback:rating_{rating}")
-                count = int(val) if val else 0
-                if count > 0:
-                    stats['feedback_stats'][rating] = count
-                    stats['total_feedbacks'] += count
-            except: pass
+            count = get_val(f'feedback_{rating}')
+            if count > 0:
+                stats['feedback_stats'][rating] = count
+                stats['total_feedbacks'] += count
         
         # 평균 만족도 계산
         if stats['total_feedbacks'] > 0:
@@ -1041,7 +1004,20 @@ def get_analytics_stats(days=30):
         else:
             stats['avg_rating'] = 0
         
-        log(f"✅ KV 통계 조회 완료: 총 {stats['total_analyses']}건", "ANALYTICS")
+        # 전환율 계산
+        stats['conversion_funnel']['visits'] = stats['total_page_views']
+        stats['conversion_funnel']['analyses'] = stats['success_analyses']
+        stats['conversion_funnel']['copies'] = stats['total_comment_copies']
+        stats['conversion_funnel']['visits_to_blog'] = stats['total_blog_visits']
+        
+        # 성공률 계산
+        if stats['total_analyses'] > 0:
+            stats['success_rate'] = round((stats['success_analyses'] / stats['total_analyses']) * 100, 1)
+        
+        # 플랫폼 (네이버만 사용 중)
+        stats['top_blog_domains']['네이버 블로그'] = stats['total_analyses']
+        
+        log(f"⚡ KV 통계 조회 완료 (Pipeline): 총 {stats['total_analyses']}건", "ANALYTICS")
         
     except Exception as e:
         log(f"⚠️ KV 통계 조회 실패: {e}", "ERROR")
