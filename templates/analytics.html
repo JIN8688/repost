@@ -268,11 +268,20 @@
             margin-top: 20px;
             width: 100%;
             max-width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .chart-canvas-wrapper canvas {
             max-width: 100%;
             height: auto !important;
+        }
+        
+        /* 플랫폼 차트 전용 스타일 */
+        .platform-chart-wrapper {
+            height: 380px !important;
+            padding: 20px 0;
         }
 
         .chart-header {
@@ -591,6 +600,10 @@
                 height: 240px;
             }
             
+            .platform-chart-wrapper {
+                height: 340px !important;
+            }
+            
             .chart-title {
                 font-size: 1.2em;
             }
@@ -664,6 +677,10 @@
             
             .chart-canvas-wrapper {
                 height: 220px;
+            }
+            
+            .platform-chart-wrapper {
+                height: 320px !important;
             }
             
             .chart-title {
@@ -743,6 +760,10 @@
             
             .chart-canvas-wrapper {
                 height: 200px;
+            }
+            
+            .platform-chart-wrapper {
+                height: 300px !important;
             }
             
             .summary-value {
@@ -996,7 +1017,7 @@
                     </div>
                     <span class="badge warning">네이버</span>
                 </div>
-                <div class="chart-canvas-wrapper">
+                <div class="chart-canvas-wrapper platform-chart-wrapper">
                     <canvas id="platformChart"></canvas>
                 </div>
             </div>
@@ -1304,6 +1325,14 @@
                     animation: {
                         duration: 1500,
                         easing: 'easeInOutQuart'
+                    },
+                    layout: {
+                        padding: {
+                            top: 30,
+                            bottom: 10,
+                            left: 20,
+                            right: 20
+                        }
                     },
                     plugins: {
                         legend: {
