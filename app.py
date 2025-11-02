@@ -36,34 +36,28 @@ def log_analytics(action, data=None, success=True, error_message=None):
         # 서버 로그 출력
         log(f"📊 Analytics: {action} | success={success}", "ANALYTICS")
         
-        # Vercel KV에 저장
-        if redis_client and redis_client.get('enabled'):
+        # Vercel KV에 저장 (Redis 프로토콜)
+        if redis_client:
             try:
-                timestamp = datetime.now().isoformat()
                 today = datetime.now().strftime('%Y-%m-%d')
-                
-                # REST API로 데이터 저장
-                import requests as req
-                headers = {
-                    'Authorization': f"Bearer {redis_client['token']}",
-                    'Content-Type': 'application/json'
-                }
+                hour = datetime.now().strftime('%H')
+                status = 'success' if success else 'failed'
                 
                 # 1. 전체 카운트 증가
-                req.post(f"{redis_client['url']}/incr/analytics:total:{action}", headers=headers)
+                redis_client.incr(f"analytics:total:{action}")
                 
                 # 2. 오늘 카운트 증가
-                req.post(f"{redis_client['url']}/incr/analytics:daily:{today}:{action}", headers=headers)
-                req.post(f"{redis_client['url']}/expire/analytics:daily:{today}:{action}/2592000", headers=headers)  # 30일
+                key_daily = f"analytics:daily:{today}:{action}"
+                redis_client.incr(key_daily)
+                redis_client.expire(key_daily, 2592000)  # 30일
                 
                 # 3. 성공/실패 카운트
-                status = 'success' if success else 'failed'
-                req.post(f"{redis_client['url']}/incr/analytics:{status}:{action}", headers=headers)
+                redis_client.incr(f"analytics:{status}:{action}")
                 
                 # 4. 시간대별 카운트 (오늘만)
-                hour = datetime.now().strftime('%H')
-                req.post(f"{redis_client['url']}/incr/analytics:hourly:{today}:{hour}", headers=headers)
-                req.post(f"{redis_client['url']}/expire/analytics:hourly:{today}:{hour}/86400", headers=headers)  # 24시간
+                key_hourly = f"analytics:hourly:{today}:{hour}"
+                redis_client.incr(key_hourly)
+                redis_client.expire(key_hourly, 86400)  # 24시간
                 
                 log(f"✅ KV 저장 완료: {action}", "ANALYTICS")
                 
@@ -89,23 +83,25 @@ CORS(app)
 # 📊 Redis (Vercel KV) 클라이언트 초기화
 redis_client = None
 try:
-    kv_url = os.environ.get('KV_REST_API_URL')
-    kv_token = os.environ.get('KV_REST_API_TOKEN')
+    redis_url = os.environ.get('KV_REDIS_URL') or os.environ.get('REDIS_URL')
     
-    if kv_url and kv_token:
-        # Vercel KV REST API 설정
-        redis_client = {
-            'url': kv_url,
-            'token': kv_token,
-            'enabled': True
-        }
-        log("✅ Vercel KV 연결 준비 완료!")
+    if redis_url:
+        # Redis 프로토콜 연결
+        redis_client = redis.from_url(
+            redis_url,
+            decode_responses=True,  # 문자열로 자동 디코딩
+            socket_connect_timeout=5,
+            socket_timeout=5
+        )
+        # 연결 테스트
+        redis_client.ping()
+        log("✅ Vercel KV (Redis) 연결 성공!")
     else:
         log("⚠️ KV 환경변수 없음 - GA4만 사용")
-        redis_client = {'enabled': False}
+        redis_client = None
 except Exception as e:
     log(f"⚠️ KV 연결 실패: {e} - GA4만 사용")
-    redis_client = {'enabled': False}
+    redis_client = None
 
 # OpenAI 클라이언트 초기화
 api_key = os.environ.get('OPENAI_API_KEY')
@@ -770,7 +766,7 @@ def analyze_blog():
 # 📊 Analytics 통계 계산 함수 (Vercel KV)
 def get_analytics_stats(days=30):
     """
-    Vercel KV에서 통계 데이터 조회
+    Vercel KV에서 통계 데이터 조회 (Redis 프로토콜)
     
     Args:
         days: 최근 며칠간의 데이터 (기본 30일)
@@ -802,80 +798,66 @@ def get_analytics_stats(days=30):
     }
     
     # Vercel KV가 없으면 빈 stats 반환
-    if not redis_client or not redis_client.get('enabled'):
+    if not redis_client:
         log("⚠️ KV 비활성화 - 빈 통계 반환", "WARNING")
         return stats
     
     try:
-        import requests as req
-        headers = {
-            'Authorization': f"Bearer {redis_client['token']}",
-            'Content-Type': 'application/json'
-        }
-        base_url = redis_client['url']
-        
         today = datetime.now()
         today_str = today.strftime('%Y-%m-%d')
         yesterday_str = (today - timedelta(days=1)).strftime('%Y-%m-%d')
         
         # 1. 전체 통계
         try:
-            resp = req.get(f"{base_url}/get/analytics:total:blog_analyzed", headers=headers)
-            if resp.status_code == 200:
-                stats['total_analyses'] = int(resp.json().get('result', 0) or 0)
+            val = redis_client.get("analytics:total:blog_analyzed")
+            stats['total_analyses'] = int(val) if val else 0
         except: pass
         
         # 2. 성공/실패 통계
         try:
-            resp = req.get(f"{base_url}/get/analytics:success:blog_analyzed", headers=headers)
-            if resp.status_code == 200:
-                stats['success_analyses'] = int(resp.json().get('result', 0) or 0)
+            val = redis_client.get("analytics:success:blog_analyzed")
+            stats['success_analyses'] = int(val) if val else 0
         except: pass
         
         try:
-            resp = req.get(f"{base_url}/get/analytics:failed:blog_analyzed", headers=headers)
-            if resp.status_code == 200:
-                stats['failed_analyses'] = int(resp.json().get('result', 0) or 0)
+            val = redis_client.get("analytics:failed:blog_analyzed")
+            stats['failed_analyses'] = int(val) if val else 0
         except: pass
         
         # 3. 오늘 통계
         try:
-            resp = req.get(f"{base_url}/get/analytics:daily:{today_str}:blog_analyzed", headers=headers)
-            if resp.status_code == 200:
-                stats['today_analyses'] = int(resp.json().get('result', 0) or 0)
+            val = redis_client.get(f"analytics:daily:{today_str}:blog_analyzed")
+            stats['today_analyses'] = int(val) if val else 0
         except: pass
         
         # 4. 어제 통계
         try:
-            resp = req.get(f"{base_url}/get/analytics:daily:{yesterday_str}:blog_analyzed", headers=headers)
-            if resp.status_code == 200:
-                stats['yesterday_analyses'] = int(resp.json().get('result', 0) or 0)
+            val = redis_client.get(f"analytics:daily:{yesterday_str}:blog_analyzed")
+            stats['yesterday_analyses'] = int(val) if val else 0
         except: pass
         
         # 5. 시간대별 통계 (오늘)
         for hour in range(24):
             hour_str = f"{hour:02d}"
             try:
-                resp = req.get(f"{base_url}/get/analytics:hourly:{today_str}:{hour_str}", headers=headers)
-                if resp.status_code == 200:
-                    count = int(resp.json().get('result', 0) or 0)
-                    if count > 0:
-                        stats['hourly_stats'][hour_str] = count
+                val = redis_client.get(f"analytics:hourly:{today_str}:{hour_str}")
+                count = int(val) if val else 0
+                if count > 0:
+                    stats['hourly_stats'][hour_str] = count
             except: pass
         
         # 6. 일별 통계 (최근 30일)
         for i in range(days):
             date = (today - timedelta(days=i)).strftime('%Y-%m-%d')
             try:
-                resp = req.get(f"{base_url}/get/analytics:daily:{date}:blog_analyzed", headers=headers)
-                if resp.status_code == 200:
-                    count = int(resp.json().get('result', 0) or 0)
-                    stats['daily_stats'][date] = count
-                    
-                    # 주간/월간 합산
-                    if i < 7:
-                        stats['week_analyses'] += count
-                    stats['month_analyses'] += count
+                val = redis_client.get(f"analytics:daily:{date}:blog_analyzed")
+                count = int(val) if val else 0
+                stats['daily_stats'][date] = count
+                
+                # 주간/월간 합산
+                if i < 7:
+                    stats['week_analyses'] += count
+                stats['month_analyses'] += count
             except: pass
         
         # 7. 전환율 계산
