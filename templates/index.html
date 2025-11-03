@@ -1911,7 +1911,9 @@
                 
                 // page_view가 아닌 경우만 세션 시간 포함
                 if (eventType !== 'page_view') {
-                    payload.sessionDuration = Math.floor((Date.now() - sessionStartTime) / 1000);
+                    const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
+                    payload.sessionDuration = duration;
+                    console.log(`⏱️ 세션 시간: ${duration}초 (${eventType})`);
                 }
                 
                 await fetch('/api/track', {
