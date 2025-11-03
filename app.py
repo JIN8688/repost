@@ -1249,6 +1249,47 @@ def admin_logout():
     log("👋 관리자 로그아웃", "ADMIN")
     return redirect(url_for('admin_login'))
 
+@app.route('/admin/test-retention')
+@login_required
+def test_retention():
+    """🧪 재방문율 테스트용: 일부 사용자의 first_date를 어제로 변경"""
+    try:
+        if not redis_client:
+            return jsonify({'error': 'Redis not connected'}), 500
+        
+        today = get_kst_now().strftime('%Y-%m-%d')
+        yesterday = (get_kst_now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        
+        # 오늘의 DAU 가져오기
+        dau_users = redis_client.smembers(f'analytics:dau:{today}')
+        
+        modified_count = 0
+        for user_id in list(dau_users)[:10]:  # 최대 10명만 수정
+            user_id = user_id.decode('utf-8') if isinstance(user_id, bytes) else user_id
+            user_key = f'analytics:user:{user_id}:info'
+            
+            # first_date를 어제로 변경
+            redis_client.hset(user_key, 'first_date', yesterday)
+            
+            # 오늘 신규 사용자 목록에서 제거
+            redis_client.srem(f'analytics:new_users:{today}', user_id)
+            
+            # 어제 신규 사용자 목록에 추가
+            redis_client.sadd(f'analytics:new_users:{yesterday}', user_id)
+            
+            modified_count += 1
+        
+        log(f"🧪 테스트: {modified_count}명의 first_date를 {yesterday}로 변경", "ADMIN")
+        return jsonify({
+            'success': True, 
+            'modified': modified_count,
+            'message': f'{modified_count}명을 어제 가입자로 변경했습니다. 페이지를 새로고침하면 재방문율이 표시됩니다!'
+        }), 200
+    
+    except Exception as e:
+        log(f"⚠️ 테스트 실패: {e}", "ERROR")
+        return jsonify({'error': str(e)}), 500
+
 # ============================
 # 📊 관리자 대시보드
 # ============================
