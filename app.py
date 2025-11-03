@@ -1072,44 +1072,71 @@ def get_analytics_stats(days=30):
         if stats['total_analyses'] > 0:
             stats['success_rate'] = round((stats['success_analyses'] / stats['total_analyses']) * 100, 1)
         
-        # ✨ NEW: DAU/WAU/MAU 조회
+        # ✨ NEW: DAU/WAU/MAU 조회 (⚡ 초고속 최적화!)
         try:
-            # DAU: 오늘 활성 사용자 수
-            stats['dau'] = redis_client.scard(f'analytics:dau:{today_str}')
+            # ⚡ Pipeline으로 모든 작업 한 번에!
+            pipe_dau = redis_client.pipeline()
             
-            # WAU: 최근 7일 활성 사용자 수 (UNION)
+            # 1. DAU (오늘 고유 사용자)
+            pipe_dau.scard(f'analytics:dau:{today_str}')
+            
+            # 2. WAU (최근 7일 고유 사용자) - SUNIONSTORE 사용!
             wau_keys = [f'analytics:wau:{(today - timedelta(days=i)).strftime("%Y-%m-%d")}' for i in range(7)]
             if wau_keys:
-                stats['wau'] = len(redis_client.sunion(*wau_keys))
+                pipe_dau.sunionstore('analytics:wau:temp', *wau_keys)  # 임시 SET 생성
+                pipe_dau.scard('analytics:wau:temp')  # 크기만 조회 (초고속!)
+                pipe_dau.expire('analytics:wau:temp', 3600)  # 1시간 후 자동 삭제
             
-            # MAU: 최근 30일 활성 사용자 수 (UNION)
+            # 3. MAU (최근 30일 고유 사용자) - SUNIONSTORE 사용!
             mau_keys = [f'analytics:mau:{(today - timedelta(days=i)).strftime("%Y-%m-%d")}' for i in range(30)]
             if mau_keys:
-                stats['mau'] = len(redis_client.sunion(*mau_keys))
+                pipe_dau.sunionstore('analytics:mau:temp', *mau_keys)  # 임시 SET 생성
+                pipe_dau.scard('analytics:mau:temp')  # 크기만 조회 (초고속!)
+                pipe_dau.expire('analytics:mau:temp', 3600)  # 1시간 후 자동 삭제
             
-            # 오늘 신규 사용자 수
-            stats['today_new_users'] = redis_client.scard(f'analytics:new_users:{today_str}')
+            # 4. 오늘 신규 사용자
+            pipe_dau.scard(f'analytics:new_users:{today_str}')
             
-            # 신규 사용자 비율 (오늘)
-            if stats['dau'] > 0:
-                stats['new_user_rate'] = round((stats['today_new_users'] / stats['dau']) * 100, 1)
+            # 5. 세션 시간 리스트
+            pipe_dau.lrange(f'analytics:sessions:{today_str}', 0, -1)
             
-            # 재방문율 (오늘)
-            returning_users = stats['dau'] - stats['today_new_users']
-            if stats['dau'] > 0:
-                stats['retention_rate'] = round((returning_users / stats['dau']) * 100, 1)
+            # ⚡ 한 번에 실행!
+            dau_results = pipe_dau.execute()
             
-            # 평균 세션 시간 (오늘)
-            session_times = redis_client.lrange(f'analytics:sessions:{today_str}', 0, -1)
+            # 결과 파싱
+            idx = 0
+            stats['dau'] = dau_results[idx] or 0
+            idx += 1
+            
+            if wau_keys:
+                idx += 1  # sunionstore 결과 스킵
+                stats['wau'] = dau_results[idx] or 0
+                idx += 2  # scard, expire 스킵
+            
+            if mau_keys:
+                idx += 1  # sunionstore 결과 스킵
+                stats['mau'] = dau_results[idx] or 0
+                idx += 2  # scard, expire 스킵
+            
+            stats['today_new_users'] = dau_results[idx] or 0
+            idx += 1
+            
+            # 세션 시간 계산
+            session_times = dau_results[idx] or []
             if session_times:
                 total_time = sum(int(t) for t in session_times)
-                stats['avg_session_time'] = round(total_time / len(session_times), 0)  # 초 단위
+                stats['avg_session_time'] = round(total_time / len(session_times), 0)
             
-            # 완료율 (전체)
+            # 계산형 지표
+            if stats['dau'] > 0:
+                stats['new_user_rate'] = round((stats['today_new_users'] / stats['dau']) * 100, 1)
+                returning_users = stats['dau'] - stats['today_new_users']
+                stats['retention_rate'] = round((returning_users / stats['dau']) * 100, 1)
+            
             if stats['total_page_views'] > 0:
                 stats['completion_rate'] = round((stats['total_blog_visits'] / stats['total_page_views']) * 100, 1)
             
-            log(f"✨ DAU: {stats['dau']}, WAU: {stats['wau']}, MAU: {stats['mau']}", "ANALYTICS")
+            log(f"⚡ DAU: {stats['dau']}, WAU: {stats['wau']}, MAU: {stats['mau']} (초고속 조회!)", "ANALYTICS")
             log(f"✨ 신규: {stats['today_new_users']}, 재방문율: {stats['retention_rate']}%", "ANALYTICS")
             
         except Exception as dau_error:
