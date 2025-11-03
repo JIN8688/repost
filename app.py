@@ -118,6 +118,7 @@ def log_analytics(action, data=None, success=True, error_message=None):
                     redis_client.lpush(f'analytics:sessions:{today}', session_duration)
                     redis_client.ltrim(f'analytics:sessions:{today}', 0, 9999)  # 최대 10000개
                     redis_client.expire(f'analytics:sessions:{today}', 2592000)
+                    log(f"✅ 세션 시간 저장: {session_duration}초 ({action})", "ANALYTICS")
                 
                 # 6. 브라우저/디바이스/OS 통계 (page_view 이벤트에서만)
                 if action == 'page_view' and data:
@@ -1127,12 +1128,16 @@ def get_analytics_stats(days=30):
             if session_times:
                 total_time = sum(int(t) for t in session_times)
                 stats['avg_session_time'] = round(total_time / len(session_times), 0)
+                log(f"📊 세션 시간 통계: {len(session_times)}개 기록, 총 {total_time}초, 평균 {stats['avg_session_time']}초", "ANALYTICS")
+            else:
+                log(f"⚠️ 세션 시간 데이터 없음 (오늘: {today_str})", "WARNING")
             
             # 계산형 지표
             if stats['dau'] > 0:
                 stats['new_user_rate'] = round((stats['today_new_users'] / stats['dau']) * 100, 1)
                 returning_users = stats['dau'] - stats['today_new_users']
                 stats['retention_rate'] = round((returning_users / stats['dau']) * 100, 1)
+                log(f"👥 DAU: {stats['dau']}명, 신규: {stats['today_new_users']}명, 재방문: {returning_users}명 ({stats['retention_rate']}%)", "ANALYTICS")
             
             if stats['total_page_views'] > 0:
                 stats['completion_rate'] = round((stats['total_blog_visits'] / stats['total_page_views']) * 100, 1)
