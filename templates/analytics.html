@@ -1051,7 +1051,7 @@
                         <div class="funnel-icon">👥</div>
                         <div class="funnel-info">
                             <div class="funnel-label">방문자</div>
-                            <div class="funnel-count">{{ stats.month_analyses }}</div>
+                            <div class="funnel-count">{{ stats.conversion_funnel.visits }}</div>
                             <div class="funnel-rate">100%</div>
                         </div>
                     </div>
@@ -1060,7 +1060,7 @@
                         <div class="funnel-info">
                             <div class="funnel-label">분석 시도</div>
                             <div class="funnel-count">{{ stats.conversion_funnel.analyses }}</div>
-                            <div class="funnel-rate">{{ '%.1f'|format((stats.conversion_funnel.analyses / stats.month_analyses * 100) if stats.month_analyses > 0 else 0) }}% 전환</div>
+                            <div class="funnel-rate">{{ '%.1f'|format((stats.conversion_funnel.analyses / stats.conversion_funnel.visits * 100) if stats.conversion_funnel.visits > 0 else 0) }}% 전환</div>
                         </div>
                     </div>
                     <div class="funnel-step">
