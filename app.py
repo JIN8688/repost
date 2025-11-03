@@ -76,9 +76,12 @@ def log_analytics(action, data=None, success=True, error_message=None):
                     user_id = data['userId']
                     first_visit = data.get('firstVisit', '')
                     
+                    log(f"👤 page_view 수신: userId={user_id[:20]}..., firstVisit={first_visit[:30] if first_visit else 'None'}...", "ANALYTICS")
+                    
                     # DAU: 오늘 활성 사용자 (SET - 자동 중복 제거!)
                     redis_client.sadd(f'analytics:dau:{today}', user_id)
                     redis_client.expire(f'analytics:dau:{today}', 2592000)  # 30일
+                    log(f"✅ DAU 저장: {user_id[:20]}... → analytics:dau:{today}", "ANALYTICS")
                     
                     # WAU: 최근 7일 활성 사용자 (각 날짜별 SET)
                     for i in range(7):
@@ -96,7 +99,11 @@ def log_analytics(action, data=None, success=True, error_message=None):
                     
                     # 신규 vs 재방문 사용자 구분
                     user_key = f'analytics:user:{user_id}:info'
-                    if not redis_client.exists(user_key):
+                    user_exists = redis_client.exists(user_key)
+                    
+                    log(f"🔍 Redis 확인: user_key={user_key[:60]}... exists={user_exists}", "ANALYTICS")
+                    
+                    if not user_exists:
                         # 신규 사용자
                         redis_client.hset(user_key, 'first_visit', first_visit or now_kst.isoformat())
                         redis_client.hset(user_key, 'first_date', today)
@@ -106,10 +113,11 @@ def log_analytics(action, data=None, success=True, error_message=None):
                         redis_client.sadd(f'analytics:new_users:{today}', user_id)
                         redis_client.expire(f'analytics:new_users:{today}', 2592000)
                         
-                        log(f"✨ 신규 사용자: {user_id[:15]}...", "ANALYTICS")
+                        log(f"✨ 신규 사용자 저장 완료: {user_id[:15]}... → {user_key[:60]}...", "ANALYTICS")
                     else:
                         # 재방문 사용자
-                        log(f"🔄 재방문 사용자: {user_id[:15]}...", "ANALYTICS")
+                        stored_data = redis_client.hgetall(user_key)
+                        log(f"🔄 재방문 사용자: {user_id[:15]}... (첫방문: {stored_data.get('first_date', 'N/A')})", "ANALYTICS")
                 
                 # ✨ 세션 시간 기록 (모든 이벤트, page_view 제외)
                 # page_view는 로드 직후라 부정확하므로 실제 행동(댓글 복사, 블로그 이동)만 기록
@@ -1165,6 +1173,8 @@ def track_event():
         data = request.json
         event_type = data.get('event')  # 'page_view', 'comment_copied', 'blog_visit'
         
+        log(f"📨 /api/track 수신: event={event_type}, userId={data.get('userId', 'None')[:20] if data.get('userId') else 'None'}...", "API")
+        
         if not event_type:
             return jsonify({'error': 'event type required'}), 400
         
@@ -1179,13 +1189,26 @@ def track_event():
                 'firstVisit': data.get('firstVisit'),
                 'sessionDuration': data.get('sessionDuration', 0)
             }
+            log(f"📊 page_view 데이터: userId={device_data.get('userId', 'None')[:30] if device_data.get('userId') else 'None'}..., firstVisit={device_data.get('firstVisit', 'None')[:30] if device_data.get('firstVisit') else 'None'}...", "API")
             log_analytics('page_view', data=device_data, success=True)
         elif event_type == 'comment_copied':
-            log_analytics('comment_copied', data={'comment': data.get('comment', '')[:50]}, success=True)
+            comment_data = {
+                'comment': data.get('comment', '')[:50],
+                'sessionDuration': data.get('sessionDuration', 0)
+            }
+            log_analytics('comment_copied', data=comment_data, success=True)
         elif event_type == 'blog_visit':
-            log_analytics('blog_visit', data={'url': data.get('url', '')[:100]}, success=True)
+            visit_data = {
+                'url': data.get('url', '')[:100],
+                'sessionDuration': data.get('sessionDuration', 0)
+            }
+            log_analytics('blog_visit', data=visit_data, success=True)
         elif event_type == 'quick_feedback':
-            log_analytics('quick_feedback', data={'rating': data.get('rating', 0)}, success=True)
+            feedback_data = {
+                'rating': data.get('rating', 0),
+                'sessionDuration': data.get('sessionDuration', 0)
+            }
+            log_analytics('quick_feedback', data=feedback_data, success=True)
         
         return jsonify({'success': True}), 200
     
