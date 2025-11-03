@@ -272,11 +272,14 @@
             position: relative;
             width: 100%;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         
         .chart-canvas-wrapper {
             position: relative;
-            height: 450px;
+            flex: 1;
+            min-height: 420px;
             margin-top: 20px;
             width: 100%;
             max-width: 100%;
@@ -321,17 +324,19 @@
         .funnel-container {
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            padding: 16px 0;
+            flex: 1;
+            justify-content: center;
+            gap: 12px;
+            padding: 12px 0;
         }
 
         .funnel-step {
             display: flex;
             align-items: center;
-            gap: 16px;
-            padding: 16px;
+            gap: 14px;
+            padding: 14px;
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
+            border-radius: 14px;
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.3s ease;
             position: relative;
@@ -354,14 +359,14 @@
         }
 
         .funnel-icon {
-            font-size: 1.8em;
-            width: 54px;
-            height: 54px;
+            font-size: 1.6em;
+            width: 48px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: rgba(102, 126, 234, 0.15);
-            border-radius: 16px;
+            border-radius: 12px;
             flex-shrink: 0;
         }
 
@@ -1273,12 +1278,15 @@
                     scales: {
                         y: { 
                             beginAtZero: true,
+                            grace: '10%',
+                            suggestedMax: 10,
                             grid: { 
                                 color: 'rgba(255, 255, 255, 0.05)',
                                 drawBorder: false
                             },
                             ticks: {
                                 stepSize: 1,
+                                precision: 0,
                                 color: '#94a3b8'
                             }
                         },
@@ -1359,12 +1367,15 @@
                     scales: {
                         y: { 
                             beginAtZero: true,
+                            grace: '10%',
+                            suggestedMax: 10,
                             grid: { 
                                 color: 'rgba(255, 255, 255, 0.05)',
                                 drawBorder: false
                             },
                             ticks: {
                                 stepSize: 1,
+                                precision: 0,
                                 color: '#94a3b8'
                             }
                         },
@@ -1546,12 +1557,15 @@
                     scales: {
                         y: { 
                             beginAtZero: true,
+                            grace: '10%',
+                            suggestedMax: 10,
                             grid: { 
                                 color: 'rgba(255, 255, 255, 0.05)',
                                 drawBorder: false
                             },
                             ticks: {
                                 stepSize: 1,
+                                precision: 0,
                                 color: '#94a3b8'
                             }
                         },
@@ -1628,12 +1642,15 @@
                     scales: {
                         y: { 
                             beginAtZero: true,
+                            grace: '10%',
+                            suggestedMax: 10,
                             grid: { 
                                 color: 'rgba(255, 255, 255, 0.05)',
                                 drawBorder: false
                             },
                             ticks: {
                                 stepSize: 1,
+                                precision: 0,
                                 color: '#94a3b8'
                             }
                         },
