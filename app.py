@@ -110,13 +110,14 @@ def log_analytics(action, data=None, success=True, error_message=None):
                     else:
                         # 재방문 사용자
                         log(f"🔄 재방문 사용자: {user_id[:15]}...", "ANALYTICS")
-                    
-                    # 세션 시간 기록
-                    session_duration = data.get('sessionDuration', 0)
-                    if session_duration > 0:
-                        redis_client.lpush(f'analytics:sessions:{today}', session_duration)
-                        redis_client.ltrim(f'analytics:sessions:{today}', 0, 9999)  # 최대 10000개
-                        redis_client.expire(f'analytics:sessions:{today}', 2592000)
+                
+                # ✨ 세션 시간 기록 (모든 이벤트, page_view 제외)
+                # page_view는 로드 직후라 부정확하므로 실제 행동(댓글 복사, 블로그 이동)만 기록
+                session_duration = data.get('sessionDuration', 0) if data else 0
+                if session_duration > 0 and action != 'page_view':
+                    redis_client.lpush(f'analytics:sessions:{today}', session_duration)
+                    redis_client.ltrim(f'analytics:sessions:{today}', 0, 9999)  # 최대 10000개
+                    redis_client.expire(f'analytics:sessions:{today}', 2592000)
                 
                 # 6. 브라우저/디바이스/OS 통계 (page_view 이벤트에서만)
                 if action == 'page_view' and data:

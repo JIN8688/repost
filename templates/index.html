@@ -1899,18 +1899,25 @@
             try {
                 const userId = getUserId();
                 const firstVisit = localStorage.getItem('repost_first_visit');
-                const sessionDuration = Math.floor((Date.now() - sessionStartTime) / 1000); // 초 단위
+                
+                // ⚠️ page_view는 세션 시간 제외 (로드 직후라 부정확)
+                // 실제 행동(댓글 복사, 블로그 이동)만 세션 시간 포함
+                const payload = { 
+                    event: eventType, 
+                    userId: userId,
+                    firstVisit: firstVisit,
+                    ...data 
+                };
+                
+                // page_view가 아닌 경우만 세션 시간 포함
+                if (eventType !== 'page_view') {
+                    payload.sessionDuration = Math.floor((Date.now() - sessionStartTime) / 1000);
+                }
                 
                 await fetch('/api/track', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        event: eventType, 
-                        userId: userId,
-                        firstVisit: firstVisit,
-                        sessionDuration: sessionDuration,
-                        ...data 
-                    })
+                    body: JSON.stringify(payload)
                 });
                 console.log(`📊 이벤트 전송: ${eventType} (userId: ${userId.substr(0, 15)}...)`);
             } catch (error) {
