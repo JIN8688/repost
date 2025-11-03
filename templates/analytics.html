@@ -811,6 +811,26 @@
 
         <!-- Main Stats -->
         <div class="stats-grid">
+            <!-- 1. 총 방문자 (맨 앞) -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-label">총 방문자</div>
+                <div class="stat-value">{{ stats.total_page_views }}</div>
+                <div class="stat-change positive">
+                    오늘 {{ stats.today_page_views }}명
+                </div>
+            </div>
+
+            <!-- 2. 활성 전환율 (투자자 핵심 지표!) -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">🚀</div>
+                <div class="stat-label">활성 전환율</div>
+                <div class="stat-value">{{ '%.1f'|format((stats.total_blog_visits / stats.total_page_views * 100) if stats.total_page_views > 0 else 0) }}%</div>
+                <div class="stat-change {{ 'positive' if (stats.total_blog_visits / stats.total_page_views * 100) >= 30 else 'negative' if stats.total_page_views > 0 else '' }}">
+                    방문→사용 전환
+                </div>
+            </div>
+
             <div class="glass-card stat-card">
                 <div class="stat-icon">🔥</div>
                 <div class="stat-label">오늘 분석</div>
