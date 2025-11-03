@@ -572,7 +572,7 @@
             }
             
             .stats-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
                 gap: 15px;
             }
             
@@ -590,13 +590,14 @@
             }
             
             .header-actions {
-                flex-direction: column;
-                width: 100%;
+                flex-direction: row;
+                gap: 10px;
             }
             
             .header-actions .btn {
-                width: 100%;
-                justify-content: center;
+                flex: 1;
+                font-size: 0.85em;
+                padding: 10px 16px;
             }
 
             .stat-value {
@@ -665,6 +666,20 @@
             
             .header p {
                 font-size: 0.9em;
+            }
+            
+            .header-actions {
+                gap: 8px;
+            }
+            
+            .header-actions .btn {
+                font-size: 0.8em;
+                padding: 8px 12px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
             }
             
             .glass-card {
@@ -769,6 +784,20 @@
             
             .header h1 {
                 font-size: 1.4em;
+            }
+            
+            .header-actions {
+                gap: 6px;
+            }
+            
+            .header-actions .btn {
+                font-size: 0.75em;
+                padding: 8px 10px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
             }
             
             .stat-value {
