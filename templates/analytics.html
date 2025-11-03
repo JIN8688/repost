@@ -849,9 +849,10 @@
             </div>
         </div>
 
-        <!-- Main Stats -->
+        <!-- Main Stats (16개 카드 - 4x4) -->
         <div class="stats-grid">
-            <!-- 1. 총 방문자 (맨 앞) -->
+            <!-- 1행: 사용자 규모 지표 -->
+            <!-- 1. 총 방문자 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">👥</div>
                 <div class="stat-label">총 방문자</div>
@@ -861,7 +862,89 @@
                 </div>
             </div>
 
-            <!-- 2. 활성 전환율 (투자자 핵심 지표!) -->
+            <!-- 2. DAU -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-label">DAU</div>
+                <div class="stat-value">{{ stats.dau }}</div>
+                <div class="stat-change positive">
+                    Daily Active Users
+                </div>
+            </div>
+
+            <!-- 3. WAU -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-label">WAU</div>
+                <div class="stat-value">{{ stats.wau }}</div>
+                <div class="stat-change positive">
+                    Weekly Active Users
+                </div>
+            </div>
+
+            <!-- 4. MAU -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-label">MAU</div>
+                <div class="stat-value">{{ stats.mau }}</div>
+                <div class="stat-change positive">
+                    Monthly Active Users
+                </div>
+            </div>
+
+            <!-- 2행: 사용자 행동 지표 -->
+            <!-- 5. 재방문율 -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">🔄</div>
+                <div class="stat-label">재방문율</div>
+                <div class="stat-value">{{ stats.retention_rate }}%</div>
+                <div class="stat-change {{ 'positive' if stats.retention_rate >= 50 else 'negative' if stats.retention_rate > 0 else '' }}">
+                    재방문 사용자
+                </div>
+            </div>
+
+            <!-- 6. 신규 사용자 비율 -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">✨</div>
+                <div class="stat-label">신규 사용자</div>
+                <div class="stat-value">{{ stats.new_user_rate }}%</div>
+                <div class="stat-change positive">
+                    오늘 {{ stats.today_new_users }}명
+                </div>
+            </div>
+
+            <!-- 7. 평균 세션 시간 -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">⏱️</div>
+                <div class="stat-label">평균 세션</div>
+                <div class="stat-value">{{ (stats.avg_session_time // 60)|int }}분 {{ (stats.avg_session_time % 60)|int }}초</div>
+                <div class="stat-change positive">
+                    세션당 평균
+                </div>
+            </div>
+
+            <!-- 8. 오늘 신규 사용자 -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">🆕</div>
+                <div class="stat-label">오늘 신규</div>
+                <div class="stat-value">{{ stats.today_new_users }}</div>
+                <div class="stat-change positive">
+                    Today New Users
+                </div>
+            </div>
+
+            <!-- 3행: 활동 지표 -->
+            <!-- 9. 완료율 -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-label">완료율</div>
+                <div class="stat-value">{{ stats.completion_rate }}%</div>
+                <div class="stat-change {{ 'positive' if stats.completion_rate >= 30 else 'negative' if stats.completion_rate > 0 else '' }}">
+                    방문→완료
+                </div>
+            </div>
+
+            <!-- 10. 활성 전환율 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">🚀</div>
                 <div class="stat-label">활성 전환율</div>
@@ -871,6 +954,7 @@
                 </div>
             </div>
 
+            <!-- 11. 오늘 분석 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">🔥</div>
                 <div class="stat-label">오늘 분석</div>
@@ -878,13 +962,14 @@
                 <div class="stat-change {% if stats.yesterday_analyses %}{{ 'positive' if stats.today_analyses > stats.yesterday_analyses else 'negative' }}{% endif %}">
                     {% if stats.yesterday_analyses %}
                         {% set change = ((stats.today_analyses - stats.yesterday_analyses) / stats.yesterday_analyses * 100) if stats.yesterday_analyses > 0 else 0 %}
-                        {{ '↗' if change > 0 else '↘' }} {{ '%+.1f'|format(change) }}% 어제 대비
+                        {{ '↗' if change > 0 else '↘' }} {{ '%+.1f'|format(change) }}%
                     {% else %}
                         📈 첫 데이터
                     {% endif %}
                 </div>
             </div>
 
+            <!-- 12. 주간 분석 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">📊</div>
                 <div class="stat-label">주간 분석</div>
@@ -894,6 +979,8 @@
                 </div>
             </div>
 
+            <!-- 4행: 품질 지표 -->
+            <!-- 13. 월간 분석 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">📈</div>
                 <div class="stat-label">월간 분석</div>
@@ -903,30 +990,33 @@
                 </div>
             </div>
 
+            <!-- 14. 성공률 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">✅</div>
                 <div class="stat-label">성공률</div>
                 <div class="stat-value">{{ stats.success_rate }}%</div>
                 <div class="stat-change {{ 'positive' if stats.success_rate >= 90 else 'negative' }}">
-                    {{ stats.success_analyses }}/{{ stats.total_analyses }} 성공
+                    {{ stats.success_analyses }}/{{ stats.total_analyses }}
                 </div>
             </div>
 
+            <!-- 15. 평균 댓글 수 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">💬</div>
-                <div class="stat-label">평균 댓글 수</div>
+                <div class="stat-label">평균 댓글</div>
                 <div class="stat-value">{{ stats.avg_comments_count }}</div>
                 <div class="stat-change positive">
                     개당 평균
                 </div>
             </div>
 
+            <!-- 16. 실패 건수 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">❌</div>
                 <div class="stat-label">실패 건수</div>
                 <div class="stat-value">{{ stats.failed_analyses }}</div>
                 <div class="stat-change {{ 'negative' if stats.failed_analyses > 0 else 'positive' }}">
-                    {{ '%.1f'|format((stats.failed_analyses / stats.total_analyses * 100) if stats.total_analyses > 0 else 0) }}% 실패율
+                    {{ '%.1f'|format((stats.failed_analyses / stats.total_analyses * 100) if stats.total_analyses > 0 else 0) }}%
                 </div>
             </div>
         </div>

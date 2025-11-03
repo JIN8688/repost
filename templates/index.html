@@ -1871,14 +1871,48 @@
         }
 
         // 📊 이벤트 트래킹 함수
+        // 🆔 고유 사용자 ID 생성 및 관리
+        function getUserId() {
+            let userId = localStorage.getItem('repost_user_id');
+            
+            if (!userId) {
+                // 첫 방문: 고유 ID 생성
+                userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('repost_user_id', userId);
+                
+                // 첫 방문 시간 기록
+                const firstVisit = new Date().toISOString();
+                localStorage.setItem('repost_first_visit', firstVisit);
+                
+                console.log('✨ 신규 사용자 ID 생성:', userId);
+            } else {
+                console.log('👤 기존 사용자 ID:', userId);
+            }
+            
+            return userId;
+        }
+
+        // 📊 세션 시작 시간 기록
+        const sessionStartTime = Date.now();
+
         async function trackEvent(eventType, data = {}) {
             try {
+                const userId = getUserId();
+                const firstVisit = localStorage.getItem('repost_first_visit');
+                const sessionDuration = Math.floor((Date.now() - sessionStartTime) / 1000); // 초 단위
+                
                 await fetch('/api/track', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ event: eventType, ...data })
+                    body: JSON.stringify({ 
+                        event: eventType, 
+                        userId: userId,
+                        firstVisit: firstVisit,
+                        sessionDuration: sessionDuration,
+                        ...data 
+                    })
                 });
-                console.log(`📊 이벤트 전송: ${eventType}`);
+                console.log(`📊 이벤트 전송: ${eventType} (userId: ${userId.substr(0, 15)}...)`);
             } catch (error) {
                 console.error('📊 이벤트 전송 실패:', error);
             }

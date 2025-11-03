@@ -35,9 +35,11 @@ def log_analytics(action, data=None, success=True, error_message=None):
     """
     사용자 행동 로깅 - Vercel KV (Redis)에 저장
     
+    ✨ NEW: DAU/WAU/MAU/신규/재방문/세션 시간 추적
+    
     Args:
-        action: 액션 유형 ('blog_analyzed', 'comment_copied', 'blog_visited')
-        data: 추가 데이터 (dict)
+        action: 액션 유형 ('page_view', 'blog_analyzed', 'comment_copied', 'blog_visit')
+        data: 추가 데이터 (dict) - userId, firstVisit, sessionDuration 포함
         success: 성공 여부
         error_message: 실패 시 에러 메시지
     """
@@ -69,7 +71,54 @@ def log_analytics(action, data=None, success=True, error_message=None):
                 redis_client.incr(key_hourly)
                 redis_client.expire(key_hourly, 86400)  # 24시간
                 
-                # 5. 브라우저/디바이스/OS 통계 (page_view 이벤트에서만)
+                # ✨ 5. DAU/WAU/MAU 추적 (page_view 이벤트에서만)
+                if action == 'page_view' and data and 'userId' in data:
+                    user_id = data['userId']
+                    first_visit = data.get('firstVisit', '')
+                    
+                    # DAU: 오늘 활성 사용자 (SET - 자동 중복 제거!)
+                    redis_client.sadd(f'analytics:dau:{today}', user_id)
+                    redis_client.expire(f'analytics:dau:{today}', 2592000)  # 30일
+                    
+                    # WAU: 최근 7일 활성 사용자 (각 날짜별 SET)
+                    for i in range(7):
+                        date = (now_kst - timedelta(days=i)).strftime('%Y-%m-%d')
+                        if date == today:  # 오늘만 추가
+                            redis_client.sadd(f'analytics:wau:{date}', user_id)
+                            redis_client.expire(f'analytics:wau:{date}', 2592000)
+                    
+                    # MAU: 최근 30일 활성 사용자 (각 날짜별 SET)
+                    for i in range(30):
+                        date = (now_kst - timedelta(days=i)).strftime('%Y-%m-%d')
+                        if date == today:  # 오늘만 추가
+                            redis_client.sadd(f'analytics:mau:{date}', user_id)
+                            redis_client.expire(f'analytics:mau:{date}', 2592000)
+                    
+                    # 신규 vs 재방문 사용자 구분
+                    user_key = f'analytics:user:{user_id}:info'
+                    if not redis_client.exists(user_key):
+                        # 신규 사용자
+                        redis_client.hset(user_key, 'first_visit', first_visit or now_kst.isoformat())
+                        redis_client.hset(user_key, 'first_date', today)
+                        redis_client.expire(user_key, 7776000)  # 90일
+                        
+                        # 오늘 신규 사용자 카운트
+                        redis_client.sadd(f'analytics:new_users:{today}', user_id)
+                        redis_client.expire(f'analytics:new_users:{today}', 2592000)
+                        
+                        log(f"✨ 신규 사용자: {user_id[:15]}...", "ANALYTICS")
+                    else:
+                        # 재방문 사용자
+                        log(f"🔄 재방문 사용자: {user_id[:15]}...", "ANALYTICS")
+                    
+                    # 세션 시간 기록
+                    session_duration = data.get('sessionDuration', 0)
+                    if session_duration > 0:
+                        redis_client.lpush(f'analytics:sessions:{today}', session_duration)
+                        redis_client.ltrim(f'analytics:sessions:{today}', 0, 9999)  # 최대 10000개
+                        redis_client.expire(f'analytics:sessions:{today}', 2592000)
+                
+                # 6. 브라우저/디바이스/OS 통계 (page_view 이벤트에서만)
                 if action == 'page_view' and data:
                     if 'browser' in data:
                         redis_client.incr(f"analytics:browser:{data['browser']}")
@@ -78,7 +127,7 @@ def log_analytics(action, data=None, success=True, error_message=None):
                     if 'os' in data:
                         redis_client.incr(f"analytics:os:{data['os']}")
                 
-                # 6. 피드백 통계 (rating별 카운트)
+                # 7. 피드백 통계 (rating별 카운트)
                 if action == 'quick_feedback' and data and 'rating' in data:
                     rating = data['rating']
                     redis_client.incr(f"analytics:feedback:rating_{rating}")
@@ -851,7 +900,16 @@ def get_analytics_stats(days=30):
         'week_blog_visits': 0,
         'daily_page_views': {},
         'daily_comment_copies': {},
-        'daily_blog_visits': {}
+        'daily_blog_visits': {},
+        # ✨ NEW: DAU/WAU/MAU/신규/재방문/세션
+        'dau': 0,
+        'wau': 0,
+        'mau': 0,
+        'today_new_users': 0,
+        'new_user_rate': 0,
+        'retention_rate': 0,
+        'avg_session_time': 0,
+        'completion_rate': 0
     }
     
     if not redis_client:
@@ -1014,10 +1072,53 @@ def get_analytics_stats(days=30):
         if stats['total_analyses'] > 0:
             stats['success_rate'] = round((stats['success_analyses'] / stats['total_analyses']) * 100, 1)
         
+        # ✨ NEW: DAU/WAU/MAU 조회
+        try:
+            # DAU: 오늘 활성 사용자 수
+            stats['dau'] = redis_client.scard(f'analytics:dau:{today_str}')
+            
+            # WAU: 최근 7일 활성 사용자 수 (UNION)
+            wau_keys = [f'analytics:wau:{(today - timedelta(days=i)).strftime("%Y-%m-%d")}' for i in range(7)]
+            if wau_keys:
+                stats['wau'] = len(redis_client.sunion(*wau_keys))
+            
+            # MAU: 최근 30일 활성 사용자 수 (UNION)
+            mau_keys = [f'analytics:mau:{(today - timedelta(days=i)).strftime("%Y-%m-%d")}' for i in range(30)]
+            if mau_keys:
+                stats['mau'] = len(redis_client.sunion(*mau_keys))
+            
+            # 오늘 신규 사용자 수
+            stats['today_new_users'] = redis_client.scard(f'analytics:new_users:{today_str}')
+            
+            # 신규 사용자 비율 (오늘)
+            if stats['dau'] > 0:
+                stats['new_user_rate'] = round((stats['today_new_users'] / stats['dau']) * 100, 1)
+            
+            # 재방문율 (오늘)
+            returning_users = stats['dau'] - stats['today_new_users']
+            if stats['dau'] > 0:
+                stats['retention_rate'] = round((returning_users / stats['dau']) * 100, 1)
+            
+            # 평균 세션 시간 (오늘)
+            session_times = redis_client.lrange(f'analytics:sessions:{today_str}', 0, -1)
+            if session_times:
+                total_time = sum(int(t) for t in session_times)
+                stats['avg_session_time'] = round(total_time / len(session_times), 0)  # 초 단위
+            
+            # 완료율 (전체)
+            if stats['total_page_views'] > 0:
+                stats['completion_rate'] = round((stats['total_blog_visits'] / stats['total_page_views']) * 100, 1)
+            
+            log(f"✨ DAU: {stats['dau']}, WAU: {stats['wau']}, MAU: {stats['mau']}", "ANALYTICS")
+            log(f"✨ 신규: {stats['today_new_users']}, 재방문율: {stats['retention_rate']}%", "ANALYTICS")
+            
+        except Exception as dau_error:
+            log(f"⚠️ DAU/WAU/MAU 조회 실패: {dau_error}", "WARNING")
+        
         # 플랫폼 (네이버만 사용 중)
         stats['top_blog_domains']['네이버 블로그'] = stats['total_analyses']
         
-        log(f"⚡ KV 통계 조회 완료 (Pipeline): 총 {stats['total_analyses']}건", "ANALYTICS")
+        log(f"⚡ KV 통계 조회 완료 (Pipeline): 총 {stats['total_analyses']}건, DAU {stats['dau']}명", "ANALYTICS")
         
     except Exception as e:
         log(f"⚠️ KV 통계 조회 실패: {e}", "ERROR")
@@ -1026,7 +1127,7 @@ def get_analytics_stats(days=30):
 
 @app.route('/api/track', methods=['POST'])
 def track_event():
-    """사용자 이벤트 트래킹 API"""
+    """사용자 이벤트 트래킹 API - DAU/WAU/MAU 추적 포함"""
     try:
         data = request.json
         event_type = data.get('event')  # 'page_view', 'comment_copied', 'blog_visit'
@@ -1036,11 +1137,14 @@ def track_event():
         
         # 이벤트별 로깅
         if event_type == 'page_view':
-            # 브라우저/디바이스 정보 포함
+            # 브라우저/디바이스 + userId/firstVisit/sessionDuration 정보 포함
             device_data = {
                 'browser': data.get('browser', 'Other'),
                 'deviceType': data.get('deviceType', 'Desktop'),
-                'os': data.get('os', 'Other')
+                'os': data.get('os', 'Other'),
+                'userId': data.get('userId'),
+                'firstVisit': data.get('firstVisit'),
+                'sessionDuration': data.get('sessionDuration', 0)
             }
             log_analytics('page_view', data=device_data, success=True)
         elif event_type == 'comment_copied':
