@@ -648,19 +648,117 @@ function closeModal(event) {
 
 // 추천 링크 복사
 function copyReferralLink(link) {
-    navigator.clipboard.writeText(link).then(() => {
-        bonusSystem.showToast(
-            '링크 복사 완료!',
-            '친구에게 공유해보세요',
-            'success'
-        );
-    });
+    console.log('📋 링크 복사 시도:', link);
+    
+    // iOS Safari 등을 위한 즉시 실행
+    const textArea = document.createElement("textarea");
+    textArea.value = link;
+    textArea.style.position = "fixed";
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.width = "1px";
+    textArea.style.height = "1px";
+    textArea.style.padding = "0";
+    textArea.style.border = "none";
+    textArea.style.outline = "none";
+    textArea.style.boxShadow = "none";
+    textArea.style.background = "transparent";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    textArea.setSelectionRange(0, 99999); // 모바일 지원
+    
+    let success = false;
+    try {
+        success = document.execCommand('copy');
+        console.log('✅ execCommand 결과:', success);
+    } catch (err) {
+        console.error('❌ execCommand 에러:', err);
+    }
+    
+    document.body.removeChild(textArea);
+    
+    if (success) {
+        if (bonusSystem && bonusSystem.showToast) {
+            bonusSystem.showToast(
+                '링크 복사 완료! 📋',
+                '친구에게 공유해보세요',
+                'success'
+            );
+        } else {
+            alert('링크가 복사되었습니다!');
+        }
+    } else {
+        // Clipboard API 시도
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link)
+                .then(() => {
+                    console.log('✅ Clipboard API 성공');
+                    if (bonusSystem && bonusSystem.showToast) {
+                        bonusSystem.showToast(
+                            '링크 복사 완료! 📋',
+                            '친구에게 공유해보세요',
+                            'success'
+                        );
+                    } else {
+                        alert('링크가 복사되었습니다!');
+                    }
+                })
+                .catch(err => {
+                    console.error('❌ Clipboard API 실패:', err);
+                    // 최후의 수단: 수동 복사 안내
+                    prompt('링크를 복사해주세요 (Ctrl+C):', link);
+                });
+        } else {
+            // 최후의 수단: 수동 복사 안내
+            prompt('링크를 복사해주세요 (Ctrl+C):', link);
+        }
+    }
 }
 
 // SNS 공유 함수들
 function shareToKakao(url) {
-    alert('카카오톡 공유 기능은 곧 출시됩니다!');
-    // TODO: Kakao SDK 연동
+    console.log('💬 카카오톡 공유 시도:', url);
+    
+    // Web Share API 시도 (모바일 네이티브 공유)
+    if (navigator.share) {
+        navigator.share({
+            title: 'Repost - AI 블로그 댓글 추천',
+            text: 'Repost 덕분에 블로그 댓글 고민 끝! AI가 찰떡같은 댓글 추천해줘요 👍',
+            url: url
+        })
+        .then(() => {
+            console.log('✅ Web Share 성공');
+            if (bonusSystem && bonusSystem.showToast) {
+                bonusSystem.showToast(
+                    '공유 완료! 💬',
+                    '친구에게 전달되었습니다',
+                    'success'
+                );
+            }
+        })
+        .catch((err) => {
+            console.log('ℹ️ Web Share 취소 또는 실패:', err);
+            // 사용자가 취소한 경우 또는 실패한 경우 링크 복사
+            copyReferralLink(url);
+        });
+    } else {
+        // Web Share API 미지원 시 링크 복사
+        console.log('ℹ️ Web Share API 미지원, 링크 복사로 대체');
+        copyReferralLink(url);
+        
+        // 추가 안내
+        setTimeout(() => {
+            if (bonusSystem && bonusSystem.showToast) {
+                bonusSystem.showToast(
+                    '카카오톡에 붙여넣기',
+                    '링크가 복사되었습니다. 카카오톡에 붙여넣어 주세요!',
+                    'info'
+                );
+            }
+        }, 1000);
+    }
 }
 
 function shareToInstagram() {
