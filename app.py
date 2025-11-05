@@ -223,6 +223,153 @@ if api_key:
 else:
     log("⚠️ API 키가 없어서 기본 템플릿 사용")
 
+# ============================
+# 💾 캐싱 시스템 (프로덕션급)
+# ============================
+
+import hashlib
+
+def normalize_blog_url(url):
+    """
+    블로그 URL 정규화 (모바일/데스크톱 URL 통일)
+    
+    Args:
+        url: 블로그 URL
+    
+    Returns:
+        str: 정규화된 URL
+    """
+    try:
+        from urllib.parse import urlparse, parse_qs
+        
+        parsed = urlparse(url)
+        
+        # 네이버 블로그 URL 처리
+        if 'blog.naver.com' in url or 'm.blog.naver.com' in url:
+            # 쿼리 파라미터에서 blogId, logNo 추출
+            query_params = parse_qs(parsed.query)
+            
+            if 'blogId' in query_params and 'logNo' in query_params:
+                blog_id = query_params['blogId'][0]
+                log_no = query_params['logNo'][0]
+            else:
+                # 경로에서 추출
+                path_parts = parsed.path.strip('/').split('/')
+                if len(path_parts) >= 2:
+                    blog_id = path_parts[0]
+                    log_no = path_parts[-1]
+                else:
+                    return url  # 변환 실패 시 원본 반환
+            
+            # 정규화된 URL 생성 (항상 동일한 형식)
+            return f"blog.naver.com/{blog_id}/{log_no}"
+        
+        # 다른 블로그 플랫폼은 도메인 + 경로
+        return f"{parsed.netloc}{parsed.path}"
+    
+    except:
+        return url  # 에러 시 원본 반환
+
+def generate_cache_key(url):
+    """
+    캐시 키 생성 (URL 해시)
+    
+    Args:
+        url: 정규화된 URL
+    
+    Returns:
+        str: 캐시 키
+    """
+    url_hash = hashlib.md5(url.encode()).hexdigest()
+    return f"cache:blog:{url_hash}"
+
+def get_cached_comments(url):
+    """
+    캐시에서 댓글 조회
+    
+    Args:
+        url: 블로그 URL
+    
+    Returns:
+        dict or None: 캐시된 데이터 (blog + comments) 또는 None
+    """
+    if not redis_client:
+        return None
+    
+    try:
+        normalized_url = normalize_blog_url(url)
+        cache_key = generate_cache_key(normalized_url)
+        
+        # Redis에서 조회
+        cached_data = redis_client.get(cache_key)
+        
+        if cached_data:
+            import json
+            log(f"✅ 캐시 HIT: {normalized_url[:50]}...", "CACHE")
+            
+            # 캐시 히트 통계 증가
+            redis_client.incr('analytics:cache:hits')
+            redis_client.incr(f'analytics:cache:hits:{get_kst_now().strftime("%Y-%m-%d")}')
+            
+            return json.loads(cached_data)
+        else:
+            log(f"❌ 캐시 MISS: {normalized_url[:50]}...", "CACHE")
+            
+            # 캐시 미스 통계 증가
+            redis_client.incr('analytics:cache:misses')
+            redis_client.incr(f'analytics:cache:misses:{get_kst_now().strftime("%Y-%m-%d")}')
+            
+            return None
+    
+    except Exception as e:
+        log(f"⚠️ 캐시 조회 실패: {e}", "WARNING")
+        return None
+
+def set_cached_comments(url, blog_data, comments, ttl=86400):
+    """
+    댓글을 캐시에 저장
+    
+    Args:
+        url: 블로그 URL
+        blog_data: 블로그 데이터
+        comments: 댓글 리스트
+        ttl: TTL (초, 기본 24시간)
+    
+    Returns:
+        bool: 저장 성공 여부
+    """
+    if not redis_client:
+        return False
+    
+    try:
+        normalized_url = normalize_blog_url(url)
+        cache_key = generate_cache_key(normalized_url)
+        
+        import json
+        cache_data = {
+            'blog': blog_data,
+            'comments': comments,
+            'cached_at': get_kst_now().isoformat()
+        }
+        
+        # Redis에 저장 (24시간 TTL)
+        redis_client.setex(
+            cache_key,
+            ttl,
+            json.dumps(cache_data, ensure_ascii=False)
+        )
+        
+        log(f"💾 캐시 저장 완료: {normalized_url[:50]}... (TTL: {ttl}초)", "CACHE")
+        
+        # 캐시 저장 통계 증가
+        redis_client.incr('analytics:cache:stores')
+        
+        return True
+    
+    except Exception as e:
+        log(f"⚠️ 캐시 저장 실패: {e}", "WARNING")
+        return False
+
 def scrape_blog_content(url):
     """네이버 블로그 내용 스크래핑"""
     try:
@@ -815,10 +962,11 @@ def privacy():
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_blog():
-    """블로그 분석 및 댓글 추천 API"""
+    """블로그 분석 및 댓글 추천 API (💾 캐싱 적용)"""
     try:
         data = request.json
         blog_url = data.get('url', '').strip()
+        force_refresh = data.get('force_refresh', False)  # 강제 재생성 옵션
         
         if not blog_url:
             return jsonify({'error': 'URL을 입력해주세요.'}), 400
@@ -826,7 +974,37 @@ def analyze_blog():
         log("═" * 60)
         log("🚀 새로운 블로그 분석 요청 시작", "API")
         log(f"   URL: {blog_url}", "API")
+        log(f"   강제 재생성: {force_refresh}", "API")
         log("═" * 60)
+        
+        # 💾 1단계: 캐시 조회 (강제 재생성이 아닌 경우)
+        if not force_refresh:
+            cached_result = get_cached_comments(blog_url)
+            if cached_result:
+                log("⚡ 캐시된 데이터 반환 (즉시 응답!)", "CACHE")
+                
+                # 📊 Analytics 로깅 (캐시 히트)
+                log_analytics(
+                    action='blog_analyzed',
+                    data={
+                        'blog_url': blog_url,
+                        'title': cached_result['blog'].get('title', '')[:100],
+                        'comments_count': len(cached_result['comments']),
+                        'from_cache': True
+                    },
+                    success=True
+                )
+                
+                return jsonify({
+                    'success': True,
+                    'blog': cached_result['blog'],
+                    'comments': cached_result['comments'],
+                    'from_cache': True,
+                    'cached_at': cached_result.get('cached_at')
+                })
+        
+        # 💾 2단계: 캐시 미스 → 새로 생성
+        log("🔨 새로운 댓글 생성 시작...", "API")
         
         # 블로그 내용 스크래핑
         log("📡 블로그 스크래핑 시작...", "SCRAPE")
@@ -836,8 +1014,12 @@ def analyze_blog():
         # 댓글 생성
         comments = generate_comments(blog_data)
         
+        # 💾 3단계: 캐시에 저장 (24시간)
+        cache_saved = set_cached_comments(blog_url, blog_data, comments, ttl=86400)
+        
         log("═" * 60, "API")
         log(f"🎉 전체 분석 완료! 댓글 {len(comments)}개 생성", "API")
+        log(f"💾 캐시 저장: {'성공' if cache_saved else '실패'}", "API")
         log("═" * 60, "API")
         
         # 📊 Analytics 로깅 (성공)
@@ -845,8 +1027,9 @@ def analyze_blog():
             action='blog_analyzed',
             data={
                 'blog_url': blog_url,
-                'title': blog_data.get('title', '')[:100],  # 제목 일부만
-                'comments_count': len(comments)
+                'title': blog_data.get('title', '')[:100],
+                'comments_count': len(comments),
+                'from_cache': False
             },
             success=True
         )
@@ -854,7 +1037,8 @@ def analyze_blog():
         return jsonify({
             'success': True,
             'blog': blog_data,
-            'comments': comments
+            'comments': comments,
+            'from_cache': False
         })
     
     except Exception as e:
@@ -979,6 +1163,13 @@ def get_analytics_stats(days=30):
         for rating in [5, 4, 3, 2]:
             keys_to_get.append((f'feedback_{rating}', f'analytics:feedback:rating_{rating}'))
         
+        # 💾 캐시 통계
+        keys_to_get.append(('cache_hits', 'analytics:cache:hits'))
+        keys_to_get.append(('cache_misses', 'analytics:cache:misses'))
+        keys_to_get.append(('cache_stores', 'analytics:cache:stores'))
+        keys_to_get.append(('today_cache_hits', f'analytics:cache:hits:{today_str}'))
+        keys_to_get.append(('today_cache_misses', f'analytics:cache:misses:{today_str}'))
+        
         # Pipeline에 모든 get 추가
         for key_name, redis_key in keys_to_get:
             pipe.get(redis_key)
@@ -1071,6 +1262,27 @@ def get_analytics_stats(days=30):
             stats['avg_rating'] = round(weighted_sum / stats['total_feedbacks'], 2)
         else:
             stats['avg_rating'] = 0
+        
+        # 💾 캐시 통계
+        stats['cache_hits'] = get_val('cache_hits')
+        stats['cache_misses'] = get_val('cache_misses')
+        stats['cache_stores'] = get_val('cache_stores')
+        stats['today_cache_hits'] = get_val('today_cache_hits')
+        stats['today_cache_misses'] = get_val('today_cache_misses')
+        
+        # 캐시 히트율 계산
+        total_cache_requests = stats['cache_hits'] + stats['cache_misses']
+        if total_cache_requests > 0:
+            stats['cache_hit_rate'] = round((stats['cache_hits'] / total_cache_requests) * 100, 1)
+        else:
+            stats['cache_hit_rate'] = 0
+        
+        # 오늘 캐시 히트율
+        today_cache_requests = stats['today_cache_hits'] + stats['today_cache_misses']
+        if today_cache_requests > 0:
+            stats['today_cache_hit_rate'] = round((stats['today_cache_hits'] / today_cache_requests) * 100, 1)
+        else:
+            stats['today_cache_hit_rate'] = 0
         
         # 전환율 계산
         stats['conversion_funnel']['visits'] = stats['total_page_views']
