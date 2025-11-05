@@ -73,12 +73,25 @@
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    
+    <!-- 🎊 Confetti 라이브러리 (보너스 애니메이션) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    
+    <!-- 🎁 보너스 시스템 CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bonus-system.css') }}">
+    
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            overflow-x: hidden;
+            overflow-y: auto;
+            max-width: 100vw;
         }
 
         body {
@@ -97,11 +110,13 @@
             align-items: center;
             padding: 20px;
             overflow-x: hidden;
+            overflow-y: auto;
+            max-width: 100vw;
         }
 
         .container {
             background: transparent;
-            max-width: 900px;
+            max-width: min(900px, 100vw);
             width: 100%;
             padding: 50px 40px;
             margin: 40px auto 0;
@@ -265,6 +280,67 @@
             display: flex;
             gap: 10px;
             margin-bottom: 0;
+        }
+
+        .reset-btn {
+            width: 56px !important;
+            min-width: 56px !important;
+            height: 56px !important;
+            padding: 0 !important;
+            background: linear-gradient(135deg, #f46b99 0%, #ec4899 50%, #f43f5e 100%) !important;
+            border: none !important;
+            border-radius: 50% !important;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 20px rgba(244, 107, 153, 0.4);
+            position: relative;
+            overflow: hidden;
+            filter: brightness(1);
+        }
+
+        .reset-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .reset-btn svg {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+        }
+
+        .reset-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 35px rgba(244, 107, 153, 0.6);
+            filter: brightness(1.1);
+        }
+
+        .reset-btn:hover svg {
+            transform: rotate(180deg);
+        }
+
+        .reset-btn:hover::before {
+            opacity: 0.5;
+        }
+
+        .reset-btn:active {
+            transform: scale(0.95);
+        }
+
+        .reset-btn:active svg {
+            transform: rotate(180deg);
         }
 
         input[type="text"] {
@@ -592,26 +668,6 @@
             display: block;
         }
 
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #28a745;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s;
-            pointer-events: none;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
         /* 💬 Quick 피드백 위젯 */
         .feedback-widget {
             position: fixed;
@@ -866,7 +922,7 @@
         /* Footer */
         .footer {
             margin-top: 80px;
-            padding: 50px 20px 30px;
+            padding: 30px 20px 30px;
             text-align: center;
             position: relative;
             z-index: 1;
@@ -885,6 +941,7 @@
 
         .footer-brand {
             margin-bottom: 25px;
+            margin-top: 0;
         }
 
         .footer-logo {
@@ -895,6 +952,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 10px;
+            margin-top: 0;
             filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
         }
 
@@ -1087,21 +1145,38 @@
             }
 
             .input-group {
-                flex-direction: column;
+                flex-wrap: wrap;
                 gap: 10px;
             }
 
             input[type="text"] {
                 padding: 14px 16px;
+                width: 100%;
+                flex: 1 1 100%;
             }
 
             input[type="text"]::placeholder {
                 font-size: 0.85em;
             }
 
-            button {
-                width: 100%;
+            .reset-btn {
+                width: calc(20% - 5px) !important;
+                min-width: unset !important;
+                height: 50px !important;
+                border-radius: 50px !important;
+                flex: 0 0 calc(20% - 5px);
+            }
+            
+            .reset-btn svg {
+                width: 26px !important;
+                height: 26px !important;
+                stroke-width: 2.5 !important;
+            }
+
+            #analyzeBtn {
+                width: calc(80% - 5px) !important;
                 padding: 14px 20px;
+                flex: 0 0 calc(80% - 5px);
             }
 
             .blog-info {
@@ -1129,16 +1204,9 @@
                 min-height: 38px;
             }
 
-            .toast {
-                bottom: 20px;
-                right: 20px;
-                left: 20px;
-                text-align: center;
-            }
-
             .footer {
                 margin-top: 50px;
-                padding: 40px 15px 25px;
+                padding: 25px 15px 25px;
             }
 
             .footer-main {
@@ -1229,7 +1297,7 @@
 
             .footer {
                 margin-top: 40px;
-                padding: 30px 10px 20px;
+                padding: 20px 10px 20px;
             }
 
             .footer-logo {
@@ -1310,6 +1378,11 @@
                         id="blogUrl" 
                         placeholder="네이버 블로그 URL을 입력하세요 (예: https://blog.naver.com/...)"
                     >
+                    <button onclick="resetInput()" id="resetBtn" class="reset-btn" title="입력란 초기화">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px; color: #1a1a2e;">
+                            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                        </svg>
+                    </button>
                     <button onclick="analyzeBlog()" id="analyzeBtn">
                         분석하기
                     </button>
@@ -1403,6 +1476,13 @@
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-main">
+                <!-- 🎁 사용 횟수 배지 (푸터 내) -->
+                <div class="usage-badge" id="usageBadge" onclick="showUsageDetail()">
+                    <span class="icon">💎</span>
+                    <span class="count" id="usageCount">10</span>
+                    <span>회 남음</span>
+                </div>
+
                 <div class="footer-brand">
                     <h3 class="footer-logo">Repost</h3>
                     <p class="footer-tagline">블로그 네트워킹의 시간을 90% 줄이는 AI 비서</p>
@@ -1421,8 +1501,6 @@
             </div>
         </div>
     </footer>
-
-    <div class="toast" id="toast">복사되었습니다! ✓</div>
 
     <script>
         // 현재 블로그 URL 저장
@@ -1603,6 +1681,36 @@
             }
         }
 
+        // 입력란 초기화 함수
+        function resetInput() {
+            // 입력란 초기화
+            document.getElementById('blogUrl').value = '';
+            
+            // 결과 영역 숨기기
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('blogInfo').classList.remove('show');
+            document.getElementById('commentsSection').classList.remove('show');
+            
+            // 현재 블로그 URL 초기화
+            currentBlogUrl = '';
+            
+            // 3가지 강점 카드 다시 표시
+            const features = document.querySelector('.features');
+            if (features) {
+                features.style.display = 'grid';
+            }
+            
+            // 입력란에 포커스
+            document.getElementById('blogUrl').focus();
+            
+            // 리프레쉬 애니메이션 효과
+            const resetBtn = document.getElementById('resetBtn');
+            resetBtn.style.animation = 'none';
+            setTimeout(() => {
+                resetBtn.style.animation = '';
+            }, 10);
+        }
+
         async function analyzeBlog() {
             const url = document.getElementById('blogUrl').value.trim();
             const analyzeBtn = document.getElementById('analyzeBtn');
@@ -1737,11 +1845,23 @@
             navigator.clipboard.writeText(text).then(() => {
                 // 버튼 상태 변경
                 const originalText = button.textContent;
-                button.textContent = '복사됨!';
+                button.textContent = '복사됨! ✓';
                 button.classList.add('copied');
 
-                // 토스트 메시지 표시
-                showToast();
+                // 🎉 보너스 시스템 토스트 사용
+                if (bonusSystem) {
+                    bonusSystem.showToast(
+                        '복사 완료!',
+                        '댓글이 클립보드에 복사되었습니다',
+                        'success'
+                    );
+                }
+
+                // 2초 후 버튼 원래대로
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
 
                 // 📊 GA4: 댓글 복사 이벤트
                 if (typeof gtag !== 'undefined') {
@@ -1851,14 +1971,6 @@
             const errorMsg = document.getElementById('errorMsg');
             errorMsg.textContent = message;
             errorMsg.classList.add('show');
-        }
-
-        function showToast() {
-            const toast = document.getElementById('toast');
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2000);
         }
 
         function escapeHtml(text) {
@@ -2048,6 +2160,11 @@
             }
         }
     </script>
+
+    <!-- 🎁 보너스 시스템 모달 (숨김 상태) -->
+    <div id="bonusModals"></div>
+
+    <!-- 🎁 보너스 시스템 JavaScript (외부 파일) -->
+    <script src="{{ url_for('static', filename='js/bonus-system.js') }}"></script>
 </body>
 </html>
-

@@ -1,0 +1,737 @@
+// ========================================
+// 🎁 보너스 시스템 (프로덕션급)
+// ========================================
+
+// 보너스 관리 클래스
+class BonusSystem {
+    constructor() {
+        this.init();
+    }
+
+    init() {
+        // 초기 데이터 로드
+        this.loadUsageData();
+        this.updateUsageBadge();
+        
+        // 신규 사용자 체크 (7일 보너스)
+        this.checkNewUserBonus();
+        
+        console.log('🎁 보너스 시스템 초기화 완료');
+    }
+
+    // 사용 데이터 로드
+    loadUsageData() {
+        const today = new Date().toDateString();
+        let data = localStorage.getItem('repost_usage_data');
+        
+        if (data) {
+            data = JSON.parse(data);
+            
+            // 날짜가 바뀌면 초기화
+            if (data.date !== today) {
+                this.resetDailyUsage();
+            }
+        } else {
+            // 첫 방문
+            this.resetDailyUsage();
+        }
+    }
+
+    // 일일 사용 횟수 초기화
+    resetDailyUsage() {
+        const today = new Date().toDateString();
+        const firstVisit = localStorage.getItem('repost_first_visit');
+        
+        // 신규 사용자 여부 확인
+        const isNewUser = this.checkIfNewUser();
+        const dailyLimit = isNewUser ? 10 : 3; // 7일 이내면 10회, 아니면 3회
+        
+        const usageData = {
+            date: today,
+            baseUsage: 0,
+            baseLimit: dailyLimit,
+            bonuses: this.loadBonuses(),
+            isNewUser: isNewUser
+        };
+        
+        localStorage.setItem('repost_usage_data', JSON.stringify(usageData));
+        
+        console.log(`📊 일일 사용 횟수 초기화: ${dailyLimit}회 (신규: ${isNewUser})`);
+    }
+
+    // 신규 사용자 확인 (7일 이내)
+    checkIfNewUser() {
+        const firstVisit = localStorage.getItem('repost_first_visit');
+        
+        if (!firstVisit) {
+            return true; // 첫 방문
+        }
+        
+        const firstDate = new Date(firstVisit);
+        const today = new Date();
+        const daysDiff = Math.floor((today - firstDate) / (1000 * 60 * 60 * 24));
+        
+        return daysDiff < 7;
+    }
+
+    // 보너스 로드
+    loadBonuses() {
+        const bonusesStr = localStorage.getItem('repost_bonuses');
+        if (!bonusesStr) return [];
+        
+        const bonuses = JSON.parse(bonusesStr);
+        
+        // 만료된 보너스 제거
+        const now = Date.now();
+        const validBonuses = bonuses.filter(b => b.expiresAt > now);
+        
+        if (validBonuses.length !== bonuses.length) {
+            localStorage.setItem('repost_bonuses', JSON.stringify(validBonuses));
+        }
+        
+        return validBonuses;
+    }
+
+    // 남은 사용 횟수 계산
+    getRemainingUsage() {
+        const data = JSON.parse(localStorage.getItem('repost_usage_data'));
+        if (!data) return 0;
+        
+        const baseRemaining = data.baseLimit - data.baseUsage;
+        const bonusRemaining = data.bonuses.reduce((sum, b) => sum + b.remaining, 0);
+        
+        return Math.max(0, baseRemaining + bonusRemaining);
+    }
+
+    // 사용 횟수 감소
+    decreaseUsage() {
+        const data = JSON.parse(localStorage.getItem('repost_usage_data'));
+        if (!data) return false;
+        
+        // 먼저 기본 사용 횟수 차감
+        if (data.baseUsage < data.baseLimit) {
+            data.baseUsage++;
+        } else {
+            // 보너스 사용
+            const activeBonus = data.bonuses.find(b => b.remaining > 0);
+            if (activeBonus) {
+                activeBonus.remaining--;
+            } else {
+                return false; // 사용 불가
+            }
+        }
+        
+        localStorage.setItem('repost_usage_data', JSON.stringify(data));
+        localStorage.setItem('repost_bonuses', JSON.stringify(data.bonuses));
+        this.updateUsageBadge();
+        
+        return true;
+    }
+
+    // 배지 업데이트
+    updateUsageBadge() {
+        const remaining = this.getRemainingUsage();
+        const countEl = document.getElementById('usageCount');
+        
+        if (countEl) {
+            // 숫자 애니메이션
+            this.animateCounter(countEl, parseInt(countEl.textContent) || 0, remaining);
+        }
+        
+        // 0회 남았을 때 경고 색상
+        const badge = document.getElementById('usageBadge');
+        if (badge) {
+            if (remaining === 0) {
+                badge.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+            } else if (remaining <= 3) {
+                badge.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+            } else {
+                badge.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            }
+        }
+    }
+
+    // 숫자 카운터 애니메이션
+    animateCounter(element, from, to) {
+        if (from === to) {
+            element.textContent = to;
+            return;
+        }
+        
+        const duration = 500;
+        const steps = 20;
+        const stepValue = (to - from) / steps;
+        const stepDuration = duration / steps;
+        
+        let current = from;
+        let step = 0;
+        
+        const timer = setInterval(() => {
+            step++;
+            current += stepValue;
+            element.textContent = Math.round(current);
+            
+            if (step >= steps) {
+                element.textContent = to;
+                clearInterval(timer);
+            }
+        }, stepDuration);
+    }
+
+    // 신규 사용자 보너스 체크 (7일 → 8일 전환 시)
+    checkNewUserBonus() {
+        const firstVisit = localStorage.getItem('repost_first_visit');
+        if (!firstVisit) return;
+        
+        const firstDate = new Date(firstVisit);
+        const today = new Date();
+        const daysDiff = Math.floor((today - firstDate) / (1000 * 60 * 60 * 24));
+        
+        // 정확히 7일째 or 8일째에 알림
+        const shownTransition = localStorage.getItem('repost_shown_transition');
+        if (daysDiff === 7 && !shownTransition) {
+            setTimeout(() => {
+                this.showTrialEndModal();
+                localStorage.setItem('repost_shown_transition', 'true');
+            }, 2000);
+        }
+    }
+
+    // 7일 체험 종료 모달
+    showTrialEndModal() {
+        const html = `
+            <div class="bonus-modal-overlay" onclick="closeModal(event)">
+                <div class="bonus-modal usage-detail-modal" onclick="event.stopPropagation()">
+                    <div class="bonus-modal-content">
+                        <h2 class="bonus-modal-title">
+                            🎉 7일 체험이 종료되었습니다
+                        </h2>
+                        
+                        <p style="font-size: 16px; line-height: 1.6; margin: 20px 0;">
+                            Repost가 마음에 드셨나요?<br><br>
+                            오늘부터 하루 3회로 제한되지만,<br>
+                            걱정 마세요! 보너스로 더 받을 수 있어요 😊
+                        </p>
+                        
+                        <div class="usage-section">
+                            <div class="usage-item">
+                                <span class="usage-item-label">👥 친구 추천</span>
+                                <span class="usage-item-value">+5회</span>
+                            </div>
+                            <div class="usage-item">
+                                <span class="usage-item-label">📢 SNS 공유</span>
+                                <span class="usage-item-value">+3회</span>
+                            </div>
+                            <div class="usage-item">
+                                <span class="usage-item-label">💎 Basic 플랜</span>
+                                <span class="usage-item-value">무제한</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bonus-actions">
+                            <button class="bonus-action-btn" onclick="showReferralModal()">
+                                친구 추천하기
+                            </button>
+                            <button class="bonus-action-btn" onclick="showShareModal()">
+                                SNS 공유하기
+                            </button>
+                            <button class="bonus-action-btn upgrade-btn" onclick="alert('업그레이드 기능은 곧 출시됩니다!')">
+                                💎 Basic 50% 할인
+                            </button>
+                        </div>
+                        
+                        <button class="bonus-btn bonus-btn-secondary" onclick="closeModal()" style="width: 100%; margin-top: 16px;">
+                            3회로 계속 사용
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const container = document.getElementById('bonusModals');
+        container.innerHTML = html;
+    }
+
+    // 보너스 추가
+    addBonus(type, amount, expiryDays = 30) {
+        const bonuses = this.loadBonuses();
+        
+        const newBonus = {
+            id: Date.now(),
+            type: type, // 'referral' or 'share'
+            amount: amount,
+            remaining: amount,
+            createdAt: Date.now(),
+            expiresAt: Date.now() + (expiryDays * 24 * 60 * 60 * 1000)
+        };
+        
+        bonuses.push(newBonus);
+        localStorage.setItem('repost_bonuses', JSON.stringify(bonuses));
+        
+        // 사용 데이터에도 반영
+        const data = JSON.parse(localStorage.getItem('repost_usage_data'));
+        data.bonuses = bonuses;
+        localStorage.setItem('repost_usage_data', JSON.stringify(data));
+        
+        return newBonus;
+    }
+
+    // 보너스 획득 축하
+    celebrateBonus(type, amount) {
+        // Confetti 효과
+        if (typeof confetti !== 'undefined') {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#667eea', '#764ba2', '#f59e0b', '#22c55e']
+            });
+        }
+        
+        // 토스트 알림
+        this.showToast(
+            '축하합니다!',
+            `${type === 'referral' ? '친구 추천' : 'SNS 공유'} 보너스 +${amount}회 획득!`,
+            'success'
+        );
+        
+        // 보너스 모달
+        setTimeout(() => {
+            this.showBonusModal(type, amount);
+        }, 1000);
+        
+        // 배지 업데이트
+        this.updateUsageBadge();
+    }
+
+    // 토스트 알림
+    showToast(title, message, type = 'success') {
+        const icons = {
+            success: '🎉',
+            info: 'ℹ️',
+            warning: '⚠️'
+        };
+        
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <div class="toast-icon">${icons[type]}</div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <div class="toast-close" onclick="this.parentElement.remove()">✕</div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // 3초 후 자동 제거
+        setTimeout(() => {
+            toast.style.animation = 'toastPopOut 0.3s ease-out forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // 보너스 모달 표시
+    showBonusModal(type, amount) {
+        const data = JSON.parse(localStorage.getItem('repost_usage_data'));
+        const remaining = this.getRemainingUsage();
+        const typeText = type === 'referral' ? '친구 추천' : 'SNS 공유';
+        const typeIcon = type === 'referral' ? '👥' : '📢';
+        
+        const html = `
+            <div class="bonus-modal-overlay" onclick="closeModal(event)">
+                <div class="bonus-modal" onclick="event.stopPropagation()">
+                    <div class="bonus-modal-content">
+                        <h2 class="bonus-modal-title">
+                            <span>🎊</span>
+                            <span>축하합니다!</span>
+                            <span>🎊</span>
+                        </h2>
+                        
+                        <p style="font-size: 18px; margin-bottom: 8px;">
+                            ${typeIcon} ${typeText} 보너스 획득!
+                        </p>
+                        
+                        <div class="bonus-amount">+${amount}회</div>
+                        
+                        <div class="bonus-details">
+                            <div class="bonus-detail-row">
+                                <span class="bonus-detail-label">남은 횟수</span>
+                                <span class="bonus-detail-value">${remaining}회</span>
+                            </div>
+                            <div class="bonus-detail-row">
+                                <span class="bonus-detail-label">유효기간</span>
+                                <span class="bonus-detail-value">30일</span>
+                            </div>
+                        </div>
+                        
+                        ${type === 'referral' ? this.getReferralProgress() : ''}
+                        
+                        <div class="bonus-modal-buttons">
+                            ${type === 'referral' ? 
+                                '<button class="bonus-btn bonus-btn-primary" onclick="showReferralModal()">더 많은 친구 추천하기</button>' :
+                                '<button class="bonus-btn bonus-btn-primary" onclick="showShareModal()">다시 공유하기</button>'
+                            }
+                            <button class="bonus-btn bonus-btn-secondary" onclick="closeModal()">확인</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const container = document.getElementById('bonusModals');
+        container.innerHTML = html;
+    }
+
+    // 친구 추천 진행률
+    getReferralProgress() {
+        const referrals = JSON.parse(localStorage.getItem('repost_referrals') || '[]');
+        const count = referrals.length;
+        const percent = (count / 5) * 100;
+        
+        const stars = [];
+        for (let i = 0; i < 5; i++) {
+            const star = i < count ? '⭐' : '☆';
+            stars.push(`<span style="--star-index: ${i};">${star}</span>`);
+        }
+        
+        return `
+            <div class="bonus-progress">
+                <div class="bonus-progress-label">추천 현황: ${count}/5명 완료</div>
+                <div class="bonus-progress-bar">
+                    <div class="bonus-progress-fill" style="width: ${percent}%"></div>
+                </div>
+                <div class="bonus-stars">${stars.join('')}</div>
+                ${count >= 5 ? '<p style="margin-top: 12px; font-size: 14px; color: #7debc8; text-shadow: 0 0 15px rgba(125, 235, 200, 0.5);">🎁 Basic 1개월 무료 획득!</p>' : 
+                  count >= 3 ? '<p style="margin-top: 12px; font-size: 14px; color: #a5b4fc; text-shadow: 0 0 15px rgba(165, 180, 252, 0.5);">💡 2명만 더 추천하면 Basic 무료!</p>' : ''}
+            </div>
+        `;
+    }
+}
+
+// 전역 보너스 시스템 인스턴스
+let bonusSystem;
+
+// 페이지 로드 시 초기화
+window.addEventListener('load', () => {
+    bonusSystem = new BonusSystem();
+});
+
+// ========================================
+// 🎁 모달 및 UI 함수들
+// ========================================
+
+// 사용 횟수 상세 모달
+function showUsageDetail() {
+    const data = JSON.parse(localStorage.getItem('repost_usage_data'));
+    if (!data) return;
+    
+    const baseRemaining = data.baseLimit - data.baseUsage;
+    const bonusTotal = data.bonuses.reduce((sum, b) => sum + b.remaining, 0);
+    const total = baseRemaining + bonusTotal;
+    
+    const bonusesHtml = data.bonuses.map(b => {
+        const typeText = b.type === 'referral' ? '친구 추천' : 'SNS 공유';
+        const daysLeft = Math.ceil((b.expiresAt - Date.now()) / (1000 * 60 * 60 * 24));
+        
+        return `
+            <div class="usage-item">
+                <span class="usage-item-label">${typeText} (${daysLeft}일 남음)</span>
+                <span class="usage-item-value">+${b.remaining}회</span>
+            </div>
+        `;
+    }).join('');
+    
+    const html = `
+        <div class="bonus-modal-overlay" onclick="closeModal(event)">
+            <div class="bonus-modal usage-detail-modal" onclick="event.stopPropagation()">
+                <div class="bonus-modal-content">
+                    <h2 class="modal-title">
+                        📊 사용 횟수 상세
+                    </h2>
+                    
+                    <div class="usage-section">
+                        <div class="usage-section-title">🔹 기본 제공</div>
+                        <div class="usage-item">
+                            <span class="usage-item-label">${data.isNewUser ? '신규 사용자 (7일)' : '일일 제공'}</span>
+                            <span class="usage-item-value">${data.baseLimit}회/일</span>
+                        </div>
+                        <div class="usage-item">
+                            <span class="usage-item-label">사용</span>
+                            <span class="usage-item-value">${data.baseUsage}회</span>
+                        </div>
+                        <div class="usage-item">
+                            <span class="usage-item-label">남음</span>
+                            <span class="usage-item-value">${baseRemaining}회</span>
+                        </div>
+                    </div>
+                    
+                    ${data.bonuses.length > 0 ? `
+                        <div class="usage-section">
+                            <div class="usage-section-title">🎁 보너스</div>
+                            ${bonusesHtml}
+                            <div class="usage-item" style="border-top: 2px solid #667eea; margin-top: 8px; padding-top: 12px;">
+                                <span class="usage-item-label" style="font-weight: 700;">총 보너스</span>
+                                <span class="usage-item-value">${bonusTotal}회</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+            <div class="total-remaining-box">
+                <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">총 남은 횟수</div>
+                <div style="font-size: 36px; font-weight: 900; color: #667eea;">${total}회</div>
+                <div style="font-size: 12px; color: #9ca3af; margin-top: 8px;">📅 내일 자정 초기화</div>
+            </div>
+            
+            <div style="margin-top: 24px;">
+                <div style="font-size: 14px; color: #6b7280; margin-bottom: 16px; text-align: center;">
+                    💡 더 많은 보너스 받기
+                </div>
+                
+                <div class="bonus-actions">
+                    <button class="bonus-action-btn" onclick="showReferralModal()">
+                        👥 친구 추천 (+5회)
+                    </button>
+                    <button class="bonus-action-btn" onclick="showShareModal()">
+                        📢 SNS 공유 (+3회)
+                    </button>
+                </div>
+            </div>
+                    
+            <button class="bonus-btn-close" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
+                닫기
+            </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const container = document.getElementById('bonusModals');
+    container.innerHTML = html;
+}
+
+// 친구 추천 모달
+function showReferralModal() {
+    const userId = localStorage.getItem('repost_user_id');
+    const referralLink = `https://repost.kr?ref=${userId}`;
+    const referrals = JSON.parse(localStorage.getItem('repost_referrals') || '[]');
+    const count = referrals.length;
+    
+    const html = `
+        <div class="bonus-modal-overlay" onclick="closeModal(event)">
+            <div class="bonus-modal referral-modal" onclick="event.stopPropagation()">
+                <div class="bonus-modal-content">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <button onclick="showUsageDetail()" style="background: none; border: none; cursor: pointer; padding: 8px; margin-right: 10px; display: flex; align-items: center; color: #667eea; font-size: 24px; transition: transform 0.2s;">
+                            ←
+                        </button>
+                        <h2 class="bonus-modal-title" style="margin: 0; flex: 1;">
+                            👥 친구 추천하기
+                        </h2>
+                    </div>
+                    
+                    <p style="font-size: 16px; margin: 20px 0; line-height: 1.6; color: #4b5563;">
+                        친구에게 Repost를 추천하고<br>
+                        <strong style="color: #667eea;">+5회 보너스</strong>를 받으세요!
+                    </p>
+                    
+                    ${bonusSystem.getReferralProgress()}
+                    
+                    <div style="background: white; border-radius: 12px; padding: 16px; margin: 20px 0; border: 2px solid #667eea; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);">
+                        <div style="font-size: 14px; margin-bottom: 8px; color: #667eea; font-weight: 700;">내 추천 링크:</div>
+                        <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; word-break: break-all; color: #1f2937; border: 1px solid rgba(102, 126, 234, 0.2);">
+                            ${referralLink}
+                        </div>
+                    </div>
+                    
+                    <div class="share-buttons">
+                        <button class="share-btn" onclick="copyReferralLink('${referralLink}')">
+                            <span class="share-btn-icon">📋</span>
+                            <span>링크 복사</span>
+                        </button>
+                        <button class="share-btn" onclick="shareToKakao('${referralLink}')">
+                            <span class="share-btn-icon">💬</span>
+                            <span>카톡 공유</span>
+                        </button>
+                    </div>
+                    
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 20px; line-height: 1.5;">
+                        💡 친구가 링크로 가입 후 1회 사용하면<br>
+                        자동으로 +5회 보너스가 지급됩니다!
+                    </div>
+                    
+                    <button class="bonus-btn bonus-btn-secondary" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
+                        닫기
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const container = document.getElementById('bonusModals');
+    container.innerHTML = html;
+}
+
+// SNS 공유 모달
+function showShareModal() {
+    const shareUrl = 'https://repost.kr';
+    const shareText = 'Repost 덕분에 블로그 댓글 고민 끝! AI가 찰떡같은 댓글 추천해줘요 👍';
+    
+    const html = `
+        <div class="bonus-modal-overlay" onclick="closeModal(event)">
+            <div class="bonus-modal share-modal" onclick="event.stopPropagation()">
+                <div class="bonus-modal-content">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <button onclick="showUsageDetail()" style="background: none; border: none; cursor: pointer; padding: 8px; margin-right: 10px; display: flex; align-items: center; color: #667eea; font-size: 24px; transition: transform 0.2s;">
+                            ←
+                        </button>
+                        <h2 class="bonus-modal-title" style="margin: 0; flex: 1;">
+                            📢 SNS 공유하기
+                        </h2>
+                    </div>
+                    
+                    <p style="font-size: 16px; margin: 20px 0; line-height: 1.6; color: #4b5563;">
+                        SNS에 Repost를 공유하고<br>
+                        <strong style="color: #667eea;">+3회 보너스</strong>를 받으세요!
+                    </p>
+                    
+                    <div class="share-buttons" style="grid-template-columns: 1fr;">
+                        <button class="share-btn" onclick="shareToInstagram()">
+                            <span class="share-btn-icon">📷</span>
+                            <span>인스타그램 스토리</span>
+                        </button>
+                        <button class="share-btn" onclick="shareToKakao('${shareUrl}')">
+                            <span class="share-btn-icon">💬</span>
+                            <span>카카오톡</span>
+                        </button>
+                        <button class="share-btn" onclick="shareToTwitter('${shareText}', '${shareUrl}')">
+                            <span class="share-btn-icon">🐦</span>
+                            <span>트위터 (X)</span>
+                        </button>
+                        <button class="share-btn" onclick="shareToFacebook('${shareUrl}')">
+                            <span class="share-btn-icon">📘</span>
+                            <span>페이스북</span>
+                        </button>
+                    </div>
+                    
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 20px; line-height: 1.5;">
+                        💡 공유 후 24시간 유지 시 +3회 보너스!<br>
+                        (주 1회 제한)
+                    </div>
+                    
+                    <button class="bonus-btn bonus-btn-secondary" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
+                        닫기
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const container = document.getElementById('bonusModals');
+    container.innerHTML = html;
+}
+
+// 모달 닫기
+function closeModal(event) {
+    if (event && event.target.classList.contains('bonus-modal')) {
+        return; // 모달 내부 클릭은 무시
+    }
+    
+    const container = document.getElementById('bonusModals');
+    container.innerHTML = '';
+}
+
+// ========================================
+// 🔗 공유 및 추천 함수들
+// ========================================
+
+// 추천 링크 복사
+function copyReferralLink(link) {
+    navigator.clipboard.writeText(link).then(() => {
+        bonusSystem.showToast(
+            '링크 복사 완료!',
+            '친구에게 공유해보세요',
+            'success'
+        );
+    });
+}
+
+// SNS 공유 함수들
+function shareToKakao(url) {
+    alert('카카오톡 공유 기능은 곧 출시됩니다!');
+    // TODO: Kakao SDK 연동
+}
+
+function shareToInstagram() {
+    bonusSystem.showToast(
+        '인스타그램 공유',
+        '스토리에 repost.kr을 공유하고 스크린샷을 올려주세요!',
+        'info'
+    );
+    // 보너스 지급 (데모)
+    setTimeout(() => {
+        const bonus = bonusSystem.addBonus('share', 3, 7);
+        bonusSystem.celebrateBonus('share', 3);
+    }, 2000);
+}
+
+function shareToTwitter(text, url) {
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    window.open(twitterUrl, '_blank');
+    
+    // 보너스 지급 확인 (데모)
+    setTimeout(() => {
+        if (confirm('트위터에 공유를 완료하셨나요?')) {
+            const bonus = bonusSystem.addBonus('share', 3, 7);
+            bonusSystem.celebrateBonus('share', 3);
+        }
+    }, 3000);
+}
+
+function shareToFacebook(url) {
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    window.open(fbUrl, '_blank');
+    
+    // 보너스 지급 확인 (데모)
+    setTimeout(() => {
+        if (confirm('페이스북에 공유를 완료하셨나요?')) {
+            const bonus = bonusSystem.addBonus('share', 3, 7);
+            bonusSystem.celebrateBonus('share', 3);
+        }
+    }, 3000);
+}
+
+// ========================================
+// 🔌 기존 시스템 통합
+// ========================================
+
+// 분석 전 사용 횟수 체크
+const originalAnalyze = window.analyzeBlog || function() {};
+window.analyzeBlog = function() {
+    if (!bonusSystem) {
+        originalAnalyze();
+        return;
+    }
+    
+    const remaining = bonusSystem.getRemainingUsage();
+    
+    if (remaining <= 0) {
+        bonusSystem.showToast(
+            '사용 횟수 초과',
+            '보너스를 받거나 Basic 플랜으로 업그레이드하세요!',
+            'warning'
+        );
+        showUsageDetail();
+        return;
+    }
+    
+    // 사용 횟수 차감
+    bonusSystem.decreaseUsage();
+    
+    // 원래 분석 함수 실행
+    originalAnalyze();
+};
+
+console.log('🎁 보너스 시스템 로드 완료!');
+
