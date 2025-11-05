@@ -546,9 +546,9 @@ function showReferralModal() {
                     </div>
                     
                     <div class="share-buttons">
-                        <button class="share-btn" onclick="copyReferralLink('${referralLink}')">
+                        <button class="share-btn" id="copyLinkBtn" onclick="copyReferralLink('${referralLink}', this)">
                             <span class="share-btn-icon">📋</span>
-                            <span>링크 복사</span>
+                            <span class="share-btn-text">링크 복사</span>
                         </button>
                         <button class="share-btn" onclick="shareToKakao('${referralLink}')">
                             <span class="share-btn-icon">💬</span>
@@ -647,8 +647,17 @@ function closeModal(event) {
 // ========================================
 
 // 추천 링크 복사
-function copyReferralLink(link) {
+function copyReferralLink(link, button) {
     console.log('📋 링크 복사 시도:', link);
+    
+    // 버튼 즉시 변경 (시각적 피드백)
+    const textSpan = button ? button.querySelector('.share-btn-text') : null;
+    const originalText = textSpan ? textSpan.textContent : '';
+    
+    if (textSpan) {
+        textSpan.textContent = '복사됨! ✓';
+        button.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+    }
     
     // iOS Safari 등을 위한 즉시 실행
     const textArea = document.createElement("textarea");
@@ -679,15 +688,22 @@ function copyReferralLink(link) {
     
     document.body.removeChild(textArea);
     
+    // 버튼 복원
+    if (textSpan && button) {
+        setTimeout(() => {
+            textSpan.textContent = originalText;
+            button.style.background = '';
+        }, 2000);
+    }
+    
     if (success) {
+        console.log('✅ 복사 성공!');
         if (bonusSystem && bonusSystem.showToast) {
             bonusSystem.showToast(
                 '링크 복사 완료! 📋',
                 '친구에게 공유해보세요',
                 'success'
             );
-        } else {
-            alert('링크가 복사되었습니다!');
         }
     } else {
         // Clipboard API 시도
@@ -701,18 +717,20 @@ function copyReferralLink(link) {
                             '친구에게 공유해보세요',
                             'success'
                         );
-                    } else {
-                        alert('링크가 복사되었습니다!');
                     }
                 })
                 .catch(err => {
                     console.error('❌ Clipboard API 실패:', err);
                     // 최후의 수단: 수동 복사 안내
-                    prompt('링크를 복사해주세요 (Ctrl+C):', link);
+                    if (confirm('클립보드 접근이 제한되었습니다. 링크를 수동으로 복사하시겠습니까?')) {
+                        prompt('링크를 복사해주세요 (Ctrl+C 또는 ⌘+C):', link);
+                    }
                 });
         } else {
             // 최후의 수단: 수동 복사 안내
-            prompt('링크를 복사해주세요 (Ctrl+C):', link);
+            if (confirm('클립보드 접근이 제한되었습니다. 링크를 수동으로 복사하시겠습니까?')) {
+                prompt('링크를 복사해주세요 (Ctrl+C 또는 ⌘+C):', link);
+            }
         }
     }
 }
