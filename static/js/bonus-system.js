@@ -911,16 +911,35 @@ function claimReferralBonus(button) {
                 showUsageDetail();
             }, 1500);
         } else {
+            // 에러 타입별 친근한 메시지
             if (data.error === 'cooldown') {
                 bonusSystem.showToast(
-                    '이미 보너스를 받았습니다',
-                    `다음 보너스는 ${data.days_left}일 후 가능해요 (주 1회 제한)`,
+                    '😊 이미 보너스를 받으셨어요!',
+                    `${data.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`,
                     'warning'
+                );
+            } else if (data.error === 'no_referral') {
+                bonusSystem.showToast(
+                    '🤔 아직 친구가 접속하지 않았어요',
+                    '친구에게 링크를 공유하고 접속을 기다려보세요!',
+                    'warning'
+                );
+            } else if (data.error === 'self_referral') {
+                bonusSystem.showToast(
+                    '😅 자신의 링크는 사용할 수 없어요',
+                    '다른 친구에게 공유해주세요!',
+                    'warning'
+                );
+            } else if (data.error === 'server_error') {
+                bonusSystem.showToast(
+                    '😔 일시적인 오류가 발생했어요',
+                    '잠시 후 다시 시도해주세요!',
+                    'error'
                 );
             } else {
                 bonusSystem.showToast(
-                    '보너스를 받을 수 없습니다',
-                    '친구가 링크를 클릭했는지 확인하거나, 잠시 후 다시 시도해주세요',
+                    '🤷 보너스를 받을 수 없어요',
+                    '친구가 링크를 클릭했는지 확인해보세요!',
                     'warning'
                 );
             }
@@ -931,8 +950,8 @@ function claimReferralBonus(button) {
     .catch(err => {
         console.error('❌ 친구 추천 보너스 요청 실패:', err);
         bonusSystem.showToast(
-            '네트워크 오류',
-            '인터넷 연결을 확인하고 다시 시도해주세요',
+            '📡 인터넷 연결을 확인해주세요',
+            '네트워크가 불안정해요. 잠시 후 다시 시도해주세요!',
             'error'
         );
         button.disabled = false;
@@ -969,16 +988,23 @@ function claimShareBonus(button) {
                 showUsageDetail();
             }, 1500);
         } else {
+            // 에러 타입별 친근한 메시지
             if (data.error === 'cooldown') {
                 bonusSystem.showToast(
-                    '이미 보너스를 받았습니다',
-                    `다음 보너스는 ${data.days_left}일 후 가능해요 (주 1회 제한)`,
+                    '😊 이미 보너스를 받으셨어요!',
+                    `${data.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`,
                     'warning'
+                );
+            } else if (data.error === 'server_error') {
+                bonusSystem.showToast(
+                    '😔 일시적인 오류가 발생했어요',
+                    '잠시 후 다시 시도해주세요!',
+                    'error'
                 );
             } else {
                 bonusSystem.showToast(
-                    '보너스를 받을 수 없습니다',
-                    'SNS에 공유했는지 확인하거나, 잠시 후 다시 시도해주세요',
+                    '🤷 보너스를 받을 수 없어요',
+                    'SNS에 공유하신 후 다시 시도해주세요!',
                     'warning'
                 );
             }
@@ -989,8 +1015,8 @@ function claimShareBonus(button) {
     .catch(err => {
         console.error('❌ SNS 공유 보너스 요청 실패:', err);
         bonusSystem.showToast(
-            '네트워크 오류',
-            '인터넷 연결을 확인하고 다시 시도해주세요',
+            '📡 인터넷 연결을 확인해주세요',
+            '네트워크가 불안정해요. 잠시 후 다시 시도해주세요!',
             'error'
         );
         button.disabled = false;
