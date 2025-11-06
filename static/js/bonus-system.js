@@ -989,6 +989,12 @@ function claimReferralBonus(button) {
                     '다른 친구에게 공유해주세요!',
                     'warning'
                 );
+            } else if (errorData.error === 'server_not_ready') {
+                bonusSystem.showToast(
+                    '⚠️ 서버 준비 중이에요',
+                    '잠시 후 다시 시도해주세요!',
+                    'warning'
+                );
             } else {
                 bonusSystem.showToast(
                     '😔 일시적인 오류가 발생했어요',
@@ -1091,6 +1097,12 @@ function claimShareBonus(button) {
                 bonusSystem.showToast(
                     '😊 이미 보너스를 받으셨어요!',
                     `${errorData.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`,
+                    'warning'
+                );
+            } else if (errorData.error === 'server_not_ready') {
+                bonusSystem.showToast(
+                    '⚠️ 서버 준비 중이에요',
+                    '잠시 후 다시 시도해주세요!',
                     'warning'
                 );
             } else if (errorData.error === 'server_error') {

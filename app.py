@@ -1482,9 +1482,14 @@ def track_referral():
         if not referrer_id or not new_user_id:
             return jsonify({'success': False, 'error': 'Missing parameters'}), 400
         
+        # Redis 연결 확인
+        if not redis_client:
+            log(f"⚠️ Redis 연결 없음 - 추천 기록 불가", "WARNING")
+            return jsonify({'success': True})  # 실패해도 사용자에게는 성공 반환
+        
         # Redis에 기록
         key = f'referral:{referrer_id}:{new_user_id}'
-        kv.set(key, json.dumps({
+        redis_client.set(key, json.dumps({
             'referrer_id': referrer_id,
             'new_user_id': new_user_id,
             'timestamp': datetime.now(KST).isoformat(),
@@ -1512,12 +1517,17 @@ def claim_referral_bonus():
             log(f"⚠️ userId 없음", "ERROR")
             return jsonify({'success': False, 'error': 'missing_user'}), 400
         
+        # Redis 연결 확인
+        if not redis_client:
+            log(f"⚠️ Redis 연결 없음 - 보너스 지급 불가", "ERROR")
+            return jsonify({'success': False, 'error': 'server_not_ready'}), 500
+        
         # 1. 쿨다운 체크 (7일)
         last_claim_key = f'referral_claim:{user_id}'
-        last_claim = kv.get(last_claim_key)
+        last_claim = redis_client.get(last_claim_key)
         
         if last_claim:
-            last_claim_time = datetime.fromisoformat(last_claim.decode('utf-8'))
+            last_claim_time = datetime.fromisoformat(last_claim)  # decode 제거 (이미 문자열)
             days_diff = (datetime.now(KST) - last_claim_time).days
             
             if days_diff < 7:
@@ -1526,7 +1536,7 @@ def claim_referral_bonus():
                     'success': False,
                     'error': 'cooldown',
                     'days_left': 7 - days_diff
-                }), 400  # 400으로 변경
+                }), 400
         
         # 2. 실제 추천 기록 확인
         # referral:referrerId:newUserId 형태로 저장되어 있음
@@ -1539,7 +1549,7 @@ def claim_referral_bonus():
             # Vercel KV는 SCAN을 지원하지 않으므로, 실제로는 추적 데이터를 확인
             # 일단 간단하게: referred_by가 없으면 자기 자신의 링크로 판단
             referred_by_key = f'referred_by:{user_id}'
-            referred_by = kv.get(referred_by_key)
+            referred_by = redis_client.get(referred_by_key)
             
             if referred_by:
                 # 누군가의 추천으로 가입한 사용자
@@ -1568,7 +1578,7 @@ def claim_referral_bonus():
             }), 400
         
         # 보너스 지급 기록
-        kv.set(last_claim_key, datetime.now(KST).isoformat(), ex=30*24*60*60)
+        redis_client.set(last_claim_key, datetime.now(KST).isoformat(), ex=30*24*60*60)
         
         log(f"🎁 친구 추천 보너스 지급 성공: {user_id} (+5회)", "BONUS")
         
@@ -1601,12 +1611,17 @@ def claim_share_bonus():
             log(f"⚠️ userId 없음", "ERROR")
             return jsonify({'success': False, 'error': 'missing_user'}), 400
         
+        # Redis 연결 확인
+        if not redis_client:
+            log(f"⚠️ Redis 연결 없음 - 보너스 지급 불가", "ERROR")
+            return jsonify({'success': False, 'error': 'server_not_ready'}), 500
+        
         # 쿨다운 체크 (7일)
         last_claim_key = f'share_claim:{user_id}'
-        last_claim = kv.get(last_claim_key)
+        last_claim = redis_client.get(last_claim_key)
         
         if last_claim:
-            last_claim_time = datetime.fromisoformat(last_claim.decode('utf-8'))
+            last_claim_time = datetime.fromisoformat(last_claim)  # decode 제거 (이미 문자열)
             days_diff = (datetime.now(KST) - last_claim_time).days
             
             if days_diff < 7:
@@ -1615,10 +1630,10 @@ def claim_share_bonus():
                     'success': False,
                     'error': 'cooldown',
                     'days_left': 7 - days_diff
-                }), 400  # 400으로 변경
+                }), 400
         
         # 보너스 지급 기록
-        kv.set(last_claim_key, datetime.now(KST).isoformat(), ex=30*24*60*60)
+        redis_client.set(last_claim_key, datetime.now(KST).isoformat(), ex=30*24*60*60)
         
         log(f"🎁 SNS 공유 보너스 지급 성공: {user_id} (+3회)", "BONUS")
         
