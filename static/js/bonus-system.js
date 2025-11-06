@@ -1005,54 +1005,56 @@ function claimReferralBonus(button) {
     })
     .catch(err => {
         console.error('❌ 친구 추천 보너스 요청 실패:', err);
+        console.log('🔍 에러 상세:', JSON.stringify(err));
+        console.log('🔍 bonusSystem 존재:', !!bonusSystem);
         
         // 서버 에러 응답 처리
         if (err.data) {
+            console.log('✅ err.data 존재:', err.data);
             const errorData = err.data;
+            
+            let title = '';
+            let message = '';
+            
             if (errorData.error === 'cooldown') {
-                bonusSystem.showToast(
-                    '😊 이미 보너스를 받으셨어요!',
-                    `${errorData.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`,
-                    'warning',
-                    5000
-                );
+                title = '😊 이미 보너스를 받으셨어요!';
+                message = `${errorData.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`;
             } else if (errorData.error === 'no_referral') {
-                bonusSystem.showToast(
-                    '🤔 아직 친구가 접속하지 않았어요',
-                    '친구에게 링크를 공유하고 접속을 기다려보세요!',
-                    'warning',
-                    5000
-                );
+                title = '🤔 아직 친구가 접속하지 않았어요';
+                message = '친구에게 링크를 공유하고 접속을 기다려보세요!';
             } else if (errorData.error === 'self_referral') {
-                bonusSystem.showToast(
-                    '😅 자신의 링크는 사용할 수 없어요',
-                    '다른 친구에게 공유해주세요!',
-                    'warning',
-                    5000
-                );
+                title = '😅 자신의 링크는 사용할 수 없어요';
+                message = '다른 친구에게 공유해주세요!';
             } else if (errorData.error === 'server_not_ready') {
-                bonusSystem.showToast(
-                    '⚠️ 서버 준비 중이에요',
-                    '잠시 후 다시 시도해주세요!',
-                    'warning',
-                    5000
-                );
+                title = '⚠️ 서버 준비 중이에요';
+                message = '잠시 후 다시 시도해주세요!';
             } else {
+                title = '😔 일시적인 오류가 발생했어요';
+                message = '잠시 후 다시 시도해주세요!';
+            }
+            
+            console.log('🎯 토스트 표시:', title, message);
+            
+            if (bonusSystem && bonusSystem.showToast) {
+                bonusSystem.showToast(title, message, 'warning', 5000);
+                console.log('✅ showToast 호출 완료');
+            } else {
+                console.error('❌ bonusSystem.showToast 없음!');
+                alert(title + '\n' + message);  // 긴급 대응: alert로 표시
+            }
+        } else {
+            console.log('❌ err.data 없음 - 네트워크 에러');
+            // 네트워크 에러
+            if (bonusSystem && bonusSystem.showToast) {
                 bonusSystem.showToast(
-                    '😔 일시적인 오류가 발생했어요',
-                    '잠시 후 다시 시도해주세요!',
+                    '📡 인터넷 연결을 확인해주세요',
+                    '네트워크가 불안정해요. 잠시 후 다시 시도해주세요!',
                     'error',
                     5000
                 );
+            } else {
+                alert('📡 인터넷 연결을 확인해주세요\n네트워크가 불안정해요. 잠시 후 다시 시도해주세요!');
             }
-        } else {
-            // 네트워크 에러
-            bonusSystem.showToast(
-                '📡 인터넷 연결을 확인해주세요',
-                '네트워크가 불안정해요. 잠시 후 다시 시도해주세요!',
-                'error',
-                5000
-            );
         }
         
         button.disabled = false;
