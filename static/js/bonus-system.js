@@ -138,6 +138,11 @@ class BonusSystem {
 
     // 남은 사용 횟수 계산
     getRemainingUsage() {
+        // 🔑 마스터 계정: 무제한 사용
+        if (localStorage.getItem('repost_admin') === 'true') {
+            return 9999;
+        }
+        
         const data = JSON.parse(localStorage.getItem('repost_usage_data'));
         if (!data) return 0;
         
@@ -149,6 +154,11 @@ class BonusSystem {
 
     // 사용 횟수 감소
     decreaseUsage() {
+        // 🔑 마스터 계정: 사용 횟수 차감 안 함
+        if (localStorage.getItem('repost_admin') === 'true') {
+            return true;
+        }
+        
         const data = JSON.parse(localStorage.getItem('repost_usage_data'));
         if (!data) return false;
         
@@ -274,10 +284,7 @@ class BonusSystem {
                         
                         <div class="bonus-actions">
                             <button class="bonus-action-btn" onclick="showReferralModal()">
-                                친구 추천하기
-                            </button>
-                            <button class="bonus-action-btn" onclick="showShareModal()">
-                                SNS 공유하기
+                                👥 친구 추천 (+5회)
                             </button>
                             <button class="bonus-action-btn upgrade-btn" onclick="alert('업그레이드 기능은 곧 출시됩니다!')">
                                 💎 Basic 50% 할인
@@ -436,10 +443,7 @@ class BonusSystem {
                         ${type === 'referral' ? this.getReferralProgress() : ''}
                         
                         <div class="bonus-modal-buttons">
-                            ${type === 'referral' ? 
-                                '<button class="bonus-btn bonus-btn-primary" onclick="showReferralModal()">더 많은 친구 추천하기</button>' :
-                                '<button class="bonus-btn bonus-btn-primary" onclick="showShareModal()">다시 공유하기</button>'
-                            }
+                            <button class="bonus-btn bonus-btn-primary" onclick="showReferralModal()">더 많은 친구 추천하기</button>
                             <button class="bonus-btn bonus-btn-secondary" onclick="closeModal()">확인</button>
                         </div>
                     </div>
@@ -555,14 +559,11 @@ function showUsageDetail() {
                 <div style="font-size: 16px; font-weight: 700; color: #1a202c; margin-bottom: 8px; text-align: center;">
                     ${total === 0 ? '🚨 지금 바로 보너스 받으세요!' : '💡 더 많은 보너스 받기'}
                 </div>
-                ${total === 0 ? '<div style="font-size: 13px; color: #6b7280; margin-bottom: 16px; text-align: center;">친구 추천 5회 · SNS 공유 3회 즉시 지급!</div>' : ''}
+                ${total === 0 ? '<div style="font-size: 13px; color: #6b7280; margin-bottom: 16px; text-align: center;">친구 추천 5회 즉시 지급!</div>' : ''}
                 
                 <div class="bonus-actions">
-                    <button class="bonus-action-btn ${total === 0 ? 'pulse' : ''}" onclick="showReferralModal()">
+                    <button class="bonus-action-btn ${total === 0 ? 'pulse' : ''}" onclick="showReferralModal()" style="width: 100%;">
                         👥 친구 추천 (+5회)
-                    </button>
-                    <button class="bonus-action-btn ${total === 0 ? 'pulse' : ''}" onclick="showShareModal()">
-                        📢 SNS 공유 (+3회)
                     </button>
                 </div>
             </div>
@@ -631,8 +632,8 @@ function showReferralModal() {
                             <span class="share-btn-text">링크 복사</span>
                         </button>
                         <button class="share-btn" onclick="shareReferralLink('${referralLink}')">
-                            <span class="share-btn-icon">📤</span>
-                            <span>공유하기</span>
+                            <span class="share-btn-icon">📱</span>
+                            <span>SNS 공유하기</span>
                         </button>
                     </div>
                     
@@ -661,66 +662,8 @@ function showReferralModal() {
     container.innerHTML = html;
 }
 
-// SNS 공유 모달
-function showShareModal() {
-    const shareUrl = 'https://repost.kr';
-    const shareText = 'Repost 덕분에 블로그 댓글 고민 끝! AI가 찰떡같은 댓글 추천해줘요 👍';
-    
-    const html = `
-        <div class="bonus-modal-overlay" onclick="closeModal(event)">
-            <div class="bonus-modal share-modal" onclick="event.stopPropagation()">
-                <div class="bonus-modal-content">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <button onclick="showUsageDetail()" style="background: none; border: none; cursor: pointer; padding: 8px; margin-right: 10px; display: flex; align-items: center; color: #667eea; font-size: 24px; transition: transform 0.2s;">
-                            ←
-                        </button>
-                        <h2 class="bonus-modal-title" style="margin: 0; flex: 1;">
-                            📢 SNS 공유하기
-                        </h2>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #667eea;">
-                        <div style="font-size: 15px; font-weight: 700; color: #1a202c; margin-bottom: 12px;">
-                            💡 보너스 받는 방법 (2단계)
-                        </div>
-                        <div style="font-size: 13px; color: #4b5563; line-height: 1.8;">
-                            <div style="margin-bottom: 8px;">
-                                <strong style="color: #667eea;">1단계:</strong> 아래 "공유하기" 버튼으로 SNS에 공유
-                            </div>
-                            <div>
-                                <strong style="color: #667eea;">2단계:</strong> 하단 "보너스 받기" 버튼 클릭
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button class="share-btn" onclick="shareToSocial('${shareUrl}', '${shareText}')" style="width: 100%; margin: 20px 0; padding: 20px;">
-                        <span class="share-btn-icon" style="font-size: 28px;">📤</span>
-                        <span style="font-size: 16px; font-weight: 700;">공유하기</span>
-                    </button>
-                    
-                    <button class="bonus-btn bonus-btn-primary" onclick="claimShareBonus(this)" style="width: 100%; margin-top: 16px; font-size: 16px; padding: 18px;">
-                        🎁 보너스 받기 (+3회)
-                    </button>
-                    
-                    <div style="background: #fef3c7; border-radius: 8px; padding: 12px; margin-top: 16px; border-left: 3px solid #f59e0b;">
-                        <div style="font-size: 12px; color: #92400e; line-height: 1.6;">
-                            <strong>⚠️ 주의사항</strong><br>
-                            • 주 1회만 보너스 지급<br>
-                            • 공유 후 "보너스 받기" 클릭 필수
-                        </div>
-                    </div>
-                    
-                    <button class="bonus-btn bonus-btn-secondary" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
-                        닫기
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    const container = document.getElementById('bonusModals');
-    container.innerHTML = html;
-}
+// SNS 공유 모달 - 더 이상 사용 안 함 (친구 추천으로 통합)
+// function showShareModal() { ... }
 
 // 모달 닫기
 function closeModal(event) {
@@ -837,13 +780,7 @@ function shareReferralLink(url) {
         })
         .then(() => {
             console.log('✅ 공유 성공');
-            if (bonusSystem && bonusSystem.showToast) {
-                bonusSystem.showToast(
-                    '공유 완료! 📤',
-                    '친구에게 전달되었습니다',
-                    'success'
-                );
-            }
+            // 토스트 제거 - 사용자가 실제로 공유를 완료한 후 보너스 받기 버튼 클릭
         })
         .catch((err) => {
             if (err.name !== 'AbortError') {
@@ -853,57 +790,11 @@ function shareReferralLink(url) {
     } else {
         // Web Share API 미지원 시 링크 복사
         copyReferralLink(url, document.querySelector('#copyLinkBtn'));
-        bonusSystem.showToast(
-            '링크 복사 완료',
-            '카톡이나 문자로 공유해주세요!',
-            'info'
-        );
     }
 }
 
-// SNS 공유 (Web Share API)
-function shareToSocial(url, text) {
-    console.log('📱 SNS 공유:', url);
-    
-    if (navigator.share) {
-        navigator.share({
-            title: 'Repost - AI 블로그 댓글 추천',
-            text: text,
-            url: url
-        })
-        .then(() => {
-            console.log('✅ 공유 성공');
-            if (bonusSystem && bonusSystem.showToast) {
-                bonusSystem.showToast(
-                    '공유 완료! 📱',
-                    '감사합니다!',
-                    'success'
-                );
-            }
-        })
-        .catch((err) => {
-            if (err.name !== 'AbortError') {
-                console.error('❌ 공유 실패:', err);
-            }
-        });
-    } else {
-        // PC에서는 링크 복사
-        const textArea = document.createElement("textarea");
-        textArea.value = url;
-        textArea.style.position = "fixed";
-        textArea.style.opacity = "0";
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
-        bonusSystem.showToast(
-            '링크 복사 완료',
-            'SNS에 붙여넣어 주세요!',
-            'info'
-        );
-    }
-}
+// SNS 공유 (Web Share API) - 더 이상 사용 안 함 (친구 추천으로 통합)
+// function shareToSocial(url, text) { ... }
 
 // 친구 추천 보너스 받기
 function claimReferralBonus(button) {
@@ -1063,7 +954,7 @@ function claimReferralBonus(button) {
     });
 }
 
-// SNS 공유 보너스 받기
+// SNS 공유 보너스 받기 - 더 이상 사용 안 함 (친구 추천으로 통합)
 function claimShareBonus(button) {
     const userId = localStorage.getItem('repost_user_id');
     const originalText = button.textContent;
@@ -1220,5 +1111,234 @@ window.analyzeBlog = function() {
     originalAnalyze();
 };
 
+// ========================================
+// 🔑 마스터 계정 활성화 시스템
+// ========================================
+
+// URL 파라미터로 마스터 계정 활성화
+(function checkAdminAccess() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const adminKey = urlParams.get('admin');
+    
+    // 비밀 키 검증 (프로덕션에서는 서버 검증 추가 가능)
+    const validKeys = ['repost2024', 'admin2024', 'master2024'];
+    
+    if (adminKey && validKeys.includes(adminKey)) {
+        localStorage.setItem('repost_admin', 'true');
+        console.log('🔑 마스터 계정 활성화 완료!');
+        
+        // URL에서 파라미터 제거 (보안)
+        const url = new URL(window.location.href);
+        url.searchParams.delete('admin');
+        window.history.replaceState({}, document.title, url.pathname + url.hash);
+        
+        // 알림
+        if (bonusSystem && bonusSystem.showToast) {
+            bonusSystem.showToast(
+                '🔑 마스터 계정 활성화',
+                '무제한 사용이 가능합니다!',
+                'success',
+                3000
+            );
+        }
+    }
+})();
+
+// Secret Code 입력 (로고 5번 클릭)
+(function setupSecretCodeAccess() {
+    let clickCount = 0;
+    let clickTimer = null;
+    
+    // 로고 요소 찾기
+    const logo = document.querySelector('.logo-text') || document.querySelector('h1') || document.querySelector('[onclick*="location.reload"]');
+    
+    if (!logo) {
+        console.warn('⚠️ 로고 요소를 찾을 수 없습니다');
+        return;
+    }
+    
+    logo.style.cursor = 'pointer';
+    logo.style.userSelect = 'none';
+    
+    logo.addEventListener('click', function(e) {
+        e.preventDefault();
+        clickCount++;
+        
+        // 3초 이내에 5번 클릭
+        if (clickCount === 1) {
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 3000);
+        }
+        
+        if (clickCount === 5) {
+            clearTimeout(clickTimer);
+            clickCount = 0;
+            showSecretCodeModal();
+        }
+    });
+})();
+
+// Secret Code 입력 모달
+function showSecretCodeModal() {
+    const html = `
+        <div class="bonus-modal-overlay" onclick="closeSecretModal(event)" style="z-index: 10003;">
+            <div class="bonus-modal" onclick="event.stopPropagation()" style="max-width: 400px;">
+                <div class="bonus-modal-content">
+                    <h2 class="bonus-modal-title" style="margin-bottom: 20px;">
+                        🔐 관리자 인증
+                    </h2>
+                    
+                    <div style="margin: 20px 0;">
+                        <input 
+                            type="password" 
+                            id="secretCodeInput" 
+                            placeholder="비밀 코드를 입력하세요"
+                            style="
+                                width: 100%;
+                                padding: 16px;
+                                border: 2px solid #e5e7eb;
+                                border-radius: 12px;
+                                font-size: 16px;
+                                text-align: center;
+                                letter-spacing: 2px;
+                                transition: all 0.3s;
+                            "
+                            onkeypress="if(event.key==='Enter') verifySecretCode()"
+                            autofocus
+                        />
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 24px;">
+                        <button 
+                            class="bonus-btn bonus-btn-secondary" 
+                            onclick="closeSecretModal()"
+                            style="flex: 1;"
+                        >
+                            취소
+                        </button>
+                        <button 
+                            class="bonus-btn bonus-btn-primary" 
+                            onclick="verifySecretCode()"
+                            style="flex: 1;"
+                        >
+                            확인
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const container = document.getElementById('bonusModals') || document.body;
+    const modalDiv = document.createElement('div');
+    modalDiv.id = 'secretCodeModal';
+    modalDiv.innerHTML = html;
+    container.appendChild(modalDiv);
+    
+    // 입력창 포커스
+    setTimeout(() => {
+        const input = document.getElementById('secretCodeInput');
+        if (input) {
+            input.focus();
+            // 입력 시 테두리 색상 변경
+            input.addEventListener('focus', function() {
+                this.style.borderColor = '#667eea';
+                this.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+            });
+            input.addEventListener('blur', function() {
+                this.style.borderColor = '#e5e7eb';
+                this.style.boxShadow = 'none';
+            });
+        }
+    }, 100);
+}
+
+// Secret Code 검증
+function verifySecretCode() {
+    const input = document.getElementById('secretCodeInput');
+    const code = input ? input.value.trim() : '';
+    
+    // 비밀 코드 목록 (프로덕션에서는 서버 검증 추가 가능)
+    const validCodes = ['repost2024', 'admin2024', 'master2024'];
+    
+    if (validCodes.includes(code.toLowerCase())) {
+        // 성공
+        localStorage.setItem('repost_admin', 'true');
+        
+        // 입력창 성공 애니메이션
+        input.style.borderColor = '#10b981';
+        input.style.background = '#ecfdf5';
+        
+        // 모달 닫기
+        setTimeout(() => {
+            closeSecretModal();
+            
+            // 성공 알림
+            if (bonusSystem && bonusSystem.showToast) {
+                bonusSystem.showToast(
+                    '🎉 인증 성공!',
+                    '마스터 계정이 활성화되었습니다',
+                    'success',
+                    3000
+                );
+            }
+            
+            // 배지 업데이트
+            if (bonusSystem) {
+                bonusSystem.updateUsageBadge();
+            }
+            
+            // 페이지 새로고침 (선택사항)
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        }, 500);
+        
+    } else {
+        // 실패
+        input.style.borderColor = '#ef4444';
+        input.style.background = '#fef2f2';
+        input.value = '';
+        input.placeholder = '❌ 잘못된 코드입니다';
+        
+        // 흔들기 애니메이션
+        input.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+            input.style.animation = '';
+            input.style.borderColor = '#e5e7eb';
+            input.style.background = 'white';
+            input.placeholder = '다시 입력해주세요';
+        }, 500);
+    }
+}
+
+// Secret Code 모달 닫기
+function closeSecretModal(event) {
+    if (event && event.target.classList.contains('bonus-modal')) {
+        return;
+    }
+    
+    const modal = document.getElementById('secretCodeModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// 흔들기 애니메이션 추가
+if (!document.getElementById('shakeAnimation')) {
+    const style = document.createElement('style');
+    style.id = 'shakeAnimation';
+    style.textContent = `
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 console.log('🎁 보너스 시스템 로드 완료!');
+console.log('🔑 마스터 계정 시스템 활성화됨');
 
