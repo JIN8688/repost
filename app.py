@@ -1482,6 +1482,11 @@ def track_referral():
         if not referrer_id or not new_user_id:
             return jsonify({'success': False, 'error': 'Missing parameters'}), 400
         
+        # 🚫 자기 자신의 링크는 무시
+        if referrer_id == new_user_id:
+            log(f"⚠️ 자기 자신의 추천 링크 무시: {referrer_id}", "REFERRAL")
+            return jsonify({'success': True})  # 에러 없이 무시
+        
         # Redis 연결 확인
         if not redis_client:
             log(f"⚠️ Redis 연결 없음 - 추천 기록 불가", "WARNING")

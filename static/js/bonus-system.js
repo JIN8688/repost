@@ -322,38 +322,61 @@ class BonusSystem {
 
     // 보너스 획득 축하
     celebrateBonus(type, amount) {
-        // Confetti 효과
+        // 🎉 더 화려한 Confetti 효과 (3회 연속)
         if (typeof confetti !== 'undefined') {
+            // 첫 번째 폭죽
             confetti({
-                particleCount: 100,
-                spread: 70,
+                particleCount: 150,
+                spread: 100,
                 origin: { y: 0.6 },
-                colors: ['#667eea', '#764ba2', '#f59e0b', '#22c55e']
+                colors: ['#667eea', '#764ba2', '#f59e0b', '#22c55e', '#ec4899']
             });
+            
+            // 두 번째 폭죽 (0.3초 후)
+            setTimeout(() => {
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { x: 0.3, y: 0.5 },
+                    colors: ['#667eea', '#764ba2', '#f59e0b', '#22c55e', '#ec4899']
+                });
+            }, 300);
+            
+            // 세 번째 폭죽 (0.6초 후)
+            setTimeout(() => {
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { x: 0.7, y: 0.5 },
+                    colors: ['#667eea', '#764ba2', '#f59e0b', '#22c55e', '#ec4899']
+                });
+            }, 600);
         }
         
-        // 토스트 알림
+        // 토스트 알림 (5초로 연장)
         this.showToast(
-            '축하합니다!',
+            '🎉 축하합니다! 🎉',
             `${type === 'referral' ? '친구 추천' : 'SNS 공유'} 보너스 +${amount}회 획득!`,
-            'success'
+            'success',
+            5000  // 5초
         );
         
-        // 보너스 모달
+        // 보너스 모달 (1.5초 후로 조정)
         setTimeout(() => {
             this.showBonusModal(type, amount);
-        }, 1000);
+        }, 1500);
         
         // 배지 업데이트
         this.updateUsageBadge();
     }
 
     // 토스트 알림
-    showToast(title, message, type = 'success') {
+    showToast(title, message, type = 'success', duration = 3000) {
         const icons = {
             success: '🎉',
             info: 'ℹ️',
-            warning: '⚠️'
+            warning: '⚠️',
+            error: '❌'
         };
         
         const toast = document.createElement('div');
@@ -369,11 +392,11 @@ class BonusSystem {
         
         document.body.appendChild(toast);
         
-        // 3초 후 자동 제거
+        // duration 후 자동 제거
         setTimeout(() => {
             toast.style.animation = 'toastPopOut 0.3s ease-out forwards';
             setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        }, duration);
     }
 
     // 보너스 모달 표시
@@ -913,6 +936,15 @@ function claimReferralBonus(button) {
             const bonus = bonusSystem.addBonus('referral', data.bonus, data.expiryDays);
             console.log('💰 addBonus 완료:', bonus);
             
+            // ⭐ 추천 기록에 추가 (별과 게이지 업데이트)
+            const referrals = JSON.parse(localStorage.getItem('repost_referrals') || '[]');
+            referrals.push({
+                timestamp: Date.now(),
+                bonusId: bonus.id
+            });
+            localStorage.setItem('repost_referrals', JSON.stringify(referrals));
+            console.log('⭐ 추천 기록 업데이트 완료:', referrals.length);
+            
             bonusSystem.celebrateBonus('referral', data.bonus);
             console.log('🎉 celebrateBonus 완료');
             
@@ -926,7 +958,7 @@ function claimReferralBonus(button) {
             setTimeout(() => {
                 closeModal();
                 showUsageDetail();
-            }, 1500);
+            }, 2000);  // 2초로 연장 (축하 효과 볼 시간)
         } else {
             console.log('❌ 서버 응답 실패:', data.error);
             // 에러 타입별 친근한 메시지
