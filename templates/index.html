@@ -1774,12 +1774,18 @@
             startLoadingAnimation();
 
             try {
+                // 🔑 마스터 계정 확인
+                const isAdmin = localStorage.getItem('repost_admin') === 'true';
+                
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ url: url })
+                    body: JSON.stringify({ 
+                        url: url,
+                        isAdmin: isAdmin  // 마스터 계정 여부 전달
+                    })
                 });
 
                 const data = await response.json();

@@ -1115,34 +1115,8 @@ window.analyzeBlog = function() {
 // 🔑 마스터 계정 활성화 시스템
 // ========================================
 
-// URL 파라미터로 마스터 계정 활성화
-(function checkAdminAccess() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const adminKey = urlParams.get('admin');
-    
-    // 비밀 키 검증 (프로덕션에서는 서버 검증 추가 가능)
-    const validKeys = ['repost2024', 'admin2024', 'master2024'];
-    
-    if (adminKey && validKeys.includes(adminKey)) {
-        localStorage.setItem('repost_admin', 'true');
-        console.log('🔑 마스터 계정 활성화 완료!');
-        
-        // URL에서 파라미터 제거 (보안)
-        const url = new URL(window.location.href);
-        url.searchParams.delete('admin');
-        window.history.replaceState({}, document.title, url.pathname + url.hash);
-        
-        // 알림
-        if (bonusSystem && bonusSystem.showToast) {
-            bonusSystem.showToast(
-                '🔑 마스터 계정 활성화',
-                '무제한 사용이 가능합니다!',
-                'success',
-                3000
-            );
-        }
-    }
-})();
+// URL 파라미터로 마스터 계정 활성화 - 제거됨 (시크릿 코드만 사용)
+// (function checkAdminAccess() { ... })();
 
 // Secret Code 입력 (로고 5번 클릭)
 (function setupSecretCodeAccess() {

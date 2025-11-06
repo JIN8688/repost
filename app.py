@@ -471,7 +471,7 @@ def scrape_blog_content(url):
             'url': url
         }
 
-def generate_comments_with_ai(title, content):
+def generate_comments_with_ai(title, content, is_admin=False):
     """OpenAI를 사용하여 블로그 내용 기반 댓글 생성 (프로덕션 레벨)"""
     log("=" * 60)
     log("🤖 AI 댓글 생성 함수 시작", "AI")
@@ -484,8 +484,9 @@ def generate_comments_with_ai(title, content):
         
         log("✅ OpenAI 클라이언트 확인 완료", "AI")
         
-        # 블로그 내용 요약 및 정제
-        content_preview = content[:500] if len(content) > 500 else content
+        # 🔑 블로그 내용 요약 및 정제 (마스터 계정은 1000자)
+        max_length = 1000 if is_admin else 500
+        content_preview = content[:max_length] if len(content) > max_length else content
         content_preview = content_preview.strip()
         
         if not content_preview:
@@ -494,6 +495,7 @@ def generate_comments_with_ai(title, content):
         
         log(f"📝 블로그 제목: {title[:50]}...", "AI")
         log(f"📝 내용 길이: {len(content)}자 (미리보기: {len(content_preview)}자)", "AI")
+        log(f"🔑 마스터 계정: {is_admin} (분석 길이: {max_length}자)", "AI")
         
         prompt = f"""다음은 네이버 블로그 글입니다. 이 글을 실제로 읽은 사람처럼 자연스러운 댓글을 **정확히 8개** 한국어로 작성해주세요.
 
@@ -828,7 +830,7 @@ def generate_template_comments(title, content, count=8):
     
     return comments
 
-def generate_comments(blog_data):
+def generate_comments(blog_data, is_admin=False):
     """블로그 내용을 기반으로 댓글 추천 생성 (AI 우선, 부족하면 템플릿 보충)"""
     title = blog_data['title']
     content = blog_data['content']
@@ -836,10 +838,11 @@ def generate_comments(blog_data):
     log("━" * 60)
     log(f"📋 댓글 생성 프로세스 시작", "COMMENT")
     log(f"   블로그 제목: {title[:50]}...", "COMMENT")
+    log(f"   🔑 마스터 계정: {is_admin}", "COMMENT")
     log("━" * 60)
     
-    # AI 댓글 생성 시도
-    ai_comments = generate_comments_with_ai(title, content)
+    # AI 댓글 생성 시도 (마스터 계정 여부 전달)
+    ai_comments = generate_comments_with_ai(title, content, is_admin)
     
     # AI 댓글이 8개 이상이면 그대로 반환
     if ai_comments and len(ai_comments) >= 8:
@@ -973,6 +976,7 @@ def analyze_blog():
         data = request.json
         blog_url = data.get('url', '').strip()
         force_refresh = data.get('force_refresh', False)  # 강제 재생성 옵션
+        is_admin = data.get('isAdmin', False)  # 🔑 마스터 계정 여부
         
         if not blog_url:
             return jsonify({'error': 'URL을 입력해주세요.'}), 400
@@ -981,6 +985,7 @@ def analyze_blog():
         log("🚀 새로운 블로그 분석 요청 시작", "API")
         log(f"   URL: {blog_url}", "API")
         log(f"   강제 재생성: {force_refresh}", "API")
+        log(f"   🔑 마스터 계정: {is_admin}", "API")
         log("═" * 60)
         
         # 💾 1단계: 캐시 조회 (강제 재생성이 아닌 경우)
@@ -1017,8 +1022,8 @@ def analyze_blog():
         blog_data = scrape_blog_content(blog_url)
         log(f"✅ 스크래핑 완료: {blog_data['title'][:50]}...", "SCRAPE")
         
-        # 댓글 생성
-        comments = generate_comments(blog_data)
+        # 댓글 생성 (마스터 계정 여부 전달)
+        comments = generate_comments(blog_data, is_admin)
         
         # 💾 3단계: 캐시에 저장 (24시간)
         cache_saved = set_cached_comments(blog_url, blog_data, comments, ttl=86400)
