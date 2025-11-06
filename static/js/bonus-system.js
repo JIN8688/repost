@@ -966,35 +966,41 @@ function claimReferralBonus(button) {
                 bonusSystem.showToast(
                     '😊 이미 보너스를 받으셨어요!',
                     `${data.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`,
-                    'warning'
+                    'warning',
+                    5000
                 );
             } else if (data.error === 'no_referral') {
                 bonusSystem.showToast(
                     '🤔 아직 친구가 접속하지 않았어요',
                     '친구에게 링크를 공유하고 접속을 기다려보세요!',
-                    'warning'
+                    'warning',
+                    5000
                 );
             } else if (data.error === 'self_referral') {
                 bonusSystem.showToast(
                     '😅 자신의 링크는 사용할 수 없어요',
                     '다른 친구에게 공유해주세요!',
-                    'warning'
+                    'warning',
+                    5000
                 );
             } else if (data.error === 'server_error') {
                 bonusSystem.showToast(
                     '😔 일시적인 오류가 발생했어요',
                     '잠시 후 다시 시도해주세요!',
-                    'error'
+                    'error',
+                    5000
                 );
             } else {
                 bonusSystem.showToast(
                     '🤷 보너스를 받을 수 없어요',
                     '친구가 링크를 클릭했는지 확인해보세요!',
-                    'warning'
+                    'warning',
+                    5000
                 );
             }
             button.disabled = false;
             button.textContent = originalText;
+            // ❌ 모달 닫지 않음! 사용자가 토스트를 봐야 함
         }
     })
     .catch(err => {
@@ -1007,31 +1013,36 @@ function claimReferralBonus(button) {
                 bonusSystem.showToast(
                     '😊 이미 보너스를 받으셨어요!',
                     `${errorData.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`,
-                    'warning'
+                    'warning',
+                    5000
                 );
             } else if (errorData.error === 'no_referral') {
                 bonusSystem.showToast(
                     '🤔 아직 친구가 접속하지 않았어요',
                     '친구에게 링크를 공유하고 접속을 기다려보세요!',
-                    'warning'
+                    'warning',
+                    5000
                 );
             } else if (errorData.error === 'self_referral') {
                 bonusSystem.showToast(
                     '😅 자신의 링크는 사용할 수 없어요',
                     '다른 친구에게 공유해주세요!',
-                    'warning'
+                    'warning',
+                    5000
                 );
             } else if (errorData.error === 'server_not_ready') {
                 bonusSystem.showToast(
                     '⚠️ 서버 준비 중이에요',
                     '잠시 후 다시 시도해주세요!',
-                    'warning'
+                    'warning',
+                    5000
                 );
             } else {
                 bonusSystem.showToast(
                     '😔 일시적인 오류가 발생했어요',
                     '잠시 후 다시 시도해주세요!',
-                    'error'
+                    'error',
+                    5000
                 );
             }
         } else {
@@ -1039,12 +1050,14 @@ function claimReferralBonus(button) {
             bonusSystem.showToast(
                 '📡 인터넷 연결을 확인해주세요',
                 '네트워크가 불안정해요. 잠시 후 다시 시도해주세요!',
-                'error'
+                'error',
+                5000
             );
         }
         
         button.disabled = false;
         button.textContent = originalText;
+        // ❌ 모달 닫지 않음! 사용자가 토스트를 봐야 함
     });
 }
 
@@ -1100,23 +1113,27 @@ function claimShareBonus(button) {
                 bonusSystem.showToast(
                     '😊 이미 보너스를 받으셨어요!',
                     `${data.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`,
-                    'warning'
+                    'warning',
+                    5000
                 );
             } else if (data.error === 'server_error') {
                 bonusSystem.showToast(
                     '😔 일시적인 오류가 발생했어요',
                     '잠시 후 다시 시도해주세요!',
-                    'error'
+                    'error',
+                    5000
                 );
             } else {
                 bonusSystem.showToast(
                     '🤷 보너스를 받을 수 없어요',
                     'SNS에 공유하신 후 다시 시도해주세요!',
-                    'warning'
+                    'warning',
+                    5000
                 );
             }
             button.disabled = false;
             button.textContent = originalText;
+            // ❌ 모달 닫지 않음! 사용자가 토스트를 봐야 함
         }
     })
     .catch(err => {
@@ -1129,25 +1146,29 @@ function claimShareBonus(button) {
                 bonusSystem.showToast(
                     '😊 이미 보너스를 받으셨어요!',
                     `${errorData.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`,
-                    'warning'
+                    'warning',
+                    5000
                 );
             } else if (errorData.error === 'server_not_ready') {
                 bonusSystem.showToast(
                     '⚠️ 서버 준비 중이에요',
                     '잠시 후 다시 시도해주세요!',
-                    'warning'
+                    'warning',
+                    5000
                 );
             } else if (errorData.error === 'server_error') {
                 bonusSystem.showToast(
                     '😔 일시적인 오류가 발생했어요',
                     '잠시 후 다시 시도해주세요!',
-                    'error'
+                    'error',
+                    5000
                 );
             } else {
                 bonusSystem.showToast(
                     '🤷 보너스를 받을 수 없어요',
                     'SNS에 공유하신 후 다시 시도해주세요!',
-                    'warning'
+                    'warning',
+                    5000
                 );
             }
         } else {
@@ -1155,12 +1176,14 @@ function claimShareBonus(button) {
             bonusSystem.showToast(
                 '📡 인터넷 연결을 확인해주세요',
                 '네트워크가 불안정해요. 잠시 후 다시 시도해주세요!',
-                'error'
+                'error',
+                5000
             );
         }
         
         button.disabled = false;
         button.textContent = originalText;
+        // ❌ 모달 닫지 않음! 사용자가 토스트를 봐야 함
     });
 }
 
