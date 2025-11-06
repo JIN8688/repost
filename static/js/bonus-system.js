@@ -16,7 +16,51 @@ class BonusSystem {
         // 신규 사용자 체크 (7일 보너스)
         this.checkNewUserBonus();
         
+        // URL 파라미터 체크 (referral 추적)
+        this.checkReferralParam();
+        
         console.log('🎁 보너스 시스템 초기화 완료');
+    }
+    
+    // URL 파라미터로 referral 추적
+    checkReferralParam() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const referrerId = urlParams.get('ref');
+        
+        if (referrerId) {
+            const userId = localStorage.getItem('repost_user_id');
+            
+            // 자기 자신의 링크는 무시
+            if (userId === referrerId) {
+                console.log('⚠️ 자신의 추천 링크는 사용할 수 없습니다');
+                return;
+            }
+            
+            // 이미 추천 받았는지 확인
+            const alreadyReferred = localStorage.getItem('repost_referred_by');
+            if (alreadyReferred) {
+                console.log('ℹ️ 이미 추천을 통해 가입한 사용자입니다');
+                return;
+            }
+            
+            // 서버에 추적 요청
+            fetch('/api/referral/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    referrerId: referrerId,
+                    newUserId: userId
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    localStorage.setItem('repost_referred_by', referrerId);
+                    console.log('✅ 추천 링크로 가입 완료:', referrerId);
+                }
+            })
+            .catch(err => console.error('❌ 추천 추적 실패:', err));
+        }
     }
 
     // 사용 데이터 로드
@@ -44,7 +88,7 @@ class BonusSystem {
         
         // 신규 사용자 여부 확인
         const isNewUser = this.checkIfNewUser();
-        const dailyLimit = isNewUser ? 10 : 3; // 7일 이내면 10회, 아니면 3회
+        const dailyLimit = isNewUser ? 5 : 3; // 7일 이내면 5회, 아니면 3회
         
         const usageData = {
             date: today,
@@ -550,15 +594,19 @@ function showReferralModal() {
                             <span class="share-btn-icon">📋</span>
                             <span class="share-btn-text">링크 복사</span>
                         </button>
-                        <button class="share-btn" onclick="shareToKakao('${referralLink}')">
-                            <span class="share-btn-icon">💬</span>
-                            <span>카톡 공유</span>
+                        <button class="share-btn" onclick="shareReferralLink('${referralLink}')">
+                            <span class="share-btn-icon">📤</span>
+                            <span>공유하기</span>
                         </button>
                     </div>
                     
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 20px; line-height: 1.5;">
-                        💡 친구가 링크로 가입 후 1회 사용하면<br>
-                        자동으로 +5회 보너스가 지급됩니다!
+                    <button class="bonus-btn bonus-btn-primary" onclick="claimReferralBonus(this)" style="width: 100%; margin-top: 20px;">
+                        🎁 친구 추천 보너스 받기 (+5회)
+                    </button>
+                    
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 16px; line-height: 1.5; text-align: center;">
+                        💡 친구에게 링크를 공유하세요!<br>
+                        주 1회 보너스를 받을 수 있습니다.
                     </div>
                     
                     <button class="bonus-btn bonus-btn-secondary" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
@@ -596,28 +644,18 @@ function showShareModal() {
                         <strong style="color: #667eea;">+3회 보너스</strong>를 받으세요!
                     </p>
                     
-                    <div class="share-buttons" style="grid-template-columns: 1fr;">
-                        <button class="share-btn" onclick="shareToInstagram()">
-                            <span class="share-btn-icon">📷</span>
-                            <span>인스타그램 스토리</span>
-                        </button>
-                        <button class="share-btn" onclick="shareToKakao('${shareUrl}')">
-                            <span class="share-btn-icon">💬</span>
-                            <span>카카오톡</span>
-                        </button>
-                        <button class="share-btn" onclick="shareToTwitter('${shareText}', '${shareUrl}')">
-                            <span class="share-btn-icon">🐦</span>
-                            <span>트위터 (X)</span>
-                        </button>
-                        <button class="share-btn" onclick="shareToFacebook('${shareUrl}')">
-                            <span class="share-btn-icon">📘</span>
-                            <span>페이스북</span>
-                        </button>
-                    </div>
+                    <button class="share-btn" onclick="shareToSocial('${shareUrl}', '${shareText}')" style="width: 100%; margin: 20px 0; padding: 20px;">
+                        <span class="share-btn-icon" style="font-size: 28px;">📤</span>
+                        <span style="font-size: 16px; font-weight: 700;">친구에게 공유하기</span>
+                    </button>
                     
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 20px; line-height: 1.5;">
-                        💡 공유 후 24시간 유지 시 +3회 보너스!<br>
-                        (주 1회 제한)
+                    <button class="bonus-btn bonus-btn-primary" onclick="claimShareBonus(this)" style="width: 100%; margin-top: 16px;">
+                        🎁 SNS 공유 보너스 받기 (+3회)
+                    </button>
+                    
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 16px; line-height: 1.5; text-align: center;">
+                        💡 카톡, 인스타, 트위터 등<br>
+                        원하는 앱으로 공유하세요! (주 1회 제한)
                     </div>
                     
                     <button class="bonus-btn bonus-btn-secondary" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
@@ -735,11 +773,10 @@ function copyReferralLink(link, button) {
     }
 }
 
-// SNS 공유 함수들
-function shareToKakao(url) {
-    console.log('💬 카카오톡 공유 시도:', url);
+// 추천 링크 공유 (Web Share API)
+function shareReferralLink(url) {
+    console.log('📤 추천 링크 공유:', url);
     
-    // Web Share API 시도 (모바일 네이티브 공유)
     if (navigator.share) {
         navigator.share({
             title: 'Repost - AI 블로그 댓글 추천',
@@ -747,75 +784,189 @@ function shareToKakao(url) {
             url: url
         })
         .then(() => {
-            console.log('✅ Web Share 성공');
+            console.log('✅ 공유 성공');
             if (bonusSystem && bonusSystem.showToast) {
                 bonusSystem.showToast(
-                    '공유 완료! 💬',
+                    '공유 완료! 📤',
                     '친구에게 전달되었습니다',
                     'success'
                 );
             }
         })
         .catch((err) => {
-            console.log('ℹ️ Web Share 취소 또는 실패:', err);
-            // 사용자가 취소한 경우 또는 실패한 경우 링크 복사
-            copyReferralLink(url);
+            if (err.name !== 'AbortError') {
+                console.error('❌ 공유 실패:', err);
+            }
         });
     } else {
         // Web Share API 미지원 시 링크 복사
-        console.log('ℹ️ Web Share API 미지원, 링크 복사로 대체');
-        copyReferralLink(url);
-        
-        // 추가 안내
-        setTimeout(() => {
-            if (bonusSystem && bonusSystem.showToast) {
-                bonusSystem.showToast(
-                    '카카오톡에 붙여넣기',
-                    '링크가 복사되었습니다. 카카오톡에 붙여넣어 주세요!',
-                    'info'
-                );
-            }
-        }, 1000);
+        copyReferralLink(url, document.querySelector('#copyLinkBtn'));
+        bonusSystem.showToast(
+            '링크 복사 완료',
+            '카톡이나 문자로 공유해주세요!',
+            'info'
+        );
     }
 }
 
-function shareToInstagram() {
-    bonusSystem.showToast(
-        '인스타그램 공유',
-        '스토리에 repost.kr을 공유하고 스크린샷을 올려주세요!',
-        'info'
-    );
-    // 보너스 지급 (데모)
-    setTimeout(() => {
-        const bonus = bonusSystem.addBonus('share', 3, 7);
-        bonusSystem.celebrateBonus('share', 3);
-    }, 2000);
+// SNS 공유 (Web Share API)
+function shareToSocial(url, text) {
+    console.log('📱 SNS 공유:', url);
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'Repost - AI 블로그 댓글 추천',
+            text: text,
+            url: url
+        })
+        .then(() => {
+            console.log('✅ 공유 성공');
+            if (bonusSystem && bonusSystem.showToast) {
+                bonusSystem.showToast(
+                    '공유 완료! 📱',
+                    '감사합니다!',
+                    'success'
+                );
+            }
+        })
+        .catch((err) => {
+            if (err.name !== 'AbortError') {
+                console.error('❌ 공유 실패:', err);
+            }
+        });
+    } else {
+        // PC에서는 링크 복사
+        const textArea = document.createElement("textarea");
+        textArea.value = url;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        bonusSystem.showToast(
+            '링크 복사 완료',
+            'SNS에 붙여넣어 주세요!',
+            'info'
+        );
+    }
 }
 
-function shareToTwitter(text, url) {
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-    window.open(twitterUrl, '_blank');
+// 친구 추천 보너스 받기
+function claimReferralBonus(button) {
+    const userId = localStorage.getItem('repost_user_id');
+    const originalText = button.textContent;
     
-    // 보너스 지급 확인 (데모)
-    setTimeout(() => {
-        if (confirm('트위터에 공유를 완료하셨나요?')) {
-            const bonus = bonusSystem.addBonus('share', 3, 7);
-            bonusSystem.celebrateBonus('share', 3);
+    button.disabled = true;
+    button.textContent = '⏳ 처리중...';
+    
+    fetch('/api/referral/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // 보너스 지급
+            const bonus = bonusSystem.addBonus('referral', data.bonus, data.expiryDays);
+            bonusSystem.celebrateBonus('referral', data.bonus);
+            bonusSystem.updateUsageBadge();
+            
+            button.textContent = '✓ 보너스 받음!';
+            button.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            
+            setTimeout(() => {
+                closeModal();
+                showUsageDetail();
+            }, 1500);
+        } else {
+            if (data.error === 'cooldown') {
+                bonusSystem.showToast(
+                    '아직 받을 수 없습니다',
+                    `${data.days_left}일 후에 다시 받을 수 있습니다`,
+                    'warning'
+                );
+            } else {
+                bonusSystem.showToast(
+                    '오류가 발생했습니다',
+                    data.error || '다시 시도해주세요',
+                    'error'
+                );
+            }
+            button.disabled = false;
+            button.textContent = originalText;
         }
-    }, 3000);
+    })
+    .catch(err => {
+        console.error('❌ 보너스 요청 실패:', err);
+        bonusSystem.showToast(
+            '네트워크 오류',
+            '다시 시도해주세요',
+            'error'
+        );
+        button.disabled = false;
+        button.textContent = originalText;
+    });
 }
 
-function shareToFacebook(url) {
-    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-    window.open(fbUrl, '_blank');
+// SNS 공유 보너스 받기
+function claimShareBonus(button) {
+    const userId = localStorage.getItem('repost_user_id');
+    const originalText = button.textContent;
     
-    // 보너스 지급 확인 (데모)
-    setTimeout(() => {
-        if (confirm('페이스북에 공유를 완료하셨나요?')) {
-            const bonus = bonusSystem.addBonus('share', 3, 7);
-            bonusSystem.celebrateBonus('share', 3);
+    button.disabled = true;
+    button.textContent = '⏳ 처리중...';
+    
+    fetch('/api/share/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // 보너스 지급
+            const bonus = bonusSystem.addBonus('share', data.bonus, data.expiryDays);
+            bonusSystem.celebrateBonus('share', data.bonus);
+            bonusSystem.updateUsageBadge();
+            
+            button.textContent = '✓ 보너스 받음!';
+            button.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            
+            setTimeout(() => {
+                closeModal();
+                showUsageDetail();
+            }, 1500);
+        } else {
+            if (data.error === 'cooldown') {
+                bonusSystem.showToast(
+                    '아직 받을 수 없습니다',
+                    `${data.days_left}일 후에 다시 받을 수 있습니다`,
+                    'warning'
+                );
+            } else {
+                bonusSystem.showToast(
+                    '오류가 발생했습니다',
+                    data.error || '다시 시도해주세요',
+                    'error'
+                );
+            }
+            button.disabled = false;
+            button.textContent = originalText;
         }
-    }, 3000);
+    })
+    .catch(err => {
+        console.error('❌ 보너스 요청 실패:', err);
+        bonusSystem.showToast(
+            '네트워크 오류',
+            '다시 시도해주세요',
+            'error'
+        );
+        button.disabled = false;
+        button.textContent = originalText;
+    });
 }
 
 // ========================================

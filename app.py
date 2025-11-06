@@ -1462,6 +1462,118 @@ def admin_logout():
     return redirect(url_for('admin_login'))
 
 # ============================
+# 🎁 보너스 시스템 API
+# ============================
+
+@app.route('/api/referral/track', methods=['POST'])
+def track_referral():
+    """친구 추천 추적"""
+    try:
+        data = request.get_json()
+        referrer_id = data.get('referrerId')  # 추천한 사람
+        new_user_id = data.get('newUserId')   # 신규 유저
+        
+        if not referrer_id or not new_user_id:
+            return jsonify({'success': False, 'error': 'Missing parameters'}), 400
+        
+        # Redis에 기록
+        key = f'referral:{referrer_id}:{new_user_id}'
+        kv.set(key, json.dumps({
+            'referrer_id': referrer_id,
+            'new_user_id': new_user_id,
+            'timestamp': datetime.now(KST).isoformat(),
+            'bonus_given': False
+        }), ex=30*24*60*60)  # 30일 보관
+        
+        log(f"📋 친구 추천 기록: {referrer_id} → {new_user_id}", "REFERRAL")
+        
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        log(f"⚠️ 친구 추천 추적 실패: {e}", "ERROR")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/referral/claim', methods=['POST'])
+def claim_referral_bonus():
+    """친구 추천 보너스 지급"""
+    try:
+        data = request.get_json()
+        user_id = data.get('userId')
+        
+        if not user_id:
+            return jsonify({'success': False, 'error': 'Missing userId'}), 400
+        
+        # 마지막 보너스 받은 시간 확인
+        last_claim_key = f'referral_claim:{user_id}'
+        last_claim = kv.get(last_claim_key)
+        
+        if last_claim:
+            last_claim_time = datetime.fromisoformat(last_claim.decode('utf-8'))
+            days_diff = (datetime.now(KST) - last_claim_time).days
+            
+            if days_diff < 7:
+                return jsonify({
+                    'success': False,
+                    'error': 'cooldown',
+                    'days_left': 7 - days_diff
+                }), 400
+        
+        # 보너스 지급 기록
+        kv.set(last_claim_key, datetime.now(KST).isoformat(), ex=30*24*60*60)
+        
+        log(f"🎁 친구 추천 보너스 지급: {user_id} (+5회)", "BONUS")
+        
+        return jsonify({
+            'success': True,
+            'bonus': 5,
+            'expiryDays': 30
+        })
+    
+    except Exception as e:
+        log(f"⚠️ 친구 추천 보너스 지급 실패: {e}", "ERROR")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/share/claim', methods=['POST'])
+def claim_share_bonus():
+    """SNS 공유 보너스 지급"""
+    try:
+        data = request.get_json()
+        user_id = data.get('userId')
+        
+        if not user_id:
+            return jsonify({'success': False, 'error': 'Missing userId'}), 400
+        
+        # 마지막 보너스 받은 시간 확인
+        last_claim_key = f'share_claim:{user_id}'
+        last_claim = kv.get(last_claim_key)
+        
+        if last_claim:
+            last_claim_time = datetime.fromisoformat(last_claim.decode('utf-8'))
+            days_diff = (datetime.now(KST) - last_claim_time).days
+            
+            if days_diff < 7:
+                return jsonify({
+                    'success': False,
+                    'error': 'cooldown',
+                    'days_left': 7 - days_diff
+                }), 400
+        
+        # 보너스 지급 기록
+        kv.set(last_claim_key, datetime.now(KST).isoformat(), ex=30*24*60*60)
+        
+        log(f"🎁 SNS 공유 보너스 지급: {user_id} (+3회)", "BONUS")
+        
+        return jsonify({
+            'success': True,
+            'bonus': 3,
+            'expiryDays': 30
+        })
+    
+    except Exception as e:
+        log(f"⚠️ SNS 공유 보너스 지급 실패: {e}", "ERROR")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============================
 # 📊 관리자 대시보드
 # ============================
 
