@@ -88,7 +88,7 @@ class BonusSystem {
         
         // 신규 사용자 여부 확인
         const isNewUser = this.checkIfNewUser();
-        const dailyLimit = isNewUser ? 5 : 3; // 7일 이내면 5회, 아니면 3회
+        const dailyLimit = isNewUser ? 7 : 3; // 7일 이내면 7회, 아니면 3회
         
         const usageData = {
             date: today,
