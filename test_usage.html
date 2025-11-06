@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용 횟수 테스트 - Repost</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #1a202c;
+        }
+        
+        p {
+            color: #6b7280;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button.secondary {
+            background: #f3f4f6;
+            color: #1a202c;
+        }
+        
+        button.secondary:hover {
+            background: #e5e7eb;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .status-value {
+            color: #1a202c;
+            font-weight: 700;
+        }
+        
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 사용 횟수 테스트</h1>
+        <p>Repost 사용 횟수를 조작하여 0회 알림을 테스트할 수 있습니다.</p>
+        
+        <div class="btn-group">
+            <button onclick="setUsageToOne()">
+                📊 사용 횟수 1회로 설정
+            </button>
+            <button onclick="setUsageToZero()">
+                🚨 사용 횟수 0회로 설정 (즉시 테스트)
+            </button>
+            <button onclick="resetUsage()" class="secondary">
+                🔄 사용 횟수 초기화 (7회)
+            </button>
+            <button onclick="viewStatus()" class="secondary">
+                👁️ 현재 상태 확인
+            </button>
+            <button onclick="goToMain()" class="secondary">
+                🏠 메인으로 돌아가기
+            </button>
+        </div>
+        
+        <div id="status" style="display: none;" class="status">
+            <div class="status-item">
+                <span class="status-label">기본 제공</span>
+                <span class="status-value" id="baseLimit">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">사용</span>
+                <span class="status-value" id="baseUsage">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">남음</span>
+                <span class="status-value" id="remaining">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">보너스</span>
+                <span class="status-value" id="bonus">-</span>
+            </div>
+        </div>
+        
+        <div id="message"></div>
+    </div>
+    
+    <script>
+        function setUsageToOne() {
+            const data = JSON.parse(localStorage.getItem('repost_usage_data') || '{}');
+            data.baseUsage = data.baseLimit - 1; // 1회 남도록 설정
+            data.bonuses = []; // 보너스 제거
+            localStorage.setItem('repost_usage_data', JSON.stringify(data));
+            
+            showMessage('✅ 사용 횟수가 1회로 설정되었습니다!<br>한 번 더 분석하면 0회 알림이 뜹니다.');
+            viewStatus();
+        }
+        
+        function setUsageToZero() {
+            const data = JSON.parse(localStorage.getItem('repost_usage_data') || '{}');
+            data.baseUsage = data.baseLimit; // 0회로 설정
+            data.bonuses = []; // 보너스 제거
+            localStorage.setItem('repost_usage_data', JSON.stringify(data));
+            
+            showMessage('🚨 사용 횟수가 0회로 설정되었습니다!<br>지금 바로 테스트하세요!');
+            viewStatus();
+        }
+        
+        function resetUsage() {
+            localStorage.removeItem('repost_usage_data');
+            localStorage.removeItem('repost_last_reset');
+            localStorage.removeItem('repost_referred_by');
+            
+            showMessage('🔄 모든 데이터가 초기화되었습니다!<br>7회로 다시 시작합니다.');
+            setTimeout(() => {
+                document.getElementById('status').style.display = 'none';
+            }, 1000);
+        }
+        
+        function viewStatus() {
+            const data = JSON.parse(localStorage.getItem('repost_usage_data'));
+            if (!data) {
+                showMessage('⚠️ 사용 데이터가 없습니다. 메인 페이지를 먼저 방문하세요.');
+                return;
+            }
+            
+            const statusDiv = document.getElementById('status');
+            const remaining = data.baseLimit - data.baseUsage;
+            const bonusTotal = data.bonuses.reduce((sum, b) => sum + b.remaining, 0);
+            
+            document.getElementById('baseLimit').textContent = data.baseLimit + '회/일';
+            document.getElementById('baseUsage').textContent = data.baseUsage + '회';
+            document.getElementById('remaining').textContent = remaining + '회';
+            document.getElementById('bonus').textContent = bonusTotal + '회';
+            
+            statusDiv.style.display = 'block';
+        }
+        
+        function goToMain() {
+            window.location.href = '/';
+        }
+        
+        function showMessage(text) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="success">${text}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
+

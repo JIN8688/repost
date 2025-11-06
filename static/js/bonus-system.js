@@ -524,20 +524,21 @@ function showUsageDetail() {
                     
             <div class="total-remaining-box">
                 <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">총 남은 횟수</div>
-                <div style="font-size: 36px; font-weight: 900; color: #667eea;">${total}회</div>
+                <div class="remaining-count ${total === 0 ? 'zero-count' : ''}" style="font-size: ${total === 0 ? '48px' : '36px'}; font-weight: 900; color: ${total === 0 ? '#f59e0b' : '#667eea'};">${total}회</div>
                 <div style="font-size: 12px; color: #9ca3af; margin-top: 8px;">📅 내일 자정 초기화</div>
             </div>
             
             <div style="margin-top: 24px;">
-                <div style="font-size: 14px; color: #6b7280; margin-bottom: 16px; text-align: center;">
-                    💡 더 많은 보너스 받기
+                <div style="font-size: 16px; font-weight: 700; color: #1a202c; margin-bottom: 8px; text-align: center;">
+                    ${total === 0 ? '🚨 지금 바로 보너스 받으세요!' : '💡 더 많은 보너스 받기'}
                 </div>
+                ${total === 0 ? '<div style="font-size: 13px; color: #6b7280; margin-bottom: 16px; text-align: center;">친구 추천 5회 · SNS 공유 3회 즉시 지급!</div>' : ''}
                 
                 <div class="bonus-actions">
-                    <button class="bonus-action-btn" onclick="showReferralModal()">
+                    <button class="bonus-action-btn ${total === 0 ? 'pulse' : ''}" onclick="showReferralModal()">
                         👥 친구 추천 (+5회)
                     </button>
-                    <button class="bonus-action-btn" onclick="showShareModal()">
+                    <button class="bonus-action-btn ${total === 0 ? 'pulse' : ''}" onclick="showShareModal()">
                         📢 SNS 공유 (+3회)
                     </button>
                 </div>
@@ -986,7 +987,7 @@ window.analyzeBlog = function() {
     if (remaining <= 0) {
         bonusSystem.showToast(
             '사용 횟수 초과',
-            '보너스를 받거나 Basic 플랜으로 업그레이드하세요!',
+            '지금 바로 보너스 받고 계속 이용하세요!',
             'warning'
         );
         showUsageDetail();

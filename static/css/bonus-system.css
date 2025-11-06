@@ -484,6 +484,36 @@
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
+/* 펄스 애니메이션 (0회일 때) */
+.bonus-action-btn.pulse {
+    animation: btnPulse 2s ease-in-out infinite;
+}
+
+@keyframes btnPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    }
+}
+
+/* 0회 강조 애니메이션 */
+.zero-count {
+    animation: zeroCountPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes zeroCountPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
 /* 애니메이션 */
 @keyframes fadeIn {
     from {

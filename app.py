@@ -895,6 +895,12 @@ def index():
     """메인 페이지"""
     return render_template('index.html')
 
+@app.route('/test')
+def test_usage():
+    """사용 횟수 테스트 페이지"""
+    with open('test_usage.html', 'r', encoding='utf-8') as f:
+        return f.read()
+
 @app.route('/favicon.ico')
 def favicon():
     """파비콘 제공"""
