@@ -895,7 +895,14 @@ function claimReferralBonus(button) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: userId })
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(data => {
+                throw { status: res.status, data: data };
+            });
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.success) {
             // 보너스 지급
@@ -949,11 +956,44 @@ function claimReferralBonus(button) {
     })
     .catch(err => {
         console.error('❌ 친구 추천 보너스 요청 실패:', err);
-        bonusSystem.showToast(
-            '📡 인터넷 연결을 확인해주세요',
-            '네트워크가 불안정해요. 잠시 후 다시 시도해주세요!',
-            'error'
-        );
+        
+        // 서버 에러 응답 처리
+        if (err.data) {
+            const errorData = err.data;
+            if (errorData.error === 'cooldown') {
+                bonusSystem.showToast(
+                    '😊 이미 보너스를 받으셨어요!',
+                    `${errorData.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`,
+                    'warning'
+                );
+            } else if (errorData.error === 'no_referral') {
+                bonusSystem.showToast(
+                    '🤔 아직 친구가 접속하지 않았어요',
+                    '친구에게 링크를 공유하고 접속을 기다려보세요!',
+                    'warning'
+                );
+            } else if (errorData.error === 'self_referral') {
+                bonusSystem.showToast(
+                    '😅 자신의 링크는 사용할 수 없어요',
+                    '다른 친구에게 공유해주세요!',
+                    'warning'
+                );
+            } else {
+                bonusSystem.showToast(
+                    '😔 일시적인 오류가 발생했어요',
+                    '잠시 후 다시 시도해주세요!',
+                    'error'
+                );
+            }
+        } else {
+            // 네트워크 에러
+            bonusSystem.showToast(
+                '📡 인터넷 연결을 확인해주세요',
+                '네트워크가 불안정해요. 잠시 후 다시 시도해주세요!',
+                'error'
+            );
+        }
+        
         button.disabled = false;
         button.textContent = originalText;
     });
@@ -972,7 +1012,14 @@ function claimShareBonus(button) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: userId })
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(data => {
+                throw { status: res.status, data: data };
+            });
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.success) {
             // 보너스 지급
@@ -1014,11 +1061,38 @@ function claimShareBonus(button) {
     })
     .catch(err => {
         console.error('❌ SNS 공유 보너스 요청 실패:', err);
-        bonusSystem.showToast(
-            '📡 인터넷 연결을 확인해주세요',
-            '네트워크가 불안정해요. 잠시 후 다시 시도해주세요!',
-            'error'
-        );
+        
+        // 서버 에러 응답 처리
+        if (err.data) {
+            const errorData = err.data;
+            if (errorData.error === 'cooldown') {
+                bonusSystem.showToast(
+                    '😊 이미 보너스를 받으셨어요!',
+                    `${errorData.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`,
+                    'warning'
+                );
+            } else if (errorData.error === 'server_error') {
+                bonusSystem.showToast(
+                    '😔 일시적인 오류가 발생했어요',
+                    '잠시 후 다시 시도해주세요!',
+                    'error'
+                );
+            } else {
+                bonusSystem.showToast(
+                    '🤷 보너스를 받을 수 없어요',
+                    'SNS에 공유하신 후 다시 시도해주세요!',
+                    'warning'
+                );
+            }
+        } else {
+            // 네트워크 에러
+            bonusSystem.showToast(
+                '📡 인터넷 연결을 확인해주세요',
+                '네트워크가 불안정해요. 잠시 후 다시 시도해주세요!',
+                'error'
+            );
+        }
+        
         button.disabled = false;
         button.textContent = originalText;
     });
