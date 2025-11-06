@@ -904,7 +904,7 @@ def test_usage():
 @app.route('/favicon.ico')
 def favicon():
     """파비콘 제공"""
-    return app.send_static_file('images/logo-og.png')
+    return app.send_static_file('images/favicon.svg')
 
 @app.route('/robots.txt')
 def robots():
