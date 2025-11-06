@@ -576,15 +576,27 @@ function showReferralModal() {
                         </h2>
                     </div>
                     
-                    <p style="font-size: 16px; margin: 20px 0; line-height: 1.6; color: #4b5563;">
-                        친구에게 Repost를 추천하고<br>
-                        <strong style="color: #667eea;">+5회 보너스</strong>를 받으세요!
-                    </p>
+                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #667eea;">
+                        <div style="font-size: 15px; font-weight: 700; color: #1a202c; margin-bottom: 12px;">
+                            💡 보너스 받는 방법 (3단계)
+                        </div>
+                        <div style="font-size: 13px; color: #4b5563; line-height: 1.8;">
+                            <div style="margin-bottom: 8px;">
+                                <strong style="color: #667eea;">1단계:</strong> 아래 링크를 친구에게 공유
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <strong style="color: #667eea;">2단계:</strong> 친구가 링크를 클릭해서 접속
+                            </div>
+                            <div>
+                                <strong style="color: #667eea;">3단계:</strong> 하단 "보너스 받기" 버튼 클릭
+                            </div>
+                        </div>
+                    </div>
                     
                     ${bonusSystem.getReferralProgress()}
                     
                     <div style="background: white; border-radius: 12px; padding: 16px; margin: 20px 0; border: 2px solid #667eea; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);">
-                        <div style="font-size: 14px; margin-bottom: 8px; color: #667eea; font-weight: 700;">내 추천 링크:</div>
+                        <div style="font-size: 14px; margin-bottom: 8px; color: #667eea; font-weight: 700;">📎 내 추천 링크:</div>
                         <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; word-break: break-all; color: #1f2937; border: 1px solid rgba(102, 126, 234, 0.2);">
                             ${referralLink}
                         </div>
@@ -601,13 +613,17 @@ function showReferralModal() {
                         </button>
                     </div>
                     
-                    <button class="bonus-btn bonus-btn-primary" onclick="claimReferralBonus(this)" style="width: 100%; margin-top: 20px;">
-                        🎁 친구 추천 보너스 받기 (+5회)
+                    <button class="bonus-btn bonus-btn-primary" onclick="claimReferralBonus(this)" style="width: 100%; margin-top: 24px; font-size: 16px; padding: 18px;">
+                        🎁 보너스 받기 (+5회)
                     </button>
                     
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 16px; line-height: 1.5; text-align: center;">
-                        💡 친구에게 링크를 공유하세요!<br>
-                        주 1회 보너스를 받을 수 있습니다.
+                    <div style="background: #fef3c7; border-radius: 8px; padding: 12px; margin-top: 16px; border-left: 3px solid #f59e0b;">
+                        <div style="font-size: 12px; color: #92400e; line-height: 1.6;">
+                            <strong>⚠️ 주의사항</strong><br>
+                            • 자신의 링크는 사용 불가<br>
+                            • 주 1회만 보너스 지급<br>
+                            • 친구가 실제로 접속해야 인정
+                        </div>
                     </div>
                     
                     <button class="bonus-btn bonus-btn-secondary" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
@@ -640,23 +656,35 @@ function showShareModal() {
                         </h2>
                     </div>
                     
-                    <p style="font-size: 16px; margin: 20px 0; line-height: 1.6; color: #4b5563;">
-                        SNS에 Repost를 공유하고<br>
-                        <strong style="color: #667eea;">+3회 보너스</strong>를 받으세요!
-                    </p>
+                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #667eea;">
+                        <div style="font-size: 15px; font-weight: 700; color: #1a202c; margin-bottom: 12px;">
+                            💡 보너스 받는 방법 (2단계)
+                        </div>
+                        <div style="font-size: 13px; color: #4b5563; line-height: 1.8;">
+                            <div style="margin-bottom: 8px;">
+                                <strong style="color: #667eea;">1단계:</strong> 아래 "공유하기" 버튼으로 SNS에 공유
+                            </div>
+                            <div>
+                                <strong style="color: #667eea;">2단계:</strong> 하단 "보너스 받기" 버튼 클릭
+                            </div>
+                        </div>
+                    </div>
                     
                     <button class="share-btn" onclick="shareToSocial('${shareUrl}', '${shareText}')" style="width: 100%; margin: 20px 0; padding: 20px;">
                         <span class="share-btn-icon" style="font-size: 28px;">📤</span>
-                        <span style="font-size: 16px; font-weight: 700;">친구에게 공유하기</span>
+                        <span style="font-size: 16px; font-weight: 700;">공유하기</span>
                     </button>
                     
-                    <button class="bonus-btn bonus-btn-primary" onclick="claimShareBonus(this)" style="width: 100%; margin-top: 16px;">
-                        🎁 SNS 공유 보너스 받기 (+3회)
+                    <button class="bonus-btn bonus-btn-primary" onclick="claimShareBonus(this)" style="width: 100%; margin-top: 16px; font-size: 16px; padding: 18px;">
+                        🎁 보너스 받기 (+3회)
                     </button>
                     
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 16px; line-height: 1.5; text-align: center;">
-                        💡 카톡, 인스타, 트위터 등<br>
-                        원하는 앱으로 공유하세요! (주 1회 제한)
+                    <div style="background: #fef3c7; border-radius: 8px; padding: 12px; margin-top: 16px; border-left: 3px solid #f59e0b;">
+                        <div style="font-size: 12px; color: #92400e; line-height: 1.6;">
+                            <strong>⚠️ 주의사항</strong><br>
+                            • 주 1회만 보너스 지급<br>
+                            • 공유 후 "보너스 받기" 클릭 필수
+                        </div>
                     </div>
                     
                     <button class="bonus-btn bonus-btn-secondary" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
@@ -885,15 +913,15 @@ function claimReferralBonus(button) {
         } else {
             if (data.error === 'cooldown') {
                 bonusSystem.showToast(
-                    '아직 받을 수 없습니다',
-                    `${data.days_left}일 후에 다시 받을 수 있습니다`,
+                    '이미 보너스를 받았습니다',
+                    `다음 보너스는 ${data.days_left}일 후 가능해요 (주 1회 제한)`,
                     'warning'
                 );
             } else {
                 bonusSystem.showToast(
-                    '오류가 발생했습니다',
-                    data.error || '다시 시도해주세요',
-                    'error'
+                    '보너스를 받을 수 없습니다',
+                    '친구가 링크를 클릭했는지 확인하거나, 잠시 후 다시 시도해주세요',
+                    'warning'
                 );
             }
             button.disabled = false;
@@ -901,10 +929,10 @@ function claimReferralBonus(button) {
         }
     })
     .catch(err => {
-        console.error('❌ 보너스 요청 실패:', err);
+        console.error('❌ 친구 추천 보너스 요청 실패:', err);
         bonusSystem.showToast(
             '네트워크 오류',
-            '다시 시도해주세요',
+            '인터넷 연결을 확인하고 다시 시도해주세요',
             'error'
         );
         button.disabled = false;
@@ -943,15 +971,15 @@ function claimShareBonus(button) {
         } else {
             if (data.error === 'cooldown') {
                 bonusSystem.showToast(
-                    '아직 받을 수 없습니다',
-                    `${data.days_left}일 후에 다시 받을 수 있습니다`,
+                    '이미 보너스를 받았습니다',
+                    `다음 보너스는 ${data.days_left}일 후 가능해요 (주 1회 제한)`,
                     'warning'
                 );
             } else {
                 bonusSystem.showToast(
-                    '오류가 발생했습니다',
-                    data.error || '다시 시도해주세요',
-                    'error'
+                    '보너스를 받을 수 없습니다',
+                    'SNS에 공유했는지 확인하거나, 잠시 후 다시 시도해주세요',
+                    'warning'
                 );
             }
             button.disabled = false;
@@ -959,10 +987,10 @@ function claimShareBonus(button) {
         }
     })
     .catch(err => {
-        console.error('❌ 보너스 요청 실패:', err);
+        console.error('❌ SNS 공유 보너스 요청 실패:', err);
         bonusSystem.showToast(
             '네트워크 오류',
-            '다시 시도해주세요',
+            '인터넷 연결을 확인하고 다시 시도해주세요',
             'error'
         );
         button.disabled = false;
