@@ -904,20 +904,31 @@ function claimReferralBonus(button) {
         return res.json();
     })
     .then(data => {
+        console.log('📦 서버 응답:', data);
+        
         if (data.success) {
+            console.log('✅ 보너스 지급 시작');
+            
             // 보너스 지급
             const bonus = bonusSystem.addBonus('referral', data.bonus, data.expiryDays);
+            console.log('💰 addBonus 완료:', bonus);
+            
             bonusSystem.celebrateBonus('referral', data.bonus);
+            console.log('🎉 celebrateBonus 완료');
+            
             bonusSystem.updateUsageBadge();
+            console.log('🔄 updateUsageBadge 완료');
             
             button.textContent = '✓ 보너스 받음!';
             button.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            console.log('✅ 버튼 업데이트 완료');
             
             setTimeout(() => {
                 closeModal();
                 showUsageDetail();
             }, 1500);
         } else {
+            console.log('❌ 서버 응답 실패:', data.error);
             // 에러 타입별 친근한 메시지
             if (data.error === 'cooldown') {
                 bonusSystem.showToast(
@@ -1021,20 +1032,31 @@ function claimShareBonus(button) {
         return res.json();
     })
     .then(data => {
+        console.log('📦 SNS 서버 응답:', data);
+        
         if (data.success) {
+            console.log('✅ SNS 보너스 지급 시작');
+            
             // 보너스 지급
             const bonus = bonusSystem.addBonus('share', data.bonus, data.expiryDays);
+            console.log('💰 addBonus 완료:', bonus);
+            
             bonusSystem.celebrateBonus('share', data.bonus);
+            console.log('🎉 celebrateBonus 완료');
+            
             bonusSystem.updateUsageBadge();
+            console.log('🔄 updateUsageBadge 완료');
             
             button.textContent = '✓ 보너스 받음!';
             button.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            console.log('✅ 버튼 업데이트 완료');
             
             setTimeout(() => {
                 closeModal();
                 showUsageDetail();
             }, 1500);
         } else {
+            console.log('❌ SNS 서버 응답 실패:', data.error);
             // 에러 타입별 친근한 메시지
             if (data.error === 'cooldown') {
                 bonusSystem.showToast(
