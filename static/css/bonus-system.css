@@ -459,9 +459,8 @@
 
 /* 보너스 액션 래퍼 */
 .bonus-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    display: block;
+    width: 100%;
 }
 
 .bonus-action-btn {
@@ -475,8 +474,7 @@
     transition: all 0.3s ease;
     border: none;
     text-align: center;
-    white-space: nowrap;
-    line-height: 1;
+    line-height: 1.4;
     width: 100%;
 }
 

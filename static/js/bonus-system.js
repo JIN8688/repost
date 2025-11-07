@@ -284,10 +284,7 @@ class BonusSystem {
                         
                         <div class="bonus-actions">
                             <button class="bonus-action-btn" onclick="showReferralModal()">
-                                👥 친구 추천 (+5회)
-                            </button>
-                            <button class="bonus-action-btn upgrade-btn" onclick="alert('업그레이드 기능은 곧 출시됩니다!')">
-                                💎 Basic 50% 할인
+                                👥 친구 추천 (+5회) | 7일간 최대 25회
                             </button>
                         </div>
                         
@@ -563,7 +560,7 @@ function showUsageDetail() {
                 
                 <div class="bonus-actions">
                     <button class="bonus-action-btn ${total === 0 ? 'pulse' : ''}" onclick="showReferralModal()" style="width: 100%;">
-                        👥 친구 추천 (+5회)
+                        👥 친구 추천 (+5회) | 7일간 최대 25회
                     </button>
                 </div>
             </div>
