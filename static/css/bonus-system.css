@@ -467,9 +467,9 @@
 .bonus-action-btn {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 14px 18px;
+    padding: 14px 24px;
     border-radius: 12px;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -477,6 +477,7 @@
     text-align: center;
     white-space: nowrap;
     line-height: 1;
+    width: 100%;
 }
 
 .bonus-action-btn:hover {

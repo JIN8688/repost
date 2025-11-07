@@ -1516,7 +1516,7 @@ def track_referral():
 
 @app.route('/api/referral/claim', methods=['POST'])
 def claim_referral_bonus():
-    """친구 추천 보너스 지급"""
+    """친구 추천 보너스 지급 (7일 롤링 5회 제한)"""
     try:
         data = request.get_json()
         user_id = data.get('userId')
@@ -1532,53 +1532,75 @@ def claim_referral_bonus():
             log(f"⚠️ Redis 연결 없음 - 보너스 지급 불가", "ERROR")
             return jsonify({'success': False, 'error': 'server_not_ready'}), 500
         
-        # 1. 쿨다운 체크 (7일)
-        last_claim_key = f'referral_claim:{user_id}'
-        last_claim = redis_client.get(last_claim_key)
+        now = datetime.now(KST)
         
-        if last_claim:
-            last_claim_time = datetime.fromisoformat(last_claim)  # decode 제거 (이미 문자열)
-            days_diff = (datetime.now(KST) - last_claim_time).days
-            
-            if days_diff < 7:
-                log(f"⏰ 쿨다운: {user_id} (남은 일수: {7 - days_diff}일)", "BONUS")
+        # 1. 리셋 시점 확인 (5회 소진 후 7일)
+        reset_key = f'referral:reset:{user_id}'
+        reset_time_str = redis_client.get(reset_key)
+        
+        if reset_time_str:
+            reset_time = datetime.fromisoformat(reset_time_str)
+            if now < reset_time:
+                # 아직 리셋 시점이 안 됨 (7일 미경과)
+                days_left = (reset_time - now).days
+                hours_left = ((reset_time - now).seconds // 3600)
+                
+                log(f"⏰ 리셋 대기 중: {user_id} (남은 시간: {days_left}일 {hours_left}시간)", "BONUS")
                 return jsonify({
                     'success': False,
-                    'error': 'cooldown',
-                    'days_left': 7 - days_diff
+                    'error': 'reset_pending',
+                    'reset_time': reset_time.isoformat(),
+                    'days_left': days_left,
+                    'hours_left': hours_left
+                }), 400
+            else:
+                # 리셋 시점 도달 → 초기화
+                log(f"🔄 7일 경과 → 클레임 횟수 초기화: {user_id}", "BONUS")
+                redis_client.delete(reset_key)
+                redis_client.delete(f'referral:claims:{user_id}')
+        
+        # 2. 현재 클레임 횟수 확인
+        claims_key = f'referral:claims:{user_id}'
+        current_claims = int(redis_client.get(claims_key) or 0)
+        
+        log(f"📊 현재 클레임 횟수: {current_claims}/5", "BONUS")
+        
+        # 3. 한도 체크 (5회)
+        if current_claims >= 5:
+            log(f"⚠️ 한도 초과: {user_id} (5/5)", "BONUS")
+            # 리셋 시점을 다시 확인해서 반환
+            reset_time_str = redis_client.get(reset_key)
+            if reset_time_str:
+                reset_time = datetime.fromisoformat(reset_time_str)
+                days_left = (reset_time - now).days
+                hours_left = ((reset_time - now).seconds // 3600)
+                return jsonify({
+                    'success': False,
+                    'error': 'limit_reached',
+                    'current_claims': current_claims,
+                    'max_claims': 5,
+                    'reset_time': reset_time.isoformat(),
+                    'days_left': days_left,
+                    'hours_left': hours_left
                 }), 400
         
-        # 2. 실제 추천 기록 확인
-        # referral:referrerId:newUserId 형태로 저장되어 있음
-        # 이 userId가 referrerId인 경우를 찾아야 함
+        # 4. 실제 추천 기록 확인 (너그러운 정책)
         has_referral = False
-        referral_count = 0
         
         try:
-            # Redis SCAN으로 referral:{userId}:* 패턴 검색
-            # Vercel KV는 SCAN을 지원하지 않으므로, 실제로는 추적 데이터를 확인
-            # 일단 간단하게: referred_by가 없으면 자기 자신의 링크로 판단
             referred_by_key = f'referred_by:{user_id}'
             referred_by = redis_client.get(referred_by_key)
             
             if referred_by:
-                # 누군가의 추천으로 가입한 사용자
-                # 이 사용자가 다른 사람을 추천했는지는 별도 확인 필요
-                # 일단은 너그럽게 지급
                 has_referral = True
                 log(f"✅ 추천 기록 확인: {user_id}", "BONUS")
             else:
-                # 추천 없이 가입 → 최소 1명 이상 추천해야 보너스 가능
-                # 하지만 너그러운 정책으로 일단 지급
-                # (실제로는 referral:{userId}:* 키를 모두 검색해야 함)
+                # 너그러운 정책으로 일단 지급
                 log(f"⚠️ 추천 기록 없음, 하지만 지급: {user_id}", "BONUS")
                 has_referral = True
         except Exception as e:
             log(f"⚠️ 추천 기록 확인 중 오류 (무시): {e}", "WARNING")
             has_referral = True  # 에러 시에도 너그럽게 지급
-        
-        # 3. 자기 자신의 링크로 접속한 경우는 제외
-        # 이미 위에서 referred_by를 체크했으므로 패스
         
         if not has_referral:
             log(f"❌ 추천 기록 없음: {user_id}", "BONUS")
@@ -1587,15 +1609,25 @@ def claim_referral_bonus():
                 'error': 'no_referral'
             }), 400
         
-        # 보너스 지급 기록
-        redis_client.set(last_claim_key, datetime.now(KST).isoformat(), ex=30*24*60*60)
+        # 5. 클레임 횟수 증가
+        new_claims = current_claims + 1
+        redis_client.set(claims_key, str(new_claims), ex=30*24*60*60)  # 30일 보관
         
-        log(f"🎁 친구 추천 보너스 지급 성공: {user_id} (+5회)", "BONUS")
+        # 6. 5회 소진 시 리셋 시점 기록 (현재 시각 + 7일)
+        if new_claims >= 5:
+            reset_time = now + timedelta(days=7)
+            redis_client.set(reset_key, reset_time.isoformat(), ex=8*24*60*60)  # 8일 보관 (여유)
+            log(f"🔒 5회 소진 완료 → 7일 후 초기화: {reset_time.strftime('%Y-%m-%d %H:%M')}", "BONUS")
+        
+        log(f"🎁 친구 추천 보너스 지급 성공: {user_id} (+5회) [{new_claims}/5]", "BONUS")
         
         return jsonify({
             'success': True,
             'bonus': 5,
-            'expiryDays': 30
+            'current_claims': new_claims,
+            'max_claims': 5,
+            'remaining_claims': 5 - new_claims,
+            'reset_in_7_days': new_claims >= 5
         }), 200
     
     except Exception as e:

@@ -455,7 +455,7 @@ class BonusSystem {
         container.innerHTML = html;
     }
 
-    // 친구 추천 진행률
+    // 친구 추천 진행률 (7일 롤링 5회)
     getReferralProgress() {
         const referrals = JSON.parse(localStorage.getItem('repost_referrals') || '[]');
         const count = referrals.length;
@@ -469,13 +469,13 @@ class BonusSystem {
         
         return `
             <div class="bonus-progress">
-                <div class="bonus-progress-label">추천 현황: ${count}/5명 완료</div>
+                <div class="bonus-progress-label">보너스 진행률: ${count}/5회</div>
                 <div class="bonus-progress-bar">
                     <div class="bonus-progress-fill" style="width: ${percent}%"></div>
                 </div>
                 <div class="bonus-stars">${stars.join('')}</div>
-                ${count >= 5 ? '<p style="margin-top: 12px; font-size: 14px; color: #7debc8; text-shadow: 0 0 15px rgba(125, 235, 200, 0.5);">🎁 Basic 1개월 무료 획득!</p>' : 
-                  count >= 3 ? '<p style="margin-top: 12px; font-size: 14px; color: #a5b4fc; text-shadow: 0 0 15px rgba(165, 180, 252, 0.5);">💡 2명만 더 추천하면 Basic 무료!</p>' : ''}
+                ${count >= 5 ? '<p style="margin-top: 12px; font-size: 14px; color: #7debc8; text-shadow: 0 0 15px rgba(125, 235, 200, 0.5);">🎉 5회 모두 완료! 7일 후 다시 받으세요!</p>' : 
+                  count >= 3 ? '<p style="margin-top: 12px; font-size: 14px; color: #a5b4fc; text-shadow: 0 0 15px rgba(165, 180, 252, 0.5);">💡 ${5 - count}번만 더 받으면 완료! (7일간 유효)</p>' : ''}
             </div>
         `;
     }
@@ -645,8 +645,8 @@ function showReferralModal() {
                         <div style="font-size: 12px; color: #92400e; line-height: 1.6;">
                             <strong>⚠️ 주의사항</strong><br>
                             • 자신의 링크는 사용 불가<br>
-                            • 주 1회만 보너스 지급<br>
-                            • 친구가 실제로 접속해야 인정
+                            • 7일간 5회까지 보너스 지급 (하루에 다 받아도 OK!)<br>
+                            • 5회 소진 후 7일이 지나면 자동 초기화
                         </div>
                     </div>
                     
@@ -853,11 +853,13 @@ function claimReferralBonus(button) {
         } else {
             console.log('❌ 서버 응답 실패:', data.error);
             // 에러 타입별 친근한 메시지
-            if (data.error === 'cooldown') {
+            if (data.error === 'limit_reached' || data.error === 'reset_pending') {
+                const daysLeft = data.days_left || 0;
+                const hoursLeft = data.hours_left || 0;
                 bonusSystem.showToast(
-                    '😊 이미 보너스를 받으셨어요!',
-                    `${data.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`,
-                    'warning',
+                    '🎉 5회 보너스를 모두 받으셨어요!',
+                    `${daysLeft}일 ${hoursLeft}시간 후에 다시 받을 수 있어요 (7일 후 초기화)`,
+                    'success',
                     5000
                 );
             } else if (data.error === 'no_referral') {
@@ -907,9 +909,11 @@ function claimReferralBonus(button) {
             let title = '';
             let message = '';
             
-            if (errorData.error === 'cooldown') {
-                title = '😊 이미 보너스를 받으셨어요!';
-                message = `${errorData.days_left}일 후에 다시 받을 수 있어요 (주 1회 제한)`;
+            if (errorData.error === 'limit_reached' || errorData.error === 'reset_pending') {
+                const daysLeft = errorData.days_left || 0;
+                const hoursLeft = errorData.hours_left || 0;
+                title = '🎉 5회 보너스를 모두 받으셨어요!';
+                message = `${daysLeft}일 ${hoursLeft}시간 후에 다시 받을 수 있어요 (7일 후 초기화)`;
             } else if (errorData.error === 'no_referral') {
                 title = '🤔 아직 친구가 접속하지 않았어요';
                 message = '친구에게 링크를 공유하고 접속을 기다려보세요!';
