@@ -298,6 +298,14 @@ class BonusSystem {
         
         const container = document.getElementById('bonusModals');
         container.innerHTML = html;
+        
+        // 🎨 부드러운 애니메이션을 위해 다음 프레임에 show 클래스 추가
+        requestAnimationFrame(() => {
+            const overlay = container.querySelector('.bonus-modal-overlay');
+            if (overlay) {
+                overlay.classList.add('show');
+            }
+        });
     }
 
     // 보너스 추가
@@ -450,6 +458,14 @@ class BonusSystem {
         
         const container = document.getElementById('bonusModals');
         container.innerHTML = html;
+        
+        // 🎨 부드러운 애니메이션을 위해 다음 프레임에 show 클래스 추가
+        requestAnimationFrame(() => {
+            const overlay = container.querySelector('.bonus-modal-overlay');
+            if (overlay) {
+                overlay.classList.add('show');
+            }
+        });
     }
 
     // 친구 추천 진행률 (7일 롤링 5회)
@@ -575,6 +591,14 @@ function showUsageDetail() {
     
     const container = document.getElementById('bonusModals');
     container.innerHTML = html;
+    
+    // 🎨 부드러운 애니메이션을 위해 다음 프레임에 show 클래스 추가
+    requestAnimationFrame(() => {
+        const overlay = container.querySelector('.bonus-modal-overlay');
+        if (overlay) {
+            overlay.classList.add('show');
+        }
+    });
 }
 
 // 친구 추천 모달
@@ -657,19 +681,40 @@ function showReferralModal() {
     
     const container = document.getElementById('bonusModals');
     container.innerHTML = html;
+    
+    // 🎨 부드러운 애니메이션을 위해 다음 프레임에 show 클래스 추가
+    requestAnimationFrame(() => {
+        const overlay = container.querySelector('.bonus-modal-overlay');
+        if (overlay) {
+            overlay.classList.add('show');
+        }
+    });
 }
 
 // SNS 공유 모달 - 더 이상 사용 안 함 (친구 추천으로 통합)
 // function showShareModal() { ... }
 
-// 모달 닫기
+// 모달 닫기 (부드러운 애니메이션)
 function closeModal(event) {
     if (event && event.target.classList.contains('bonus-modal')) {
         return; // 모달 내부 클릭은 무시
     }
     
     const container = document.getElementById('bonusModals');
-    container.innerHTML = '';
+    const overlay = container.querySelector('.bonus-modal-overlay');
+    
+    if (overlay) {
+        // 🎨 show 클래스 제거하여 페이드아웃 애니메이션 시작
+        overlay.classList.remove('show');
+        
+        // 🎨 애니메이션 완료 후 DOM에서 제거 (400ms)
+        setTimeout(() => {
+            container.innerHTML = '';
+        }, 400);
+    } else {
+        // overlay가 없으면 즉시 제거
+        container.innerHTML = '';
+    }
 }
 
 // ========================================
