@@ -939,13 +939,13 @@
             </div>
 
             <!-- 3행: 활동 지표 -->
-            <!-- 9. 완료율 -->
+            <!-- 9. 추천 참여율 -->
             <div class="glass-card stat-card">
-                <div class="stat-icon">🎯</div>
-                <div class="stat-label">완료율</div>
-                <div class="stat-value">{{ stats.completion_rate }}%</div>
-                <div class="stat-change {{ 'positive' if stats.completion_rate >= 30 else 'negative' if stats.completion_rate > 0 else '' }}">
-                    방문→완료
+                <div class="stat-icon">👥</div>
+                <div class="stat-label">추천 참여율</div>
+                <div class="stat-value">{{ stats.referral_participation_rate }}%</div>
+                <div class="stat-change {{ 'positive' if stats.referral_participation_rate >= 10 else 'neutral' if stats.referral_participation_rate >= 5 else '' }}">
+                    바이럴 잠재력
                 </div>
             </div>
 
@@ -1028,6 +1028,26 @@
                 <div class="stat-value">{{ stats.avg_comments_count }}</div>
                 <div class="stat-change positive">
                     개당 평균
+                </div>
+            </div>
+
+            <!-- 17. 총 추천 건수 -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">🔗</div>
+                <div class="stat-label">총 추천 건수</div>
+                <div class="stat-value">{{ stats.total_referrals }}</div>
+                <div class="stat-change {{ 'positive' if stats.total_referrals >= 100 else 'neutral' if stats.total_referrals >= 10 else '' }}">
+                    실제 바이럴 성과
+                </div>
+            </div>
+
+            <!-- 18. 보너스 지급 횟수 -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">🎁</div>
+                <div class="stat-label">보너스 지급</div>
+                <div class="stat-value">{{ stats.total_bonus_claims }}</div>
+                <div class="stat-change {{ 'positive' if stats.total_bonus_claims >= 50 else 'neutral' if stats.total_bonus_claims >= 10 else '' }}">
+                    시스템 활용도
                 </div>
             </div>
         </div>

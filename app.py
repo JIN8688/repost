@@ -1181,6 +1181,10 @@ def get_analytics_stats(days=30):
         keys_to_get.append(('today_cache_hits', f'analytics:cache:hits:{today_str}'))
         keys_to_get.append(('today_cache_misses', f'analytics:cache:misses:{today_str}'))
         
+        # 👥 추천 통계
+        keys_to_get.append(('total_referrals', 'analytics:total_referrals'))
+        keys_to_get.append(('total_bonus_claims', 'analytics:total_bonus_claims'))
+        
         # Pipeline에 모든 get 추가
         for key_name, redis_key in keys_to_get:
             pipe.get(redis_key)
@@ -1295,6 +1299,16 @@ def get_analytics_stats(days=30):
         else:
             stats['today_cache_hit_rate'] = 0
         
+        # 👥 추천 통계
+        stats['total_referrals'] = get_val('total_referrals')  # 총 추천 건수
+        stats['total_bonus_claims'] = get_val('total_bonus_claims')  # 총 보너스 지급 횟수
+        
+        # 추천한 유저 수 (SET 크기 조회)
+        try:
+            stats['total_referrers'] = redis_client.scard('analytics:referrers') or 0
+        except:
+            stats['total_referrers'] = 0
+        
         # 전환율 계산
         stats['conversion_funnel']['visits'] = stats['total_page_views']
         stats['conversion_funnel']['analyses'] = stats['success_analyses']
@@ -1372,6 +1386,12 @@ def get_analytics_stats(days=30):
             
             if stats['total_page_views'] > 0:
                 stats['completion_rate'] = round((stats['total_blog_visits'] / stats['total_page_views']) * 100, 1)
+            
+            # 👥 추천 참여율 계산 (추천한 유저 / 전체 유저)
+            if stats['mau'] > 0:
+                stats['referral_participation_rate'] = round((stats['total_referrers'] / stats['mau']) * 100, 1)
+            else:
+                stats['referral_participation_rate'] = 0
             
             log(f"⚡ DAU: {stats['dau']}, WAU: {stats['wau']}, MAU: {stats['mau']} (초고속 조회!)", "ANALYTICS")
             log(f"✨ 신규: {stats['today_new_users']}, 재방문율: {stats['retention_rate']}%", "ANALYTICS")
@@ -1506,6 +1526,10 @@ def track_referral():
             'bonus_given': False
         }), ex=30*24*60*60)  # 30일 보관
         
+        # 📊 Analytics: 추천 통계 기록
+        redis_client.incr('analytics:total_referrals')  # 총 추천 건수
+        redis_client.sadd('analytics:referrers', referrer_id)  # 추천한 유저 집합
+        
         log(f"📋 친구 추천 기록: {referrer_id} → {new_user_id}", "REFERRAL")
         
         return jsonify({'success': True})
@@ -1612,6 +1636,9 @@ def claim_referral_bonus():
         # 5. 클레임 횟수 증가
         new_claims = current_claims + 1
         redis_client.set(claims_key, str(new_claims), ex=30*24*60*60)  # 30일 보관
+        
+        # 📊 Analytics: 보너스 지급 통계 기록
+        redis_client.incr('analytics:total_bonus_claims')  # 총 보너스 지급 횟수
         
         # 6. 5회 소진 시 리셋 시점 기록 (현재 시각 + 7일)
         if new_claims >= 5:
