@@ -508,187 +508,213 @@ window.addEventListener('load', () => {
 
 // 사용 횟수 상세 모달
 function showUsageDetail() {
-    const data = JSON.parse(localStorage.getItem('repost_usage_data'));
-    if (!data) return;
+    const container = document.getElementById('bonusModals');
+    const existingOverlay = container.querySelector('.bonus-modal-overlay');
     
-    const baseRemaining = data.baseLimit - data.baseUsage;
-    const bonusTotal = data.bonuses.reduce((sum, b) => sum + b.remaining, 0);
-    const total = baseRemaining + bonusTotal;
-    
-    const bonusesHtml = data.bonuses.map(b => {
-        const typeText = b.type === 'referral' ? '친구 추천' : 'SNS 공유';
-        const daysLeft = Math.ceil((b.expiresAt - Date.now()) / (1000 * 60 * 60 * 24));
+    // 🎨 부드러운 모달 전환 함수
+    const renderModal = () => {
+        const data = JSON.parse(localStorage.getItem('repost_usage_data'));
+        if (!data) return;
         
-        return `
-            <div class="usage-item">
-                <span class="usage-item-label">${typeText} (${daysLeft}일 남음)</span>
-                <span class="usage-item-value">+${b.remaining}회</span>
+        const baseRemaining = data.baseLimit - data.baseUsage;
+        const bonusTotal = data.bonuses.reduce((sum, b) => sum + b.remaining, 0);
+        const total = baseRemaining + bonusTotal;
+        
+        const bonusesHtml = data.bonuses.map(b => {
+            const typeText = b.type === 'referral' ? '친구 추천' : 'SNS 공유';
+            const daysLeft = Math.ceil((b.expiresAt - Date.now()) / (1000 * 60 * 60 * 24));
+            
+            return `
+                <div class="usage-item">
+                    <span class="usage-item-label">${typeText} (${daysLeft}일 남음)</span>
+                    <span class="usage-item-value">+${b.remaining}회</span>
+                </div>
+            `;
+        }).join('');
+        
+        const html = `
+            <div class="bonus-modal-overlay" onclick="closeModal(event)">
+                <div class="bonus-modal usage-detail-modal" onclick="event.stopPropagation()">
+                    <div class="bonus-modal-content">
+                        <h2 class="modal-title">
+                            📊 사용 횟수 상세
+                        </h2>
+                        
+                        <div class="usage-section">
+                            <div class="usage-section-title">🔹 기본 제공</div>
+                            <div class="usage-item">
+                                <span class="usage-item-label">${data.isNewUser ? '신규 사용자 (7일)' : '일일 제공'}</span>
+                                <span class="usage-item-value">${data.baseLimit}회/일</span>
+                            </div>
+                            <div class="usage-item">
+                                <span class="usage-item-label">사용</span>
+                                <span class="usage-item-value">${data.baseUsage}회</span>
+                            </div>
+                            <div class="usage-item">
+                                <span class="usage-item-label">남음</span>
+                                <span class="usage-item-value">${baseRemaining}회</span>
+                            </div>
+                        </div>
+                        
+                        ${data.bonuses.length > 0 ? `
+                            <div class="usage-section">
+                                <div class="usage-section-title">🎁 보너스</div>
+                                ${bonusesHtml}
+                                <div class="usage-item" style="border-top: 2px solid #667eea; margin-top: 8px; padding-top: 12px;">
+                                    <span class="usage-item-label" style="font-weight: 700;">총 보너스</span>
+                                    <span class="usage-item-value">${bonusTotal}회</span>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                <div class="total-remaining-box">
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">총 남은 횟수</div>
+                    <div class="remaining-count ${total === 0 ? 'zero-count' : ''}" style="font-size: ${total === 0 ? '48px' : '36px'}; font-weight: 900; color: ${total === 0 ? '#f59e0b' : '#667eea'};">${total}회</div>
+                    <div style="font-size: 12px; color: #9ca3af; margin-top: 8px;">📅 내일 자정 초기화</div>
+                </div>
+                
+                <div style="margin-top: 24px;">
+                    <div style="font-size: 16px; font-weight: 700; color: #1a202c; margin-bottom: 8px; text-align: center;">
+                        ${total === 0 ? '🚨 지금 바로 보너스 받으세요!' : '💡 더 많은 보너스 받기'}
+                    </div>
+                    ${total === 0 ? '<div style="font-size: 13px; color: #6b7280; margin-bottom: 16px; text-align: center;">친구 추천 5회 즉시 지급!</div>' : ''}
+                    
+                    <div class="bonus-actions">
+                        <button class="bonus-action-btn ${total === 0 ? 'pulse' : ''}" onclick="showReferralModal()" style="width: 100%;">
+                            👥 친구 추천 (+5회) | 7일간 최대 25회
+                        </button>
+                    </div>
+                </div>
+                        
+                <button class="bonus-btn-close" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
+                    닫기
+                </button>
+                    </div>
+                </div>
             </div>
         `;
-    }).join('');
+        
+        container.innerHTML = html;
+        
+        // 🎨 부드러운 애니메이션을 위해 다음 프레임에 show 클래스 추가
+        requestAnimationFrame(() => {
+            const overlay = container.querySelector('.bonus-modal-overlay');
+            if (overlay) {
+                overlay.classList.add('show');
+            }
+        });
+    };
     
-    const html = `
-        <div class="bonus-modal-overlay" onclick="closeModal(event)">
-            <div class="bonus-modal usage-detail-modal" onclick="event.stopPropagation()">
-                <div class="bonus-modal-content">
-                    <h2 class="modal-title">
-                        📊 사용 횟수 상세
-                    </h2>
-                    
-                    <div class="usage-section">
-                        <div class="usage-section-title">🔹 기본 제공</div>
-                        <div class="usage-item">
-                            <span class="usage-item-label">${data.isNewUser ? '신규 사용자 (7일)' : '일일 제공'}</span>
-                            <span class="usage-item-value">${data.baseLimit}회/일</span>
-                        </div>
-                        <div class="usage-item">
-                            <span class="usage-item-label">사용</span>
-                            <span class="usage-item-value">${data.baseUsage}회</span>
-                        </div>
-                        <div class="usage-item">
-                            <span class="usage-item-label">남음</span>
-                            <span class="usage-item-value">${baseRemaining}회</span>
-                        </div>
-                    </div>
-                    
-                    ${data.bonuses.length > 0 ? `
-                        <div class="usage-section">
-                            <div class="usage-section-title">🎁 보너스</div>
-                            ${bonusesHtml}
-                            <div class="usage-item" style="border-top: 2px solid #667eea; margin-top: 8px; padding-top: 12px;">
-                                <span class="usage-item-label" style="font-weight: 700;">총 보너스</span>
-                                <span class="usage-item-value">${bonusTotal}회</span>
-                            </div>
-                        </div>
-                    ` : ''}
-                    
-            <div class="total-remaining-box">
-                <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">총 남은 횟수</div>
-                <div class="remaining-count ${total === 0 ? 'zero-count' : ''}" style="font-size: ${total === 0 ? '48px' : '36px'}; font-weight: 900; color: ${total === 0 ? '#f59e0b' : '#667eea'};">${total}회</div>
-                <div style="font-size: 12px; color: #9ca3af; margin-top: 8px;">📅 내일 자정 초기화</div>
-            </div>
-            
-            <div style="margin-top: 24px;">
-                <div style="font-size: 16px; font-weight: 700; color: #1a202c; margin-bottom: 8px; text-align: center;">
-                    ${total === 0 ? '🚨 지금 바로 보너스 받으세요!' : '💡 더 많은 보너스 받기'}
-                </div>
-                ${total === 0 ? '<div style="font-size: 13px; color: #6b7280; margin-bottom: 16px; text-align: center;">친구 추천 5회 즉시 지급!</div>' : ''}
-                
-                <div class="bonus-actions">
-                    <button class="bonus-action-btn ${total === 0 ? 'pulse' : ''}" onclick="showReferralModal()" style="width: 100%;">
-                        👥 친구 추천 (+5회) | 7일간 최대 25회
-                    </button>
-                </div>
-            </div>
-                    
-            <button class="bonus-btn-close" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
-                닫기
-            </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    const container = document.getElementById('bonusModals');
-    container.innerHTML = html;
-    
-    // 🎨 부드러운 애니메이션을 위해 다음 프레임에 show 클래스 추가
-    requestAnimationFrame(() => {
-        const overlay = container.querySelector('.bonus-modal-overlay');
-        if (overlay) {
-            overlay.classList.add('show');
-        }
-    });
+    // 🎨 기존 모달이 있으면 페이드아웃 후 새 모달 표시
+    if (existingOverlay) {
+        existingOverlay.classList.remove('show');
+        setTimeout(renderModal, 300); // 300ms 페이드아웃 대기
+    } else {
+        renderModal();
+    }
 }
 
-// 친구 추천 모달
+// 친구 추천 모달 (부드러운 전환)
 function showReferralModal() {
-    const userId = localStorage.getItem('repost_user_id');
-    const referralLink = `https://repost.kr?ref=${userId}`;
-    const referrals = JSON.parse(localStorage.getItem('repost_referrals') || '[]');
-    const count = referrals.length;
+    const container = document.getElementById('bonusModals');
+    const existingOverlay = container.querySelector('.bonus-modal-overlay');
     
-    const html = `
-        <div class="bonus-modal-overlay" onclick="closeModal(event)">
-            <div class="bonus-modal referral-modal" onclick="event.stopPropagation()">
-                <div class="bonus-modal-content">
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <button onclick="showUsageDetail()" style="background: none; border: none; cursor: pointer; padding: 8px; margin-right: 10px; display: flex; align-items: center; color: #667eea; font-size: 24px; transition: transform 0.2s;">
-                            ←
-                        </button>
-                        <h2 class="bonus-modal-title" style="margin: 0; flex: 1;">
-                            👥 친구 추천하기
-                        </h2>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #667eea;">
-                        <div style="font-size: 15px; font-weight: 700; color: #1a202c; margin-bottom: 12px;">
-                            💡 보너스 받는 방법 (3단계)
+    // 🎨 부드러운 모달 전환 함수
+    const renderModal = () => {
+        const userId = localStorage.getItem('repost_user_id');
+        const referralLink = `https://repost.kr?ref=${userId}`;
+        const referrals = JSON.parse(localStorage.getItem('repost_referrals') || '[]');
+        const count = referrals.length;
+        
+        const html = `
+            <div class="bonus-modal-overlay" onclick="closeModal(event)">
+                <div class="bonus-modal referral-modal" onclick="event.stopPropagation()">
+                    <div class="bonus-modal-content">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <button onclick="showUsageDetail()" style="background: none; border: none; cursor: pointer; padding: 8px; margin-right: 10px; display: flex; align-items: center; color: #667eea; font-size: 24px; transition: transform 0.2s;">
+                                ←
+                            </button>
+                            <h2 class="bonus-modal-title" style="margin: 0; flex: 1;">
+                                👥 친구 추천하기
+                            </h2>
                         </div>
-                        <div style="font-size: 13px; color: #4b5563; line-height: 1.8;">
-                            <div style="margin-bottom: 8px;">
-                                <strong style="color: #667eea;">1단계:</strong> 아래 링크를 친구에게 공유
+                        
+                        <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #667eea;">
+                            <div style="font-size: 15px; font-weight: 700; color: #1a202c; margin-bottom: 12px;">
+                                💡 보너스 받는 방법 (3단계)
                             </div>
-                            <div style="margin-bottom: 8px;">
-                                <strong style="color: #667eea;">2단계:</strong> 친구가 링크를 클릭해서 접속
+                            <div style="font-size: 13px; color: #4b5563; line-height: 1.8;">
+                                <div style="margin-bottom: 8px;">
+                                    <strong style="color: #667eea;">1단계:</strong> 아래 링크를 친구에게 공유
+                                </div>
+                                <div style="margin-bottom: 8px;">
+                                    <strong style="color: #667eea;">2단계:</strong> 친구가 링크를 클릭해서 접속
+                                </div>
+                                <div>
+                                    <strong style="color: #667eea;">3단계:</strong> 하단 "보너스 받기" 버튼 클릭
+                                </div>
                             </div>
-                            <div>
-                                <strong style="color: #667eea;">3단계:</strong> 하단 "보너스 받기" 버튼 클릭
+                        </div>
+                        
+                        ${bonusSystem.getReferralProgress()}
+                        
+                        <div style="background: white; border-radius: 12px; padding: 16px; margin: 20px 0; border: 2px solid #667eea; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);">
+                            <div style="font-size: 14px; margin-bottom: 8px; color: #667eea; font-weight: 700;">📎 내 추천 링크:</div>
+                            <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; word-break: break-all; color: #1f2937; border: 1px solid rgba(102, 126, 234, 0.2);">
+                                ${referralLink}
                             </div>
                         </div>
-                    </div>
-                    
-                    ${bonusSystem.getReferralProgress()}
-                    
-                    <div style="background: white; border-radius: 12px; padding: 16px; margin: 20px 0; border: 2px solid #667eea; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);">
-                        <div style="font-size: 14px; margin-bottom: 8px; color: #667eea; font-weight: 700;">📎 내 추천 링크:</div>
-                        <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; word-break: break-all; color: #1f2937; border: 1px solid rgba(102, 126, 234, 0.2);">
-                            ${referralLink}
+                        
+                        <div class="share-buttons">
+                            <button class="share-btn" id="copyLinkBtn" onclick="copyReferralLink('${referralLink}', this)">
+                                <span class="share-btn-icon">📋</span>
+                                <span class="share-btn-text">링크 복사</span>
+                            </button>
+                            <button class="share-btn" onclick="shareReferralLink('${referralLink}')">
+                                <span class="share-btn-icon">📱</span>
+                                <span>SNS 공유하기</span>
+                            </button>
                         </div>
-                    </div>
-                    
-                    <div class="share-buttons">
-                        <button class="share-btn" id="copyLinkBtn" onclick="copyReferralLink('${referralLink}', this)">
-                            <span class="share-btn-icon">📋</span>
-                            <span class="share-btn-text">링크 복사</span>
+                        
+                        <button class="bonus-btn bonus-btn-primary" onclick="claimReferralBonus(this)" style="width: 100%; margin-top: 24px; font-size: 16px; padding: 18px;">
+                            🎁 보너스 받기 (+5회)
                         </button>
-                        <button class="share-btn" onclick="shareReferralLink('${referralLink}')">
-                            <span class="share-btn-icon">📱</span>
-                            <span>SNS 공유하기</span>
-                        </button>
-                    </div>
-                    
-                    <button class="bonus-btn bonus-btn-primary" onclick="claimReferralBonus(this)" style="width: 100%; margin-top: 24px; font-size: 16px; padding: 18px;">
-                        🎁 보너스 받기 (+5회)
-                    </button>
-                    
-                    <div style="background: #fef3c7; border-radius: 8px; padding: 12px; margin-top: 16px; border-left: 3px solid #f59e0b;">
-                        <div style="font-size: 12px; color: #92400e; line-height: 1.6;">
-                            <strong>⚠️ 주의사항</strong><br>
-                            • 자신의 링크는 사용 불가<br>
-                            • 7일간 5회까지 보너스 지급 (하루에 다 받아도 OK!)<br>
-                            • 5회 소진 후 7일이 지나면 자동 초기화
+                        
+                        <div style="background: #fef3c7; border-radius: 8px; padding: 12px; margin-top: 16px; border-left: 3px solid #f59e0b;">
+                            <div style="font-size: 12px; color: #92400e; line-height: 1.6;">
+                                <strong>⚠️ 주의사항</strong><br>
+                                • 자신의 링크는 사용 불가<br>
+                                • 7일간 5회까지 보너스 지급 (하루에 다 받아도 OK!)<br>
+                                • 5회 소진 후 7일이 지나면 자동 초기화
+                            </div>
                         </div>
+                        
+                        <button class="bonus-btn bonus-btn-secondary" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
+                            닫기
+                        </button>
                     </div>
-                    
-                    <button class="bonus-btn bonus-btn-secondary" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
-                        닫기
-                    </button>
                 </div>
             </div>
-        </div>
-    `;
+        `;
+        
+        container.innerHTML = html;
+        
+        // 🎨 부드러운 애니메이션을 위해 다음 프레임에 show 클래스 추가
+        requestAnimationFrame(() => {
+            const overlay = container.querySelector('.bonus-modal-overlay');
+            if (overlay) {
+                overlay.classList.add('show');
+            }
+        });
+    };
     
-    const container = document.getElementById('bonusModals');
-    container.innerHTML = html;
-    
-    // 🎨 부드러운 애니메이션을 위해 다음 프레임에 show 클래스 추가
-    requestAnimationFrame(() => {
-        const overlay = container.querySelector('.bonus-modal-overlay');
-        if (overlay) {
-            overlay.classList.add('show');
-        }
-    });
+    // 🎨 기존 모달이 있으면 페이드아웃 후 새 모달 표시
+    if (existingOverlay) {
+        existingOverlay.classList.remove('show');
+        setTimeout(renderModal, 300); // 300ms 페이드아웃 대기
+    } else {
+        renderModal();
+    }
 }
 
 // SNS 공유 모달 - 더 이상 사용 안 함 (친구 추천으로 통합)
