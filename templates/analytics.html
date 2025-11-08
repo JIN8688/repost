@@ -939,17 +939,7 @@
             </div>
 
             <!-- 3행: 활동 지표 -->
-            <!-- 9. 추천 참여율 -->
-            <div class="glass-card stat-card">
-                <div class="stat-icon">👥</div>
-                <div class="stat-label">추천 참여율</div>
-                <div class="stat-value">{{ stats.referral_participation_rate }}%</div>
-                <div class="stat-change {{ 'positive' if stats.referral_participation_rate >= 10 else 'neutral' if stats.referral_participation_rate >= 5 else '' }}">
-                    바이럴 잠재력
-                </div>
-            </div>
-
-            <!-- 10. 활성 전환율 -->
+            <!-- 9. 활성 전환율 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">🚀</div>
                 <div class="stat-label">활성 전환율</div>
@@ -959,7 +949,7 @@
                 </div>
             </div>
 
-            <!-- 11. 오늘 분석 -->
+            <!-- 10. 오늘 분석 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">🔥</div>
                 <div class="stat-label">오늘 분석</div>
@@ -974,7 +964,7 @@
                 </div>
             </div>
 
-            <!-- 12. 주간 분석 -->
+            <!-- 11. 주간 분석 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">📊</div>
                 <div class="stat-label">주간 분석</div>
@@ -984,8 +974,7 @@
                 </div>
             </div>
 
-            <!-- 4행: 품질 지표 -->
-            <!-- 13. 월간 분석 -->
+            <!-- 12. 월간 분석 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">📈</div>
                 <div class="stat-label">월간 분석</div>
@@ -995,7 +984,8 @@
                 </div>
             </div>
 
-            <!-- 14. 성공률 -->
+            <!-- 4행: 품질 지표 -->
+            <!-- 13. 성공률 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">✅</div>
                 <div class="stat-label">성공률</div>
@@ -1005,7 +995,7 @@
                 </div>
             </div>
 
-            <!-- 15. 💾 캐시 히트율 -->
+            <!-- 14. 💾 캐시 히트율 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">💾</div>
                 <div class="stat-label">캐시 히트율</div>
@@ -1021,7 +1011,7 @@
                 </div>
             </div>
 
-            <!-- 16. 평균 댓글 수 -->
+            <!-- 15. 평균 댓글 수 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">💬</div>
                 <div class="stat-label">평균 댓글</div>
@@ -1031,7 +1021,26 @@
                 </div>
             </div>
 
-            <!-- 17. 총 추천 건수 -->
+            <!-- 16. 빈 슬롯 (추후 확장용) -->
+            <div class="glass-card stat-card" style="opacity: 0; pointer-events: none;">
+                <div class="stat-icon">📊</div>
+                <div class="stat-label">-</div>
+                <div class="stat-value">-</div>
+                <div class="stat-change">-</div>
+            </div>
+
+            <!-- 5행: 추천 시스템 지표 -->
+            <!-- 17. 추천 참여율 -->
+            <div class="glass-card stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-label">추천 참여율</div>
+                <div class="stat-value">{{ stats.referral_participation_rate }}%</div>
+                <div class="stat-change {{ 'positive' if stats.referral_participation_rate >= 10 else 'neutral' if stats.referral_participation_rate >= 5 else '' }}">
+                    바이럴 잠재력
+                </div>
+            </div>
+
+            <!-- 18. 총 추천 건수 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">🔗</div>
                 <div class="stat-label">총 추천 건수</div>
@@ -1041,7 +1050,7 @@
                 </div>
             </div>
 
-            <!-- 18. 보너스 지급 횟수 -->
+            <!-- 19. 보너스 지급 횟수 -->
             <div class="glass-card stat-card">
                 <div class="stat-icon">🎁</div>
                 <div class="stat-label">보너스 지급</div>
