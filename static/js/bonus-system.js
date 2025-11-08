@@ -672,13 +672,13 @@ function showReferralModal() {
                         </div>
                         
                         <div class="share-buttons">
-                            <button class="share-btn" id="copyLinkBtn" onclick="copyReferralLink('${referralLink}', this)">
+                            <button class="share-btn" id="copyLinkBtn" onclick="event.stopPropagation(); copyReferralLink('${referralLink}', this)">
                                 <span class="share-btn-icon">📋</span>
                                 <span class="share-btn-text">링크 복사</span>
                             </button>
-                            <button class="share-btn" onclick="shareReferralLink('${referralLink}')">
+                            <button class="share-btn" onclick="event.stopPropagation(); shareReferralLink('${referralLink}')">
                                 <span class="share-btn-icon">📱</span>
-                                <span>SNS 공유하기</span>
+                                <span class="share-btn-text">SNS 공유하기</span>
                             </button>
                         </div>
                         

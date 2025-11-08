@@ -579,6 +579,11 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
 }
 
 .share-btn:hover {
@@ -592,6 +597,11 @@
 
 .share-btn-icon {
     font-size: 20px;
+    pointer-events: none;
+}
+
+.share-btn-text {
+    pointer-events: none;
 }
 
 /* 뒤로가기 버튼 호버 효과 */
@@ -658,6 +668,13 @@
 
     .share-buttons {
         grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .share-btn {
+        padding: 18px;
+        min-height: 56px;
+        font-size: 15px;
     }
 }
 
