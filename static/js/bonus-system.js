@@ -513,6 +513,9 @@ function showUsageDetail() {
     
     // 🎨 부드러운 모달 전환 함수
     const renderModal = () => {
+        // 📱 모바일: 배경 스크롤 방지
+        document.body.style.overflow = 'hidden';
+        
         const data = JSON.parse(localStorage.getItem('repost_usage_data'));
         if (!data) return;
         
@@ -621,6 +624,9 @@ function showReferralModal() {
     
     // 🎨 부드러운 모달 전환 함수
     const renderModal = () => {
+        // 📱 모바일: 배경 스크롤 방지
+        document.body.style.overflow = 'hidden';
+        
         const userId = localStorage.getItem('repost_user_id');
         const referralLink = `https://repost.kr?ref=${userId}`;
         const referrals = JSON.parse(localStorage.getItem('repost_referrals') || '[]');
@@ -736,10 +742,14 @@ function closeModal(event) {
         // 🎨 애니메이션 완료 후 DOM에서 제거 (400ms)
         setTimeout(() => {
             container.innerHTML = '';
+            // 📱 모바일: 배경 스크롤 복원
+            document.body.style.overflow = '';
         }, 400);
     } else {
         // overlay가 없으면 즉시 제거
         container.innerHTML = '';
+        // 📱 모바일: 배경 스크롤 복원
+        document.body.style.overflow = '';
     }
 }
 
