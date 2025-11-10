@@ -274,11 +274,7 @@ class BonusSystem {
                             </div>
                             <div class="usage-item">
                                 <span class="usage-item-label">📢 SNS 공유</span>
-                                <span class="usage-item-value">+3회</span>
-                            </div>
-                            <div class="usage-item">
-                                <span class="usage-item-label">💎 Basic 플랜</span>
-                                <span class="usage-item-value">무제한</span>
+                                <span class="usage-item-value">+5회</span>
                             </div>
                         </div>
                         

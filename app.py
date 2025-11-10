@@ -1704,11 +1704,11 @@ def claim_share_bonus():
         # 보너스 지급 기록
         redis_client.set(last_claim_key, datetime.now(KST).isoformat(), ex=30*24*60*60)
         
-        log(f"🎁 SNS 공유 보너스 지급 성공: {user_id} (+3회)", "BONUS")
+        log(f"🎁 SNS 공유 보너스 지급 성공: {user_id} (+5회)", "BONUS")
         
         return jsonify({
             'success': True,
-            'bonus': 3,
+            'bonus': 5,
             'expiryDays': 30
         }), 200
     
