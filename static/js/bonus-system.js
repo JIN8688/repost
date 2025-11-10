@@ -100,7 +100,8 @@ class BonusSystem {
         
         localStorage.setItem('repost_usage_data', JSON.stringify(usageData));
         
-        console.log(`📊 일일 사용 횟수 초기화: ${dailyLimit}회 (신규: ${isNewUser})`);
+        const statusText = isNewUser ? '7일 체험 기간 중' : '일반 사용자';
+        console.log(`📊 일일 사용 횟수 초기화: ${dailyLimit}회/일 (상태: ${statusText})`);
     }
 
     // 신규 사용자 확인 (7일 이내)
@@ -1290,11 +1291,24 @@ function showSecretCodeModal() {
         </div>
     `;
     
-    const container = document.getElementById('bonusModals') || document.body;
-    const modalDiv = document.createElement('div');
-    modalDiv.id = 'secretCodeModal';
-    modalDiv.innerHTML = html;
-    container.appendChild(modalDiv);
+    const container = document.getElementById('bonusModals');
+    if (!container) {
+        console.error('❌ bonusModals 컨테이너를 찾을 수 없습니다!');
+        return;
+    }
+    
+    container.innerHTML = html;
+    
+    // 🎨 부드러운 애니메이션을 위해 다음 프레임에 show 클래스 추가
+    requestAnimationFrame(() => {
+        const overlay = container.querySelector('.bonus-modal-overlay');
+        if (overlay) {
+            overlay.classList.add('show');
+            console.log('✅ 모달 표시 완료!');
+        } else {
+            console.error('❌ overlay를 찾을 수 없습니다!');
+        }
+    });
     
     // 입력창 포커스
     setTimeout(() => {

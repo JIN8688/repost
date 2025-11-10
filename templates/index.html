@@ -2015,9 +2015,9 @@
                 const firstVisit = new Date().toISOString();
                 localStorage.setItem('repost_first_visit', firstVisit);
                 
-                console.log('✨ 신규 사용자 ID 생성:', userId);
+                console.log('🎉 첫 방문! 사용자 ID 생성:', userId);
             } else {
-                console.log('👤 기존 사용자 ID:', userId);
+                console.log('✅ 사용자 ID 로드됨 (재방문):', userId);
             }
             
             return userId;
