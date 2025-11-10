@@ -86,22 +86,21 @@ class BonusSystem {
         const today = new Date().toDateString();
         const firstVisit = localStorage.getItem('repost_first_visit');
         
-        // 신규 사용자 여부 확인
-        const isNewUser = this.checkIfNewUser();
-        const dailyLimit = isNewUser ? 7 : 3; // 7일 이내면 7회, 아니면 3회
+        // 체험 기간 상태 조회 (상세 정보 포함)
+        const trialStatus = this.getTrialStatus();
+        const dailyLimit = trialStatus.isNewUser ? 7 : 3; // 7일 이내면 7회, 아니면 3회
         
         const usageData = {
             date: today,
             baseUsage: 0,
             baseLimit: dailyLimit,
             bonuses: this.loadBonuses(),
-            isNewUser: isNewUser
+            isNewUser: trialStatus.isNewUser
         };
         
         localStorage.setItem('repost_usage_data', JSON.stringify(usageData));
         
-        const statusText = isNewUser ? '7일 체험 기간 중' : '일반 사용자';
-        console.log(`📊 일일 사용 횟수 초기화: ${dailyLimit}회/일 (상태: ${statusText})`);
+        console.log(`📊 일일 사용 횟수 초기화: ${dailyLimit}회/일 (상태: ${trialStatus.statusText})`);
     }
 
     // 신규 사용자 확인 (7일 이내)
@@ -117,6 +116,44 @@ class BonusSystem {
         const daysDiff = Math.floor((today - firstDate) / (1000 * 60 * 60 * 24));
         
         return daysDiff < 7;
+    }
+    
+    // 체험 기간 상태 조회 (상세 정보 포함)
+    getTrialStatus() {
+        const firstVisit = localStorage.getItem('repost_first_visit');
+        
+        if (!firstVisit) {
+            return {
+                isNewUser: true,
+                daysElapsed: 0,
+                daysRemaining: 7,
+                statusText: '7일 체험 시작!'
+            };
+        }
+        
+        const firstDate = new Date(firstVisit);
+        const today = new Date();
+        const daysDiff = Math.floor((today - firstDate) / (1000 * 60 * 60 * 24));
+        const daysRemaining = Math.max(0, 7 - daysDiff);
+        const isNewUser = daysDiff < 7;
+        
+        let statusText;
+        if (isNewUser) {
+            if (daysRemaining === 0) {
+                statusText = '7일 체험 마지막 날! 🎉';
+            } else {
+                statusText = `7일 체험 기간 중 (${daysRemaining}일 남음)`;
+            }
+        } else {
+            statusText = '일반 사용자';
+        }
+        
+        return {
+            isNewUser,
+            daysElapsed: daysDiff,
+            daysRemaining,
+            statusText
+        };
     }
 
     // 보너스 로드
@@ -519,6 +556,9 @@ function showUsageDetail() {
         const data = JSON.parse(localStorage.getItem('repost_usage_data'));
         if (!data) return;
         
+        // 체험 기간 상태 조회
+        const trialStatus = bonusSystem ? bonusSystem.getTrialStatus() : { statusText: '일일 제공' };
+        
         const baseRemaining = data.baseLimit - data.baseUsage;
         const bonusTotal = data.bonuses.reduce((sum, b) => sum + b.remaining, 0);
         const total = baseRemaining + bonusTotal;
@@ -546,7 +586,7 @@ function showUsageDetail() {
                         <div class="usage-section">
                             <div class="usage-section-title">🔹 기본 제공</div>
                             <div class="usage-item">
-                                <span class="usage-item-label">${data.isNewUser ? '신규 사용자 (7일)' : '일일 제공'}</span>
+                                <span class="usage-item-label">${trialStatus.statusText}</span>
                                 <span class="usage-item-value">${data.baseLimit}회/일</span>
                             </div>
                             <div class="usage-item">
