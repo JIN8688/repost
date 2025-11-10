@@ -496,6 +496,9 @@ let bonusSystem;
 // 페이지 로드 시 초기화
 window.addEventListener('load', () => {
     bonusSystem = new BonusSystem();
+    
+    // 🔑 Secret Code 시스템 초기화 (DOM 로드 후)
+    setupSecretCodeAccess();
 });
 
 // ========================================
@@ -1197,7 +1200,7 @@ window.analyzeBlog = function() {
 // (function checkAdminAccess() { ... })();
 
 // Secret Code 입력 (로고 5번 클릭)
-(function setupSecretCodeAccess() {
+function setupSecretCodeAccess() {
     let clickCount = 0;
     let clickTimer = null;
     
@@ -1209,16 +1212,20 @@ window.analyzeBlog = function() {
         return;
     }
     
+    console.log('✅ 시크릿 코드 시스템 활성화: 로고를 3초 안에 5번 클릭하세요');
+    
     logo.style.cursor = 'pointer';
     logo.style.userSelect = 'none';
     
     logo.addEventListener('click', function(e) {
         e.preventDefault();
         clickCount++;
+        console.log(`🖱️ 클릭 ${clickCount}/5`);
         
         // 3초 이내에 5번 클릭
         if (clickCount === 1) {
             clickTimer = setTimeout(() => {
+                console.log('⏱️ 타임아웃: 클릭 카운트 초기화');
                 clickCount = 0;
             }, 3000);
         }
@@ -1226,10 +1233,11 @@ window.analyzeBlog = function() {
         if (clickCount === 5) {
             clearTimeout(clickTimer);
             clickCount = 0;
+            console.log('🔐 시크릿 코드 모달 표시!');
             showSecretCodeModal();
         }
     });
-})();
+}
 
 // Secret Code 입력 모달
 function showSecretCodeModal() {
