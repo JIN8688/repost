@@ -208,6 +208,151 @@
             }
         }
 
+        /* 🎨 블로거 도구 섹션 */
+        .blogger-tools-section {
+            margin-bottom: 50px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tools-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .tools-header h2 {
+            font-size: 2em;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tools-header p {
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 0 auto;
+            max-width: 1000px;
+        }
+
+        .tool-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 
+                0 20px 60px rgba(102, 126, 234, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.8);
+        }
+
+        .tool-card:hover::before {
+            opacity: 1;
+        }
+
+        .tool-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .tool-card:hover .tool-icon {
+            animation: none;
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        .tool-card h3 {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1a1a2e;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tool-card p {
+            font-size: 1em;
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tool-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .tool-card:nth-child(1) .tool-badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .tool-card:nth-child(2) .tool-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .tool-card:nth-child(3) .tool-badge {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
         /* 3가지 강점 카드 */
         .features {
             display: grid;
@@ -1070,6 +1215,36 @@
             .header .subtitle {
                 font-size: clamp(0.95em, 3vw, 1.1em);
             }
+
+            /* 블로거 도구 모바일 */
+            .blogger-tools-section {
+                margin-bottom: 35px;
+            }
+
+            .tools-header h2 {
+                font-size: 1.6em;
+            }
+
+            .tools-header p {
+                font-size: 1em;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .tool-card {
+                padding: 25px 20px;
+            }
+
+            .tool-icon {
+                font-size: 2.5em;
+            }
+
+            .tool-card h3 {
+                font-size: 1.3em;
+            }
             
             .input-section {
                 margin-bottom: 35px;
@@ -1380,6 +1555,34 @@
             <h1>Repost</h1>
             <p class="tagline">블로그 댓글 자동 추천, 읽은 척은 이제 그만<br>AI가 진짜 읽고 자연스러운 댓글을 만들어드립니다</p>
             <p class="subtitle">블로그 네트워킹의 시간을 90% 줄이는 AI 비서</p>
+        </div>
+
+        <!-- 🎨 블로거 도구 섹션 (NEW!) -->
+        <div class="blogger-tools-section">
+            <div class="tools-header">
+                <h2>🛠️ 블로거 필수 도구</h2>
+                <p>글쓰기부터 SEO까지, 블로거가 필요한 모든 도구를 한 곳에</p>
+            </div>
+            <div class="tools-grid">
+                <a href="/tools/text-analyzer" class="tool-card">
+                    <div class="tool-icon">📊</div>
+                    <h3>텍스트 분석기</h3>
+                    <p>키워드 밀도, 글자수, 가독성을 실시간으로 분석</p>
+                    <div class="tool-badge">무료</div>
+                </a>
+                <a href="/tools/title-generator" class="tool-card">
+                    <div class="tool-icon">💡</div>
+                    <h3>제목 생성기</h3>
+                    <p>AI가 클릭율 높은 제목 10개를 즉시 생성</p>
+                    <div class="tool-badge">인기</div>
+                </a>
+                <a href="/tools/seo-checker" class="tool-card">
+                    <div class="tool-icon">🎯</div>
+                    <h3>SEO 점수 체커</h3>
+                    <p>검색 최적화 점수와 개선 방법을 자동 분석</p>
+                    <div class="tool-badge">NEW</div>
+                </a>
+            </div>
         </div>
 
         <!-- 하얀 배경 컨텐츠 영역 -->

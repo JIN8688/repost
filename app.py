@@ -1723,6 +1723,839 @@ def claim_share_bonus():
         }), 500
 
 # ============================
+# 🎨 블로거 도구 페이지
+# ============================
+
+@app.route('/tools')
+def blogger_tools():
+    """🎨 블로거 도구 메인 페이지"""
+    return render_template('tools.html')
+
+@app.route('/tools/text-analyzer')
+def text_analyzer():
+    """📊 텍스트 분석기 페이지"""
+    return render_template('text-analyzer.html')
+
+@app.route('/tools/title-generator')
+def title_generator():
+    """💡 제목 생성기 페이지"""
+    return render_template('title-generator.html')
+
+@app.route('/tools/seo-checker')
+def seo_checker():
+    """🎯 SEO 점수 체커 페이지"""
+    return render_template('seo-checker.html')
+
+# ============================
+# 📊 블로거 도구 - 텍스트 분석
+# ============================
+
+@app.route('/api/analyze-text', methods=['POST'])
+def analyze_text():
+    """📊 실시간 텍스트 분석 API"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        title = data.get('title', '')
+        
+        if not text:
+            return jsonify({'error': 'text is required'}), 400
+        
+        # 분석 결과 생성
+        analysis = {
+            'character_count': analyze_character_count(text, title),
+            'keyword_density': analyze_keyword_density(text),
+            'duplicate_expressions': analyze_duplicate_expressions(text),
+            'readability': analyze_readability(text)
+        }
+        
+        log(f"📊 텍스트 분석 완료: {len(text)}자", "ANALYSIS")
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 텍스트 분석 실패: {e}", "ERROR")
+        import traceback
+        log(f"📋 상세 에러: {traceback.format_exc()}", "ERROR")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def analyze_character_count(text, title):
+    """글자수 분석"""
+    import re
+    
+    # 공백 포함/제외 글자수
+    total_chars = len(text)
+    chars_no_space = len(text.replace(' ', '').replace('\n', '').replace('\t', ''))
+    title_chars = len(title)
+    
+    # 읽는 시간 계산 (한국어 기준: 분당 500자)
+    reading_time_minutes = total_chars / 500
+    reading_time_seconds = int((reading_time_minutes % 1) * 60)
+    reading_time_minutes = int(reading_time_minutes)
+    
+    # 권장 범위 체크
+    status = 'good'
+    message = '적정한 길이입니다'
+    if total_chars < 800:
+        status = 'warning'
+        message = f'{800 - total_chars}자 더 작성하는 것을 권장합니다'
+    elif total_chars > 2000:
+        status = 'info'
+        message = '긴 글은 여러 문단으로 나누는 것을 권장합니다'
+    
+    return {
+        'total': total_chars,
+        'without_space': chars_no_space,
+        'title': title_chars,
+        'reading_time': f"{reading_time_minutes}분 {reading_time_seconds}초",
+        'recommended_range': '800-2,000자',
+        'status': status,
+        'message': message
+    }
+
+def analyze_keyword_density(text):
+    """키워드 밀도 분석"""
+    import re
+    from collections import Counter
+    
+    # 한글 단어 추출 (2글자 이상)
+    words = re.findall(r'[가-힣]{2,}', text)
+    
+    if not words:
+        return {'keywords': [], 'total_words': 0}
+    
+    # 불용어 제거
+    stopwords = {'그리고', '하지만', '그러나', '그래서', '때문에', '그것', '이것', '저것', 
+                 '있는', '없는', '되는', '하는', '같은', '있다', '없다', '이다', '아니다',
+                 '수', '등', '및', '또는', '또한', '따라', '대한', '위해', '통해', '까지'}
+    
+    filtered_words = [word for word in words if word not in stopwords]
+    
+    # 빈도수 계산
+    word_counts = Counter(filtered_words)
+    total_words = len(filtered_words)
+    
+    # 상위 키워드 추출 (빈도 3회 이상)
+    keywords = []
+    for word, count in word_counts.most_common(20):
+        if count >= 3:
+            density = (count / total_words) * 100
+            
+            # 키워드 밀도 평가
+            status = 'good'
+            suggestion = ''
+            if density > 1.5:
+                status = 'warning'
+                recommended_count = int(total_words * 0.01)
+                suggestion = f'너무 많이 사용되었습니다. {recommended_count}-{recommended_count + 2}회로 줄이는 것을 권장합니다'
+            elif density < 0.3:
+                status = 'info'
+                suggestion = '조금 더 사용해도 좋습니다'
+            else:
+                status = 'good'
+                suggestion = '적정한 사용 빈도입니다'
+            
+            keywords.append({
+                'word': word,
+                'count': count,
+                'density': round(density, 2),
+                'status': status,
+                'suggestion': suggestion
+            })
+    
+    return {
+        'keywords': keywords[:10],  # 상위 10개만
+        'total_words': total_words
+    }
+
+def analyze_duplicate_expressions(text):
+    """중복 표현 분석"""
+    import re
+    from collections import Counter
+    
+    duplicates = []
+    
+    # 1. 반복 단어 체크 (2글자 이상, 5회 이상 반복)
+    words = re.findall(r'[가-힣]{2,}', text)
+    word_counts = Counter(words)
+    
+    common_words = ['정말', '진짜', '너무', '아주', '매우', '완전', '엄청', '되게', 
+                   '것', '같아요', '같은', '같다', '거예요', '거에요']
+    
+    for word in common_words:
+        count = word_counts.get(word, 0)
+        if count >= 5:
+            alternatives = get_alternatives(word)
+            duplicates.append({
+                'type': 'word',
+                'expression': word,
+                'count': count,
+                'suggestion': f'대체어: {", ".join(alternatives)}',
+                'status': 'warning' if count >= 8 else 'info'
+            })
+    
+    # 2. 문장 패턴 체크
+    sentence_patterns = [
+        (r'~\s*것\s*같아요?', '~것 같아요'),
+        (r'~\s*거\s*같아요?', '~거 같아요'),
+        (r'~\s*네요', '~네요'),
+        (r'정말\s+', '정말 ')
+    ]
+    
+    for pattern, display in sentence_patterns:
+        matches = re.findall(pattern, text)
+        count = len(matches)
+        if count >= 4:
+            duplicates.append({
+                'type': 'pattern',
+                'expression': display,
+                'count': count,
+                'suggestion': '다양한 표현으로 변경을 권장합니다',
+                'status': 'warning' if count >= 6 else 'info'
+            })
+    
+    return duplicates
+
+def get_alternatives(word):
+    """대체어 추천"""
+    alternatives_map = {
+        '정말': ['진짜', '굉장히', '아주', '매우', '무척', '상당히'],
+        '진짜': ['정말', '굉장히', '아주', '매우', '무척'],
+        '너무': ['아주', '매우', '굉장히', '정말', '상당히'],
+        '아주': ['매우', '굉장히', '정말', '무척', '상당히'],
+        '매우': ['아주', '굉장히', '정말', '무척', '상당히'],
+        '완전': ['정말', '아주', '굉장히', '매우'],
+        '엄청': ['굉장히', '정말', '아주', '매우'],
+        '것': ['점', '부분', '면'],
+        '같아요': ['생각해요', '느껴져요', '보여요', '인 것 같습니다'],
+        '같은': ['비슷한', '유사한', '~와 같은'],
+        '같다': ['비슷하다', '유사하다', '~와 같다']
+    }
+    return alternatives_map.get(word, ['다양한 표현 사용 권장'])
+
+def analyze_readability(text):
+    """가독성 분석"""
+    import re
+    
+    # 문장 분리
+    sentences = re.split(r'[.!?]\s+', text)
+    sentences = [s.strip() for s in sentences if s.strip()]
+    
+    if not sentences:
+        return {
+            'score': 0,
+            'sentence_length': {'avg': 0, 'status': 'good'},
+            'paragraph_length': {'avg': 0, 'status': 'good'},
+            'line_breaks': {'count': 0, 'status': 'good'}
+        }
+    
+    # 1. 문장 길이 분석
+    sentence_lengths = [len(s) for s in sentences]
+    avg_sentence_length = sum(sentence_lengths) / len(sentences)
+    
+    sentence_status = 'good'
+    sentence_message = '적절한 문장 길이입니다'
+    if avg_sentence_length > 60:
+        sentence_status = 'warning'
+        sentence_message = '문장이 길어서 읽기 어려울 수 있습니다. 짧게 나누는 것을 권장합니다'
+    elif avg_sentence_length < 20:
+        sentence_status = 'info'
+        sentence_message = '문장이 짧습니다. 조금 더 자세한 설명을 추가해보세요'
+    
+    # 2. 단락 분석
+    paragraphs = text.split('\n\n')
+    paragraphs = [p.strip() for p in paragraphs if p.strip()]
+    
+    paragraph_lengths = [len(p.split('\n')) for p in paragraphs]
+    avg_paragraph_length = sum(paragraph_lengths) / len(paragraph_lengths) if paragraph_lengths else 0
+    
+    paragraph_status = 'good'
+    paragraph_message = '적절한 단락 구성입니다'
+    if avg_paragraph_length > 8:
+        paragraph_status = 'warning'
+        paragraph_message = '단락이 길어서 지루할 수 있습니다. 4-6줄로 나누는 것을 권장합니다'
+    
+    # 3. 줄바꿈 분석
+    line_breaks = text.count('\n')
+    line_break_status = 'good'
+    line_break_message = '적절한 줄바꿈입니다'
+    
+    total_chars = len(text)
+    if total_chars > 500 and line_breaks < 3:
+        line_break_status = 'warning'
+        line_break_message = '줄바꿈이 부족합니다. 가독성을 위해 더 추가하세요'
+    
+    # 4. 종합 점수 계산
+    score = 100
+    if sentence_status == 'warning':
+        score -= 15
+    elif sentence_status == 'info':
+        score -= 5
+    
+    if paragraph_status == 'warning':
+        score -= 15
+    
+    if line_break_status == 'warning':
+        score -= 10
+    
+    return {
+        'score': max(0, score),
+        'sentence_length': {
+            'avg': round(avg_sentence_length, 1),
+            'status': sentence_status,
+            'message': sentence_message
+        },
+        'paragraph_length': {
+            'avg': round(avg_paragraph_length, 1),
+            'status': paragraph_status,
+            'message': paragraph_message
+        },
+        'line_breaks': {
+            'count': line_breaks,
+            'status': line_break_status,
+            'message': line_break_message
+        }
+    }
+
+# ============================
+# 💡 블로거 도구 - 제목 생성
+# ============================
+
+@app.route('/api/generate-titles', methods=['POST'])
+def generate_titles():
+    """💡 AI 제목 생성 API"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        keywords = data.get('keywords', '')
+        style = data.get('style', 'friendly')  # friendly, professional, sensational
+        
+        if not text and not keywords:
+            return jsonify({'error': 'text or keywords required'}), 400
+        
+        # OpenAI로 제목 생성
+        titles = generate_titles_with_ai(text, keywords, style)
+        
+        log(f"💡 제목 생성 완료: {len(titles)}개", "TITLE")
+        
+        return jsonify({
+            'success': True,
+            'titles': titles
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 제목 생성 실패: {e}", "ERROR")
+        import traceback
+        log(f"📋 상세 에러: {traceback.format_exc()}", "ERROR")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def generate_titles_with_ai(text, keywords, style):
+    """AI로 제목 생성"""
+    try:
+        # 스타일별 프롬프트
+        style_prompts = {
+            'friendly': '친근하고 편안한 말투로, 독자가 친구에게 추천받는 느낌의',
+            'professional': '전문적이고 신뢰감 있는 톤으로',
+            'sensational': '클릭을 유도하는 자극적이면서도 과하지 않은',
+            'informative': '정보 전달에 집중한 명확하고 구체적인',
+            'emotional': '감성적이고 공감을 이끌어내는'
+        }
+        
+        style_desc = style_prompts.get(style, style_prompts['friendly'])
+        
+        # 텍스트에서 핵심 키워드 추출
+        import re
+        from collections import Counter
+        
+        content_keywords = []
+        if text:
+            words = re.findall(r'[가-힣]{2,}', text[:500])  # 앞 500자만
+            word_counts = Counter(words)
+            content_keywords = [word for word, count in word_counts.most_common(5) if count >= 2]
+        
+        if keywords:
+            content_keywords.extend(keywords.split(','))
+        
+        content_keywords = list(set(content_keywords))[:7]  # 중복 제거, 최대 7개
+        
+        # AI 프롬프트
+        prompt = f"""당신은 블로그 제목 전문가입니다. 아래 정보를 바탕으로 클릭율이 높은 블로그 제목 10개를 생성해주세요.
+
+글 내용 미리보기:
+{text[:300] if text else '없음'}
+
+핵심 키워드: {', '.join(content_keywords)}
+
+제목 스타일: {style_desc}
+
+제목 작성 규칙:
+1. 제목 길이: 20-50자
+2. 숫자 활용 (TOP 5, BEST 10 등)
+3. 혜택 명시 (가성비, 무료, 꿀팁 등)
+4. 궁금증 유발
+5. 구체적이고 명확하게
+6. 이모지는 사용하지 말 것
+
+각 제목에 대해:
+- 제목
+- 예상 클릭율 (7-15% 범위)
+- 강점 (간단히 한줄)
+
+JSON 형식으로 응답:
+[
+  {{
+    "title": "제목",
+    "ctr": 12.5,
+    "strength": "강점 설명"
+  }},
+  ...
+]
+"""
+        
+        # OpenAI API 호출
+        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "당신은 블로그 제목 전문가입니다. 클릭율이 높은 제목을 생성합니다."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.8,
+            max_tokens=1500
+        )
+        
+        # 응답 파싱
+        result_text = response.choices[0].message.content.strip()
+        
+        # JSON 추출 (마크다운 코드 블록 제거)
+        if '```json' in result_text:
+            result_text = result_text.split('```json')[1].split('```')[0].strip()
+        elif '```' in result_text:
+            result_text = result_text.split('```')[1].split('```')[0].strip()
+        
+        titles_data = json.loads(result_text)
+        
+        # 제목 평가 추가
+        for title_obj in titles_data:
+            title_obj['evaluation'] = evaluate_title(title_obj['title'])
+        
+        return titles_data
+    
+    except Exception as e:
+        log(f"❌ AI 제목 생성 실패: {e}", "ERROR")
+        # 폴백: 간단한 제목 생성
+        return generate_fallback_titles(keywords or text[:50])
+
+def evaluate_title(title):
+    """제목 평가"""
+    score = 50  # 기본 점수
+    feedback = []
+    
+    title_length = len(title)
+    
+    # 1. 길이 체크
+    if 20 <= title_length <= 50:
+        score += 20
+        feedback.append('✅ 적절한 길이')
+    elif title_length < 20:
+        score -= 10
+        feedback.append('⚠️ 너무 짧음 (20자 이상 권장)')
+    else:
+        score -= 15
+        feedback.append('⚠️ 너무 김 (50자 이하 권장)')
+    
+    # 2. 숫자 포함 체크
+    import re
+    if re.search(r'\d+|TOP|BEST|순위', title):
+        score += 15
+        feedback.append('✅ 숫자/리스트 포함 (클릭율 +23%)')
+    else:
+        feedback.append('💡 숫자 추가 권장 (TOP 5, BEST 10)')
+    
+    # 3. 혜택/가치 명시
+    benefit_keywords = ['가성비', '무료', '꿀팁', '추천', '완벽', '최고', '인기', '핫플', '데이트', '예약']
+    if any(keyword in title for keyword in benefit_keywords):
+        score += 10
+        feedback.append('✅ 혜택 명시')
+    else:
+        feedback.append('💡 혜택 키워드 추가 고려')
+    
+    # 4. 궁금증 유발
+    question_patterns = ['?', '방법', '비법', '노하우', '총정리', '완벽', '알아보기']
+    if any(pattern in title for pattern in question_patterns):
+        score += 10
+        feedback.append('✅ 궁금증 유발')
+    
+    # 5. 구체성
+    if '|' in title or ':' in title:
+        score += 5
+        feedback.append('✅ 구체적 정보 제공')
+    
+    score = min(100, max(0, score))
+    
+    return {
+        'score': score,
+        'feedback': feedback
+    }
+
+def generate_fallback_titles(base_text):
+    """폴백 제목 생성 (AI 실패시)"""
+    import re
+    words = re.findall(r'[가-힣]+', base_text)
+    main_keyword = words[0] if words else '블로그'
+    
+    templates = [
+        f"{main_keyword} 완벽 가이드 | 초보자도 쉽게!",
+        f"{main_keyword} TOP 5 추천 (2025년 최신)",
+        f"{main_keyword} 총정리 | 이것만 보면 끝",
+        f"알아두면 좋은 {main_keyword} 꿀팁 BEST 7",
+        f"{main_keyword} 완전 정복 | 실전 노하우",
+        f"{main_keyword}의 모든 것 | 상세 리뷰",
+        f"{main_keyword} 추천 | 검증된 후기",
+        f"{main_keyword} 어떻게 선택할까? (비교 분석)",
+        f"{main_keyword} 이렇게 하세요 | 단계별 가이드",
+        f"{main_keyword} 시작하기 전 꼭 알아야 할 것들"
+    ]
+    
+    return [
+        {
+            'title': title,
+            'ctr': 8.0 + (i * 0.3),
+            'strength': '템플릿 기반 제목',
+            'evaluation': evaluate_title(title)
+        }
+        for i, title in enumerate(templates)
+    ]
+
+@app.route('/api/evaluate-title', methods=['POST'])
+def evaluate_title_api():
+    """💡 제목 평가 API"""
+    try:
+        data = request.get_json()
+        title = data.get('title', '')
+        
+        if not title:
+            return jsonify({'error': 'title is required'}), 400
+        
+        evaluation = evaluate_title(title)
+        
+        return jsonify({
+            'success': True,
+            'evaluation': evaluation
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 제목 평가 실패: {e}", "ERROR")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# ============================
+# 🎯 블로거 도구 - SEO 분석
+# ============================
+
+@app.route('/api/check-seo', methods=['POST'])
+def check_seo():
+    """🎯 SEO 종합 분석 API"""
+    try:
+        data = request.get_json()
+        title = data.get('title', '')
+        text = data.get('text', '')
+        keywords = data.get('keywords', '')
+        image_count = data.get('image_count', 0)
+        
+        if not text:
+            return jsonify({'error': 'text is required'}), 400
+        
+        # SEO 종합 분석
+        seo_result = {
+            'title_optimization': analyze_title_seo(title, keywords),
+            'content_optimization': analyze_content_seo(text, keywords),
+            'image_optimization': analyze_image_seo(image_count),
+            'readability': analyze_readability(text),
+            'overall_score': 0,
+            'quick_wins': []
+        }
+        
+        # 종합 점수 계산
+        scores = [
+            seo_result['title_optimization']['score'] * 0.25,  # 25%
+            seo_result['content_optimization']['score'] * 0.35,  # 35%
+            seo_result['image_optimization']['score'] * 0.15,  # 15%
+            seo_result['readability']['score'] * 0.25  # 25%
+        ]
+        seo_result['overall_score'] = int(sum(scores))
+        
+        # 즉시 개선 가능 항목 추출
+        seo_result['quick_wins'] = extract_quick_wins(seo_result)
+        
+        # 등급 계산
+        score = seo_result['overall_score']
+        if score >= 90:
+            seo_result['grade'] = 'S'
+            seo_result['grade_message'] = '완벽한 SEO 최적화!'
+        elif score >= 80:
+            seo_result['grade'] = 'A'
+            seo_result['grade_message'] = '우수한 SEO 최적화'
+        elif score >= 70:
+            seo_result['grade'] = 'B'
+            seo_result['grade_message'] = '양호한 SEO 최적화'
+        elif score >= 60:
+            seo_result['grade'] = 'C'
+            seo_result['grade_message'] = '보통 수준의 SEO'
+        else:
+            seo_result['grade'] = 'D'
+            seo_result['grade_message'] = '개선이 많이 필요함'
+        
+        log(f"🎯 SEO 분석 완료: {len(text)}자, 점수 {seo_result['overall_score']}", "SEO")
+        
+        return jsonify({
+            'success': True,
+            'seo': seo_result
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ SEO 분석 실패: {e}", "ERROR")
+        import traceback
+        log(f"📋 상세 에러: {traceback.format_exc()}", "ERROR")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def analyze_title_seo(title, keywords):
+    """제목 SEO 분석"""
+    import re
+    
+    if not title:
+        return {
+            'score': 0,
+            'issues': ['제목이 없습니다'],
+            'suggestions': ['제목을 입력해주세요'],
+            'details': {}
+        }
+    
+    score = 50
+    issues = []
+    suggestions = []
+    details = {}
+    
+    title_length = len(title)
+    details['length'] = title_length
+    
+    # 1. 길이 체크 (20-50자 권장)
+    if 20 <= title_length <= 50:
+        score += 20
+        details['length_status'] = 'good'
+    elif title_length < 20:
+        issues.append('제목이 너무 짧습니다')
+        suggestions.append('제목을 20자 이상으로 늘리세요')
+        details['length_status'] = 'short'
+    else:
+        issues.append('제목이 너무 깁니다')
+        suggestions.append('제목을 50자 이하로 줄이세요')
+        score -= 10
+        details['length_status'] = 'long'
+    
+    # 2. 키워드 포함 체크
+    keywords_list = [k.strip() for k in keywords.split(',') if k.strip()] if keywords else []
+    keyword_in_title = any(kw in title for kw in keywords_list) if keywords_list else False
+    
+    if keyword_in_title:
+        score += 15
+        details['keyword_included'] = True
+    else:
+        if keywords_list:
+            issues.append('주요 키워드가 제목에 없습니다')
+            suggestions.append(f'"{keywords_list[0]}" 키워드를 제목에 추가하세요')
+        details['keyword_included'] = False
+    
+    # 3. 숫자 포함 체크 (클릭율 향상)
+    has_number = bool(re.search(r'\d+|TOP|BEST|순위', title))
+    details['has_number'] = has_number
+    
+    if has_number:
+        score += 10
+    else:
+        suggestions.append('숫자를 넣으면 클릭율이 23% 증가합니다 (예: TOP 5, BEST 10)')
+    
+    # 4. 특수문자/이모지 체크
+    has_special = bool(re.search(r'[|:!?]', title))
+    details['has_special'] = has_special
+    
+    if has_special:
+        score += 5
+    else:
+        suggestions.append('구분자(|, :)를 사용하면 가독성이 좋아집니다')
+    
+    return {
+        'score': min(100, score),
+        'issues': issues,
+        'suggestions': suggestions,
+        'details': details
+    }
+
+def analyze_content_seo(text, keywords):
+    """본문 SEO 분석"""
+    import re
+    from collections import Counter
+    
+    score = 50
+    issues = []
+    suggestions = []
+    details = {}
+    
+    # 1. 글자수 체크 (800-2000자 권장)
+    text_length = len(text)
+    details['length'] = text_length
+    
+    if 800 <= text_length <= 2000:
+        score += 20
+        details['length_status'] = 'good'
+    elif text_length < 800:
+        issues.append(f'본문이 너무 짧습니다 ({text_length}자)')
+        suggestions.append(f'{800 - text_length}자를 더 작성하세요')
+        details['length_status'] = 'short'
+    else:
+        score += 10  # 긴 건 나쁘지 않음
+        details['length_status'] = 'long'
+    
+    # 2. 키워드 밀도 체크
+    keywords_list = [k.strip() for k in keywords.split(',') if k.strip()] if keywords else []
+    
+    if keywords_list:
+        main_keyword = keywords_list[0]
+        keyword_count = text.count(main_keyword)
+        words = re.findall(r'[가-힣]{2,}', text)
+        total_words = len(words)
+        
+        if total_words > 0:
+            keyword_density = (keyword_count / total_words) * 100
+            details['keyword_density'] = round(keyword_density, 2)
+            details['keyword_count'] = keyword_count
+            
+            if 0.5 <= keyword_density <= 1.5:
+                score += 15
+                details['density_status'] = 'good'
+            elif keyword_density < 0.5:
+                issues.append(f'"{main_keyword}" 키워드가 부족합니다')
+                suggestions.append(f'"{main_keyword}"를 {int(total_words * 0.01) - keyword_count}회 더 사용하세요')
+                details['density_status'] = 'low'
+            else:
+                issues.append(f'"{main_keyword}" 키워드가 과다합니다')
+                suggestions.append(f'"{main_keyword}"를 {keyword_count - int(total_words * 0.015)}회 줄이세요')
+                score -= 10
+                details['density_status'] = 'high'
+    
+    # 3. 단락 구조 (줄바꿈)
+    paragraphs = text.split('\n\n')
+    paragraph_count = len([p for p in paragraphs if p.strip()])
+    details['paragraph_count'] = paragraph_count
+    
+    if paragraph_count >= 3:
+        score += 10
+        details['paragraph_status'] = 'good'
+    else:
+        issues.append('단락이 부족합니다')
+        suggestions.append('글을 3개 이상의 단락으로 나누세요')
+        details['paragraph_status'] = 'poor'
+    
+    # 4. 내부 링크 (실제로는 HTML 파싱 필요, 여기서는 URL 패턴 체크)
+    has_links = bool(re.search(r'http[s]?://|www\.', text))
+    details['has_links'] = has_links
+    
+    if has_links:
+        score += 5
+    else:
+        suggestions.append('관련 포스트 링크를 추가하면 SEO에 도움됩니다')
+    
+    return {
+        'score': min(100, score),
+        'issues': issues,
+        'suggestions': suggestions,
+        'details': details
+    }
+
+def analyze_image_seo(image_count):
+    """이미지 SEO 분석"""
+    score = 50
+    issues = []
+    suggestions = []
+    details = {'count': image_count}
+    
+    # 1. 이미지 개수 체크 (5-15개 권장)
+    if 5 <= image_count <= 15:
+        score += 30
+        details['count_status'] = 'good'
+    elif image_count < 5:
+        issues.append(f'이미지가 부족합니다 ({image_count}개)')
+        suggestions.append(f'{5 - image_count}개의 이미지를 더 추가하세요')
+        details['count_status'] = 'low'
+    else:
+        score += 10  # 많은 건 나쁘지 않음
+        details['count_status'] = 'high'
+    
+    # 2. 이미지 최적화 가이드
+    if image_count > 0:
+        suggestions.append('이미지 파일명을 키워드로 변경하세요 (예: keyword-image-01.jpg)')
+        suggestions.append('이미지 ALT 태그를 추가하세요')
+        suggestions.append('이미지 용량을 최적화하세요 (권장: 200KB 이하)')
+    
+    return {
+        'score': min(100, score),
+        'issues': issues,
+        'suggestions': suggestions,
+        'details': details
+    }
+
+def extract_quick_wins(seo_result):
+    """즉시 개선 가능한 항목 추출"""
+    quick_wins = []
+    
+    # 제목 개선
+    if seo_result['title_optimization']['score'] < 80:
+        for suggestion in seo_result['title_optimization']['suggestions'][:2]:
+            quick_wins.append({
+                'category': 'title',
+                'action': suggestion,
+                'impact': '높음',
+                'time': '5초'
+            })
+    
+    # 본문 개선
+    if seo_result['content_optimization']['score'] < 80:
+        for suggestion in seo_result['content_optimization']['suggestions'][:2]:
+            quick_wins.append({
+                'category': 'content',
+                'action': suggestion,
+                'impact': '중간',
+                'time': '5-10분'
+            })
+    
+    # 이미지 개선
+    if seo_result['image_optimization']['score'] < 70:
+        if seo_result['image_optimization']['suggestions']:
+            quick_wins.append({
+                'category': 'image',
+                'action': seo_result['image_optimization']['suggestions'][0],
+                'impact': '중간',
+                'time': '2분'
+            })
+    
+    return quick_wins[:5]  # 최대 5개
+
+# ============================
 # 📊 관리자 대시보드
 # ============================
 
