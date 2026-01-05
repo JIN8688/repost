@@ -253,19 +253,21 @@
         .mobile-menu {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 70px;
+            right: 12px;
+            width: 280px;
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
-            padding: 80px 20px 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            padding: 16px;
             opacity: 0;
-            transform: scale(0.95);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
+            z-index: 999;
+            max-height: calc(100vh - 90px);
             overflow-y: auto;
-            z-index: 1000;
         }
 
         .mobile-menu.show {
@@ -277,18 +279,43 @@
 
         .mobile-menu-item {
             display: block;
-            padding: 16px 20px;
+            padding: 14px 16px;
             text-decoration: none;
             color: var(--text-dark);
             font-weight: 500;
-            border-radius: 12px;
-            margin-bottom: 8px;
+            font-size: 0.95rem;
+            border-radius: 10px;
+            margin-bottom: 4px;
             transition: all 0.2s ease;
         }
 
         .mobile-menu-item:hover {
             background: rgba(102, 126, 234, 0.1);
             color: var(--primary);
+        }
+
+        .mobile-menu-item:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 메뉴 배경 오버레이 */
+        .mobile-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-menu-overlay.show {
+            display: block;
+            opacity: 1;
         }
 
         /* ============================================
@@ -461,6 +488,9 @@
         </div>
     </header>
 
+    <!-- 모바일 메뉴 오버레이 -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="toggleMobileMenu()"></div>
+
     <!-- 모바일 메뉴 -->
     <div class="mobile-menu" id="mobileMenu">
         <a href="/" class="mobile-menu-item">홈</a>
@@ -544,9 +574,11 @@
         // 모바일 메뉴 토글
         function toggleMobileMenu() {
             const menu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
             const btn = document.getElementById('mobileMenuBtn');
             
             menu.classList.toggle('show');
+            overlay.classList.toggle('show');
             btn.classList.toggle('active');
         }
 
