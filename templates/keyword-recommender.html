@@ -1,9 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}키워드 추천 - Repost{% endblock %}
+{% block title %}키워드 추천 엔진 - Repost{% endblock %}
 
 {% block extra_css %}
 <style>
+    /* 홈 배경 그대로 사용 */
+    body {
+        background: 
+            radial-gradient(at 27% 37%, rgba(102, 126, 234, 0.8) 0px, transparent 50%),
+            radial-gradient(at 97% 21%, rgba(125, 235, 200, 0.7) 0px, transparent 50%),
+            radial-gradient(at 52% 99%, rgba(244, 107, 153, 0.7) 0px, transparent 50%),
+            radial-gradient(at 10% 29%, rgba(118, 75, 162, 0.8) 0px, transparent 50%),
+            #1a1a2e !important;
+        background-attachment: fixed !important;
+    }
+
     .page-header {
         text-align: center;
         padding: 60px 20px 40px;
@@ -16,17 +27,37 @@
     }
 
     .page-header h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
+        font-size: clamp(1.8rem, 5vw, 2.5rem);
+        font-weight: 800;
         color: white;
         margin-bottom: 10px;
-        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
     }
 
     .page-header p {
-        font-size: 1.1rem;
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 300;
+        font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 500;
+    }
+    
+    .tier-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        color: white;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 6px 14px;
+        border-radius: 16px;
+        font-size: 0.8rem;
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        margin-left: 12px;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
     }
 
     .container {
@@ -36,12 +67,15 @@
     }
 
     .glass-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 24px;
-        padding: 30px;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(30px) saturate(180%);
+        -webkit-backdrop-filter: blur(30px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 28px;
+        padding: 35px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
+                    0 0 0 1px rgba(255, 255, 255, 0.5),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8);
         margin-bottom: 30px;
         animation: fadeInUp 0.8s ease-out;
     }
@@ -53,8 +87,8 @@
 
     .card-title {
         font-size: 1.5rem;
-        font-weight: 600;
-        color: white;
+        font-weight: 700;
+        color: #1a1a2e;
         margin-bottom: 20px;
         display: flex;
         align-items: center;
@@ -67,20 +101,19 @@
 
     .input-label {
         display: block;
-        color: white;
-        font-weight: 500;
+        color: #1a1a2e;
+        font-weight: 600;
         margin-bottom: 8px;
         font-size: 0.95rem;
     }
 
     .input-field {
         width: 100%;
-        padding: 12px 16px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 12px;
-        color: white;
+        padding: 14px 18px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        color: #1a1a2e;
         font-size: 1rem;
         font-family: inherit;
         transition: all 0.3s ease;
@@ -88,184 +121,161 @@
 
     .input-field:focus {
         outline: none;
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.4);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        background: #f8fafc;
+        border-color: #ec4899;
+        box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
     }
 
     .input-field::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: #94a3b8;
     }
 
-    .recommend-btn {
+    .generate-btn {
         width: 100%;
         padding: 16px;
-        background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
         border: none;
-        border-radius: 12px;
+        border-radius: 14px;
         color: white;
         font-size: 1.1rem;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+        box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
     }
 
-    .recommend-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6);
+    .generate-btn:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(139, 92, 246, 0.5);
     }
 
-    .recommend-btn:disabled {
+    .generate-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
-        transform: none;
     }
 
-    .keyword-section {
-        margin-bottom: 30px;
-    }
-
-    .section-header {
+    .copy-all-btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        border-radius: 14px;
         color: white;
-        font-size: 1.3rem;
-        font-weight: 600;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        margin-bottom: 20px;
     }
 
-    .keyword-list {
+    .copy-all-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    }
+
+    .copy-all-btn.copied {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    }
+
+    .keywords-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 15px;
     }
 
-    .keyword-item {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 12px;
+    .keyword-card {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
         padding: 20px;
-        transition: all 0.3s ease;
         cursor: pointer;
+        transition: all 0.3s ease;
+        animation: slideIn 0.5s ease-out;
     }
 
-    .keyword-item:hover {
-        background: rgba(255, 255, 255, 0.2);
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .keyword-card:hover {
+        background: white;
         transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        border-color: #8b5cf6;
     }
 
     .keyword-text {
-        color: white;
-        font-weight: 600;
-        font-size: 1.15rem;
-        margin-bottom: 12px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 10px;
     }
 
     .keyword-meta {
         display: flex;
-        gap: 15px;
-        margin-bottom: 10px;
-    }
-
-    .meta-item {
-        display: flex;
         align-items: center;
-        gap: 5px;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.9rem;
+        gap: 8px;
+        flex-wrap: wrap;
     }
 
-    .volume-badge {
+    .keyword-badge {
         padding: 4px 10px;
+        background: rgba(139, 92, 246, 0.15);
+        border: 1px solid rgba(139, 92, 246, 0.3);
         border-radius: 12px;
         font-size: 0.8rem;
-        font-weight: 600;
-    }
-
-    .volume-high {
-        background: rgba(239, 68, 68, 0.3);
-        color: #fca5a5;
-    }
-
-    .volume-medium {
-        background: rgba(245, 158, 11, 0.3);
-        color: #fcd34d;
-    }
-
-    .volume-low {
-        background: rgba(16, 185, 129, 0.3);
-        color: #6ee7b7;
+        font-weight: 700;
+        color: #6d28d9;
     }
 
     .difficulty-badge {
         padding: 4px 10px;
         border-radius: 12px;
         font-size: 0.8rem;
-        font-weight: 600;
+        font-weight: 700;
     }
 
-    .difficulty-hard {
-        background: rgba(239, 68, 68, 0.3);
-        color: #fca5a5;
+    .difficulty-low {
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #059669;
     }
 
     .difficulty-medium {
-        background: rgba(245, 158, 11, 0.3);
-        color: #fcd34d;
+        background: rgba(245, 158, 11, 0.15);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        color: #d97706;
     }
 
-    .difficulty-easy {
-        background: rgba(16, 185, 129, 0.3);
-        color: #6ee7b7;
+    .difficulty-high {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #dc2626;
     }
 
-    .keyword-recommendation {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.85rem;
-        line-height: 1.5;
-    }
-
-    .combination-list {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .combination-item {
-        background: rgba(255, 255, 255, 0.15);
-        padding: 20px;
-        border-radius: 12px;
-        border-left: 4px solid #6366f1;
-    }
-
-    .combination-title {
+    .copy-keyword-btn {
+        width: 100%;
+        padding: 8px;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        border: none;
+        border-radius: 10px;
         color: white;
         font-weight: 600;
-        font-size: 1.2rem;
-        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.85rem;
+        margin-top: 10px;
     }
 
-    .combination-keywords {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 10px;
+    .copy-keyword-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
     }
 
-    .combination-keyword-tag {
-        padding: 6px 12px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 15px;
-        color: white;
-        font-size: 0.9rem;
-    }
-
-    .combination-strategy {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.95rem;
+    .copy-keyword-btn.copied {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     }
 
     .loading {
@@ -274,10 +284,10 @@
     }
 
     .spinner {
-        width: 50px;
-        height: 50px;
-        border: 4px solid rgba(255, 255, 255, 0.2);
-        border-top-color: white;
+        width: 60px;
+        height: 60px;
+        border: 4px solid #e2e8f0;
+        border-top-color: #8b5cf6;
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin: 0 auto 20px;
@@ -288,145 +298,267 @@
     }
 
     .loading-text {
-        color: white;
+        color: #475569;
         font-size: 1.1rem;
+        font-weight: 600;
     }
 
     .empty-state {
         text-align: center;
-        padding: 60px 20px;
-        color: rgba(255, 255, 255, 0.8);
+        padding: 80px 20px;
+        color: #64748b;
     }
 
     .empty-icon {
-        font-size: 4rem;
+        font-size: 5rem;
         margin-bottom: 20px;
         opacity: 0.5;
     }
 
+    /* Toast 알림 */
+    .toast {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: white;
+        color: #1a1a2e;
+        padding: 16px 24px;
+        border-radius: 14px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 10000;
+        animation: slideInUp 0.3s ease-out;
+        min-width: 300px;
+        border: 2px solid #e2e8f0;
+    }
+
+    .toast.error {
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+
+    .toast.success {
+        background: #f0fdf4;
+        border-color: #bbf7d0;
+    }
+
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     @media (max-width: 768px) {
-        .page-header h1 { font-size: 2rem; }
-        .glass-card { padding: 20px; }
-        .keyword-list { grid-template-columns: 1fr; }
+        .page-header {
+            padding: 40px 20px 30px;
+        }
+        
+        .glass-card {
+            padding: 24px;
+        }
+        
+        .keywords-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .toast {
+            right: 20px;
+            left: 20px;
+            min-width: auto;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>🔑 키워드 추천 엔진</h1>
-    <p>검색량과 경쟁도를 분석하여 최적의 키워드를 추천합니다</p>
+    <h1>🔑 키워드 추천 엔진<span class="tier-badge">💎 PRO</span></h1>
+    <p>검색 노출에 최적화된 키워드를 AI가 찾아드립니다</p>
 </div>
 
 <div class="container">
+    <!-- 📝 입력 섹션 -->
     <div class="glass-card">
-        <h2 class="card-title"><span>🎯</span> 주제 입력</h2>
+        <h2 class="card-title">
+            <span>✍️</span>
+            주제 입력
+        </h2>
+        
         <div class="input-group">
-            <label class="input-label">블로그 주제 *</label>
-            <input type="text" id="topicInput" class="input-field" placeholder="예: 강남 맛집">
+            <label class="input-label">블로그 주제 또는 분야</label>
+            <input type="text" 
+                   id="topicInput" 
+                   class="input-field" 
+                   placeholder="예: 강남 맛집, 육아 팁, 여행 추천">
         </div>
-        <button id="recommendBtn" class="recommend-btn" onclick="recommendKeywords()">✨ 키워드 추천받기</button>
+
+        <button id="generateBtn" class="generate-btn" onclick="generateKeywords()">
+            🔑 AI 키워드 추천 받기
+        </button>
     </div>
-    <div id="resultsContainer"></div>
+
+    <!-- 📊 결과 섹션 -->
+    <div class="glass-card">
+        <h2 class="card-title">
+            <span>🎯</span>
+            추천 키워드
+        </h2>
+
+        <div id="keywordsContainer">
+            <div class="empty-state">
+                <div class="empty-icon">🔑</div>
+                <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; color: #1a1a2e;">아직 추천된 키워드가 없습니다</div>
+                <div style="font-size: 0.95rem; opacity: 0.7;">위에서 주제를 입력하고 키워드를 받아보세요</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    async function recommendKeywords() {
-        const topic = document.getElementById('topicInput').value.trim();
-        const btn = document.getElementById('recommendBtn');
-        const container = document.getElementById('resultsContainer');
-        if (!topic) { alert('주제를 입력해주세요!'); return; }
-        btn.disabled = true; btn.textContent = '🔍 분석 중...';
-        container.innerHTML = '<div class="glass-card"><div class="loading"><div class="spinner"></div><div class="loading-text">최적의 키워드를 찾고 있습니다...</div></div></div>';
-        try {
-            const response = await fetch('/api/recommend-keywords', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ topic })
-            });
-            const data = await response.json();
-            if (data.success) { displayResults(data.keywords); }
-            else { throw new Error(data.error || '추천 실패'); }
-        } catch (error) {
-            console.error('추천 오류:', error);
-            container.innerHTML = '<div class="glass-card"><div class="empty-state"><div class="empty-icon">❌</div><div style="font-size: 1.2rem;">키워드 추천 중 오류가 발생했습니다</div></div></div>';
-        } finally { btn.disabled = false; btn.textContent = '✨ 키워드 추천받기'; }
+    // Toast 알림
+    function showToast(message, type = 'info') {
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) existingToast.remove();
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+        toast.innerHTML = `<span style="font-size: 1.5rem;">${icon}</span><span style="font-weight: 600;">${message}</span>`;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'slideInUp 0.3s ease-out reverse';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
-    function displayResults(keywords) {
-        const container = document.getElementById('resultsContainer');
-        container.innerHTML = `
-            <div class="glass-card">
-                <div class="keyword-section">
-                    <div class="section-header">🎯 주요 키워드 (검색량 높음)</div>
-                    <div class="keyword-list">
-                        ${keywords.primary.map(kw => createKeywordCard(kw)).join('')}
-                    </div>
-                </div>
-            </div>
-            <div class="glass-card">
-                <div class="keyword-section">
-                    <div class="section-header">🔗 연관 키워드</div>
-                    <div class="keyword-list">
-                        ${keywords.secondary.map(kw => createKeywordCard(kw)).join('')}
-                    </div>
-                </div>
-            </div>
-            <div class="glass-card">
-                <div class="keyword-section">
-                    <div class="section-header">💎 롱테일 키워드 (추천!)</div>
-                    <div class="keyword-list">
-                        ${keywords.long_tail.map(kw => createKeywordCard(kw)).join('')}
-                    </div>
-                </div>
-            </div>
-            <div class="glass-card">
-                <h2 class="card-title"><span>🎨</span> 추천 키워드 조합</h2>
-                <div class="combination-list">
-                    ${keywords.recommended_combination.map(combo => `
-                        <div class="combination-item">
-                            <div class="combination-title">${combo.title}</div>
-                            <div class="combination-keywords">
-                                ${combo.keywords.map(kw => `<span class="combination-keyword-tag">${kw}</span>`).join('')}
-                            </div>
-                            <div class="combination-strategy">💡 ${combo.strategy}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-    }
-    function createKeywordCard(kw) {
-        const volumeClass = kw.volume === 'high' ? 'volume-high' : kw.volume === 'medium' ? 'volume-medium' : 'volume-low';
-        const difficultyClass = kw.difficulty === 'hard' ? 'difficulty-hard' : kw.difficulty === 'medium' ? 'difficulty-medium' : 'difficulty-easy';
-        const volumeText = kw.volume === 'high' ? '높음' : kw.volume === 'medium' ? '중간' : '낮음';
-        const difficultyText = kw.difficulty === 'hard' ? '어려움' : kw.difficulty === 'medium' ? '보통' : '쉬움';
-        return `
-            <div class="keyword-item" onclick="copyKeyword('${kw.keyword}')">
-                <div class="keyword-text">${kw.keyword}</div>
-                <div class="keyword-meta">
-                    <div class="meta-item">
-                        <span>📊</span>
-                        <span class="volume-badge ${volumeClass}">검색량 ${volumeText}</span>
-                    </div>
-                    <div class="meta-item">
-                        <span>🎯</span>
-                        <span class="difficulty-badge ${difficultyClass}">난이도 ${difficultyText}</span>
-                    </div>
-                </div>
-                <div class="meta-item" style="margin-bottom: 8px;">
-                    <span>🔢</span>
-                    <span>월 ${kw.volume_estimate.toLocaleString()}회 검색 (추정)</span>
-                </div>
-                <div class="keyword-recommendation">💡 ${kw.recommendation}</div>
-            </div>
-        `;
-    }
-    function copyKeyword(keyword) {
-        navigator.clipboard.writeText(keyword).then(() => {
-            alert(`✅ "${keyword}" 키워드가 복사되었습니다!`);
+
+    // 공통 복사 함수
+    function copyToClipboard(text, button, successMessage = '복사 완료!') {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '복사됨! ✓';
+            button.classList.add('copied');
+            showToast(successMessage, 'success');
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('copied');
+            }, 2000);
+        }).catch(err => {
+            showToast('복사에 실패했습니다', 'error');
+            console.error('복사 오류:', err);
         });
     }
+
+    // 모든 키워드 복사
+    function copyAllKeywords() {
+        const keywords = Array.from(document.querySelectorAll('.keyword-text')).map(el => el.textContent).join(', ');
+        const button = event.target;
+        copyToClipboard(keywords, button, '모든 키워드가 복사되었습니다!');
+    }
+
+    // 개별 키워드 복사
+    function copyKeyword(button, keyword) {
+        copyToClipboard(keyword, button, `"${keyword}" 키워드가 복사되었습니다!`);
+    }
+
+    async function generateKeywords() {
+        const topic = document.getElementById('topicInput').value.trim();
+        const btn = document.getElementById('generateBtn');
+        const container = document.getElementById('keywordsContainer');
+
+        if (!topic) {
+            showToast('주제를 입력해주세요!', 'error');
+            document.getElementById('topicInput').focus();
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">🔑</span> AI가 키워드를 찾고 있습니다...';
+        container.innerHTML = `
+            <div class="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">검색량 높은 키워드를 찾고 있습니다...</div>
+                <div style="color: #94a3b8; font-size: 0.9rem; margin-top: 10px;">잠시만 기다려주세요</div>
+            </div>
+        `;
+
+        try {
+            const response = await fetch('/api/recommend-keywords', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topic })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: 서버 오류`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                displayKeywords(data.keywords);
+                showToast('키워드 추천이 완료되었습니다!', 'success');
+            } else {
+                throw new Error(data.error || '키워드 추천 실패');
+            }
+        } catch (error) {
+            console.error('추천 오류:', error);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">❌</div>
+                    <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; color: #dc2626;">키워드 추천 중 오류가 발생했습니다</div>
+                    <div style="font-size: 0.95rem; opacity: 0.7; margin-bottom: 20px;">${error.message}</div>
+                    <button onclick="generateKeywords()" style="padding: 10px 20px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                        🔄 다시 시도
+                    </button>
+                </div>
+            `;
+            showToast('키워드 추천 중 오류가 발생했습니다', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '🔑 AI 키워드 추천 받기';
+        }
+    }
+
+    function displayKeywords(keywords) {
+        const container = document.getElementById('keywordsContainer');
+        
+        let html = '<button class="copy-all-btn" onclick="copyAllKeywords()">📋 모든 키워드 한번에 복사하기</button>';
+        html += '<div class="keywords-grid">';
+        
+        keywords.forEach((item, index) => {
+            const difficultyClass = item.difficulty === 'low' ? 'difficulty-low' : 
+                                  item.difficulty === 'medium' ? 'difficulty-medium' : 'difficulty-high';
+            const difficultyText = item.difficulty === 'low' ? '쉬움' : 
+                                 item.difficulty === 'medium' ? '보통' : '어려움';
+            
+            html += `
+                <div class="keyword-card" style="animation-delay: ${index * 0.05}s">
+                    <div class="keyword-text">${item.keyword}</div>
+                    <div class="keyword-meta">
+                        <span class="keyword-badge">🔍 ${item.search_volume || '검색량 높음'}</span>
+                        <span class="difficulty-badge ${difficultyClass}">⚡ ${difficultyText}</span>
+                    </div>
+                    <button class="copy-keyword-btn" onclick="copyKeyword(this, '${item.keyword.replace(/'/g, "\\'")}')">
+                        📋 복사하기
+                    </button>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // Enter로 키워드 생성
     document.getElementById('topicInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') recommendKeywords();
+        if (e.key === 'Enter') generateKeywords();
     });
 </script>
 {% endblock %}
+

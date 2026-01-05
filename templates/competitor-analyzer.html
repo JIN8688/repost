@@ -4,6 +4,17 @@
 
 {% block extra_css %}
 <style>
+    /* 홈 배경 그대로 사용 */
+    body {
+        background: 
+            radial-gradient(at 27% 37%, rgba(102, 126, 234, 0.8) 0px, transparent 50%),
+            radial-gradient(at 97% 21%, rgba(125, 235, 200, 0.7) 0px, transparent 50%),
+            radial-gradient(at 52% 99%, rgba(244, 107, 153, 0.7) 0px, transparent 50%),
+            radial-gradient(at 10% 29%, rgba(118, 75, 162, 0.8) 0px, transparent 50%),
+            #1a1a2e !important;
+        background-attachment: fixed !important;
+    }
+
     .page-header {
         text-align: center;
         padding: 60px 20px 40px;
@@ -16,17 +27,37 @@
     }
 
     .page-header h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
+        font-size: clamp(1.8rem, 5vw, 2.5rem);
+        font-weight: 800;
         color: white;
         margin-bottom: 10px;
-        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
     }
 
     .page-header p {
-        font-size: 1.1rem;
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 300;
+        font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 500;
+    }
+    
+    .tier-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        color: white;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 6px 14px;
+        border-radius: 16px;
+        font-size: 0.8rem;
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        margin-left: 12px;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
     }
 
     .container {
@@ -36,12 +67,15 @@
     }
 
     .glass-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 24px;
-        padding: 30px;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(30px) saturate(180%);
+        -webkit-backdrop-filter: blur(30px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 28px;
+        padding: 35px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
+                    0 0 0 1px rgba(255, 255, 255, 0.5),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8);
         margin-bottom: 30px;
         animation: fadeInUp 0.8s ease-out;
     }
@@ -53,8 +87,8 @@
 
     .card-title {
         font-size: 1.5rem;
-        font-weight: 600;
-        color: white;
+        font-weight: 700;
+        color: #1a1a2e;
         margin-bottom: 20px;
         display: flex;
         align-items: center;
@@ -67,20 +101,19 @@
 
     .input-label {
         display: block;
-        color: white;
-        font-weight: 500;
+        color: #1a1a2e;
+        font-weight: 600;
         margin-bottom: 8px;
         font-size: 0.95rem;
     }
 
     .input-field {
         width: 100%;
-        padding: 12px 16px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 12px;
-        color: white;
+        padding: 14px 18px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        color: #1a1a2e;
         font-size: 1rem;
         font-family: inherit;
         transition: all 0.3s ease;
@@ -88,170 +121,149 @@
 
     .input-field:focus {
         outline: none;
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.4);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        background: #f8fafc;
+        border-color: #ec4899;
+        box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
     }
 
     .input-field::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: #94a3b8;
     }
 
     .analyze-btn {
         width: 100%;
         padding: 16px;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
         border: none;
-        border-radius: 12px;
+        border-radius: 14px;
         color: white;
         font-size: 1.1rem;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
     }
 
-    .analyze-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+    .analyze-btn:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(139, 92, 246, 0.5);
     }
 
     .analyze-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
-        transform: none;
     }
 
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
+    .copy-btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        border-radius: 14px;
+        color: white;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        margin-top: 20px;
+    }
+
+    .copy-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    }
+
+    .copy-btn.copied {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    }
+
+    .analysis-section {
         margin-bottom: 30px;
     }
 
-    .stat-card {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 16px;
-        padding: 20px;
-        text-align: center;
-    }
-
-    .stat-value {
-        font-size: 2.5rem;
+    .section-title {
+        font-size: 1.3rem;
         font-weight: 700;
-        color: white;
-        margin-bottom: 8px;
+        color: #1a1a2e;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
-    .stat-label {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.95rem;
-    }
-
-    .keyword-grid {
+    .metrics-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 15px;
+        margin-bottom: 20px;
     }
 
-    .keyword-card {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 15px;
-        border-radius: 12px;
-        border-left: 4px solid #10b981;
+    .metric-card {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
     }
 
-    .keyword-word {
-        color: white;
-        font-weight: 600;
-        font-size: 1.1rem;
+    .metric-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #8b5cf6;
         margin-bottom: 5px;
     }
 
-    .keyword-meta {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.85rem;
-    }
-
-    .suggestion-list {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .suggestion-item {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 20px;
-        border-radius: 12px;
-        border-left: 4px solid #f59e0b;
-    }
-
-    .suggestion-title {
-        color: white;
+    .metric-label {
+        font-size: 0.9rem;
+        color: #64748b;
         font-weight: 600;
-        font-size: 1.1rem;
-        margin-bottom: 8px;
     }
 
-    .suggestion-desc {
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 8px;
+    .insight-list {
+        list-style: none;
+        padding: 0;
     }
 
-    .suggestion-action {
-        color: rgba(255, 255, 255, 0.9);
+    .insight-item {
+        background: #f8fafc;
+        border-left: 4px solid #8b5cf6;
+        padding: 15px 20px;
+        margin-bottom: 12px;
+        border-radius: 8px;
         font-weight: 500;
+        color: #475569;
     }
 
-    .priority-badge {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        margin-left: 10px;
+    .strategy-box {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 2px solid #fbbf24;
+        border-radius: 18px;
+        padding: 25px;
+        margin-top: 20px;
     }
 
-    .priority-high {
-        background: rgba(239, 68, 68, 0.3);
-        color: #fca5a5;
-    }
-
-    .priority-medium {
-        background: rgba(245, 158, 11, 0.3);
-        color: #fcd34d;
-    }
-
-    .score-display {
-        text-align: center;
-        padding: 40px;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 20px;
-        margin-bottom: 30px;
-    }
-
-    .score-number {
-        font-size: 4rem;
-        font-weight: 800;
-        color: white;
-        margin-bottom: 10px;
-    }
-
-    .score-grade {
-        display: inline-block;
-        padding: 10px 25px;
-        border-radius: 25px;
-        font-size: 1.5rem;
+    .strategy-title {
+        font-size: 1.2rem;
         font-weight: 700;
-        margin-bottom: 15px;
+        color: #92400e;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
-    .grade-A { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-    .grade-B { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
-    .grade-C { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-    .grade-D { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    .strategy-text {
+        color: #78350f;
+        font-weight: 500;
+        line-height: 1.7;
+    }
 
     .loading {
         text-align: center;
@@ -259,10 +271,10 @@
     }
 
     .spinner {
-        width: 50px;
-        height: 50px;
-        border: 4px solid rgba(255, 255, 255, 0.2);
-        border-top-color: white;
+        width: 60px;
+        height: 60px;
+        border: 4px solid #e2e8f0;
+        border-top-color: #8b5cf6;
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin: 0 auto 20px;
@@ -273,127 +285,283 @@
     }
 
     .loading-text {
-        color: white;
+        color: #475569;
         font-size: 1.1rem;
+        font-weight: 600;
     }
 
     .empty-state {
         text-align: center;
-        padding: 60px 20px;
-        color: rgba(255, 255, 255, 0.8);
+        padding: 80px 20px;
+        color: #64748b;
     }
 
     .empty-icon {
-        font-size: 4rem;
+        font-size: 5rem;
         margin-bottom: 20px;
         opacity: 0.5;
     }
 
+    /* Toast 알림 */
+    .toast {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: white;
+        color: #1a1a2e;
+        padding: 16px 24px;
+        border-radius: 14px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 10000;
+        animation: slideInUp 0.3s ease-out;
+        min-width: 300px;
+        border: 2px solid #e2e8f0;
+    }
+
+    .toast.error {
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+
+    .toast.success {
+        background: #f0fdf4;
+        border-color: #bbf7d0;
+    }
+
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     @media (max-width: 768px) {
-        .page-header h1 { font-size: 2rem; }
-        .glass-card { padding: 20px; }
-        .stats-grid { grid-template-columns: 1fr; }
+        .page-header {
+            padding: 40px 20px 30px;
+        }
+        
+        .glass-card {
+            padding: 24px;
+        }
+        
+        .metrics-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .toast {
+            right: 20px;
+            left: 20px;
+            min-width: auto;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>🔍 경쟁 블로그 분석</h1>
-    <p>상위 블로그를 분석하여 경쟁력 있는 콘텐츠 작성법을 알려드립니다</p>
+    <h1>🔍 경쟁 블로그 분석<span class="tier-badge">💎 PRO</span></h1>
+    <p>경쟁 블로그를 분석하고 이길 수 있는 전략을 AI가 제시합니다</p>
 </div>
 
 <div class="container">
+    <!-- 📝 입력 섹션 -->
     <div class="glass-card">
-        <h2 class="card-title"><span>🎯</span> 키워드 입력</h2>
+        <h2 class="card-title">
+            <span>🎯</span>
+            경쟁 블로그 URL 입력
+        </h2>
+        
         <div class="input-group">
-            <label class="input-label">분석할 키워드 *</label>
-            <input type="text" id="keywordInput" class="input-field" placeholder="예: 강남 파스타 맛집">
+            <label class="input-label">경쟁 블로그 URL</label>
+            <input type="text" 
+                   id="urlInput" 
+                   class="input-field" 
+                   placeholder="예: https://blog.naver.com/...">
         </div>
-        <button id="analyzeBtn" class="analyze-btn" onclick="analyzeCompetitors()">🔍 경쟁 블로그 분석하기</button>
+
+        <button id="analyzeBtn" class="analyze-btn" onclick="analyzeCompetitor()">
+            🔍 경쟁 블로그 분석 시작
+        </button>
     </div>
-    <div id="resultsContainer"></div>
+
+    <!-- 📊 결과 섹션 -->
+    <div class="glass-card" id="resultsCard" style="display: none;">
+        <h2 class="card-title">
+            <span>📈</span>
+            분석 결과
+        </h2>
+
+        <div id="resultsContainer"></div>
+
+        <button id="copyBtn" class="copy-btn" onclick="copyResults()">
+            📋 분석 결과 복사하기
+        </button>
+    </div>
 </div>
 
 <script>
-    async function analyzeCompetitors() {
-        const keyword = document.getElementById('keywordInput').value.trim();
-        const btn = document.getElementById('analyzeBtn');
-        const container = document.getElementById('resultsContainer');
-        if (!keyword) { alert('키워드를 입력해주세요!'); return; }
-        btn.disabled = true; btn.textContent = '🔍 분석 중...';
-        container.innerHTML = '<div class="glass-card"><div class="loading"><div class="spinner"></div><div class="loading-text">상위 블로그를 분석하고 있습니다...</div></div></div>';
-        try {
-            const response = await fetch('/api/analyze-competitors', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ keyword })
-            });
-            const data = await response.json();
-            if (data.success) { displayResults(data.analysis); }
-            else { throw new Error(data.error || '분석 실패'); }
-        } catch (error) {
-            console.error('분석 오류:', error);
-            container.innerHTML = '<div class="glass-card"><div class="empty-state"><div class="empty-icon">❌</div><div style="font-size: 1.2rem;">분석 중 오류가 발생했습니다</div></div></div>';
-        } finally { btn.disabled = false; btn.textContent = '🔍 경쟁 블로그 분석하기'; }
+    let analysisData = '';
+
+    // Toast 알림
+    function showToast(message, type = 'info') {
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) existingToast.remove();
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+        toast.innerHTML = `<span style="font-size: 1.5rem;">${icon}</span><span style="font-weight: 600;">${message}</span>`;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'slideInUp 0.3s ease-out reverse';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
-    function displayResults(analysis) {
+
+    // 공통 복사 함수
+    function copyToClipboard(text, button, successMessage = '복사 완료!') {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '복사됨! ✓';
+            button.classList.add('copied');
+            showToast(successMessage, 'success');
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('copied');
+            }, 2000);
+        }).catch(err => {
+            showToast('복사에 실패했습니다', 'error');
+            console.error('복사 오류:', err);
+        });
+    }
+
+    // 결과 복사
+    function copyResults() {
+        const button = document.getElementById('copyBtn');
+        copyToClipboard(analysisData, button, '분석 결과가 복사되었습니다!');
+    }
+
+    async function analyzeCompetitor() {
+        const url = document.getElementById('urlInput').value.trim();
+        const btn = document.getElementById('analyzeBtn');
+        const resultsCard = document.getElementById('resultsCard');
         const container = document.getElementById('resultsContainer');
+
+        if (!url) {
+            showToast('경쟁 블로그 URL을 입력해주세요!', 'error');
+            document.getElementById('urlInput').focus();
+            return;
+        }
+
+        if (!url.includes('blog.naver.com')) {
+            showToast('네이버 블로그 URL을 입력해주세요!', 'error');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">🔍</span> 경쟁 블로그 분석 중...';
+        resultsCard.style.display = 'block';
         container.innerHTML = `
-            <div class="glass-card">
-                <h2 class="card-title"><span>🏆</span> 경쟁력 점수</h2>
-                <div class="score-display">
-                    <div class="score-number">${analysis.competitive_score.score}<span style="font-size: 2rem;">/100</span></div>
-                    <div class="score-grade grade-${analysis.competitive_score.grade}">${analysis.competitive_score.grade} 등급</div>
-                    <div style="color: white; font-size: 1.1rem;">${analysis.competitive_score.message}</div>
-                </div>
-            </div>
-            <div class="glass-card">
-                <h2 class="card-title"><span>📊</span> 상위 블로그 통계</h2>
-                <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-value">${analysis.statistics.avg_char_count.toLocaleString()}</div><div class="stat-label">평균 글자수</div></div>
-                    <div class="stat-card"><div class="stat-value">${analysis.statistics.avg_image_count}</div><div class="stat-label">평균 이미지</div></div>
-                    <div class="stat-card"><div class="stat-value">${analysis.statistics.avg_paragraph_count}</div><div class="stat-label">평균 단락수</div></div>
-                    <div class="stat-card"><div class="stat-value">${analysis.statistics.avg_internal_links.toFixed(1)}</div><div class="stat-label">내부 링크</div></div>
-                </div>
-            </div>
-            <div class="glass-card">
-                <h2 class="card-title"><span>🔑</span> 공통 키워드 (상위 블로그)</h2>
-                <div class="keyword-grid">
-                    ${analysis.common_keywords.map(kw => `
-                        <div class="keyword-card">
-                            <div class="keyword-word">${kw.keyword}</div>
-                            <div class="keyword-meta">${kw.frequency}회 사용 · ${kw.importance === 'high' ? '중요' : '보통'}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-            <div class="glass-card">
-                <h2 class="card-title"><span>📝</span> 제목 패턴 분석</h2>
-                <div class="suggestion-list">
-                    ${analysis.title_patterns.slice(0, 3).map(pattern => `
-                        <div class="suggestion-item">
-                            <div class="suggestion-title">${pattern.pattern} <span class="priority-badge priority-high">${pattern.usage}% 사용</span></div>
-                            <div class="suggestion-action">예시: ${pattern.example}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-            <div class="glass-card">
-                <h2 class="card-title"><span>💡</span> 개선 제안</h2>
-                <div class="suggestion-list">
-                    ${analysis.suggestions.map(sug => `
-                        <div class="suggestion-item">
-                            <div class="suggestion-title">${sug.title} <span class="priority-badge priority-${sug.priority}">${sug.priority === 'high' ? '높음' : '중간'}</span></div>
-                            <div class="suggestion-desc">${sug.description}</div>
-                            <div class="suggestion-action">💡 ${sug.action}</div>
-                        </div>
-                    `).join('')}
-                </div>
+            <div class="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">AI가 경쟁 블로그를 분석하고 있습니다...</div>
+                <div style="color: #94a3b8; font-size: 0.9rem; margin-top: 10px;">잠시만 기다려주세요 (최대 30초)</div>
             </div>
         `;
+
+        try {
+            const response = await fetch('/api/analyze-competitor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: 서버 오류`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                displayResults(data.analysis);
+                showToast('경쟁 블로그 분석이 완료되었습니다!', 'success');
+            } else {
+                throw new Error(data.error || '분석 실패');
+            }
+        } catch (error) {
+            console.error('분석 오류:', error);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">❌</div>
+                    <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; color: #dc2626;">분석 중 오류가 발생했습니다</div>
+                    <div style="font-size: 0.95rem; opacity: 0.7; margin-bottom: 20px;">${error.message}</div>
+                    <button onclick="analyzeCompetitor()" style="padding: 10px 20px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                        🔄 다시 시도
+                    </button>
+                </div>
+            `;
+            showToast('분석 중 오류가 발생했습니다', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '🔍 경쟁 블로그 분석 시작';
+        }
     }
-    document.getElementById('keywordInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') analyzeCompetitors();
-    });
+
+    function displayResults(analysis) {
+        const container = document.getElementById('resultsContainer');
+        
+        // 복사용 텍스트 저장
+        analysisData = JSON.stringify(analysis, null, 2);
+        
+        let html = '';
+        
+        // 기본 정보
+        html += '<div class="analysis-section">';
+        html += '<div class="section-title">📋 블로그 기본 정보</div>';
+        html += '<div class="metrics-grid">';
+        html += `<div class="metric-card"><div class="metric-value">${analysis.metrics?.total_posts || 'N/A'}</div><div class="metric-label">총 포스팅 수</div></div>`;
+        html += `<div class="metric-card"><div class="metric-value">${analysis.metrics?.avg_length || 'N/A'}</div><div class="metric-label">평균 글자 수</div></div>`;
+        html += `<div class="metric-card"><div class="metric-value">${analysis.metrics?.posting_frequency || 'N/A'}</div><div class="metric-label">포스팅 빈도</div></div>`;
+        html += '</div></div>';
+        
+        // 강점 분석
+        if (analysis.strengths && analysis.strengths.length > 0) {
+            html += '<div class="analysis-section">';
+            html += '<div class="section-title">💪 경쟁 블로그의 강점</div>';
+            html += '<ul class="insight-list">';
+            analysis.strengths.forEach(s => {
+                html += `<li class="insight-item">${s}</li>`;
+            });
+            html += '</ul></div>';
+        }
+        
+        // 약점 분석
+        if (analysis.weaknesses && analysis.weaknesses.length > 0) {
+            html += '<div class="analysis-section">';
+            html += '<div class="section-title">🎯 경쟁 블로그의 약점 (기회 요소)</div>';
+            html += '<ul class="insight-list">';
+            analysis.weaknesses.forEach(w => {
+                html += `<li class="insight-item">${w}</li>`;
+            });
+            html += '</ul></div>';
+        }
+        
+        // 승리 전략
+        if (analysis.strategy) {
+            html += '<div class="strategy-box">';
+            html += '<div class="strategy-title">🏆 승리 전략</div>';
+            html += `<div class="strategy-text">${analysis.strategy}</div>`;
+            html += '</div>';
+        }
+        
+        container.innerHTML = html;
+    }
 </script>
 {% endblock %}
+
