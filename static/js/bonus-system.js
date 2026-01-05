@@ -543,7 +543,7 @@ window.addEventListener('load', () => {
 // 🎁 모달 및 UI 함수들
 // ========================================
 
-// 사용 횟수 상세 모달
+// 사용 횟수 상세 모달 (신규 디자인)
 function showUsageDetail() {
     const container = document.getElementById('bonusModals');
     const existingOverlay = container.querySelector('.bonus-modal-overlay');
@@ -557,81 +557,95 @@ function showUsageDetail() {
         if (!data) return;
         
         // 체험 기간 상태 조회
-        const trialStatus = bonusSystem ? bonusSystem.getTrialStatus() : { statusText: '일일 제공' };
-        
-        const baseRemaining = data.baseLimit - data.baseUsage;
-        const bonusTotal = data.bonuses.reduce((sum, b) => sum + b.remaining, 0);
-        const total = baseRemaining + bonusTotal;
-        
-        const bonusesHtml = data.bonuses.map(b => {
-            const typeText = b.type === 'referral' ? '친구 추천' : 'SNS 공유';
-            const daysLeft = Math.ceil((b.expiresAt - Date.now()) / (1000 * 60 * 60 * 24));
-            
-            return `
-                <div class="usage-item">
-                    <span class="usage-item-label">${typeText} (${daysLeft}일 남음)</span>
-                    <span class="usage-item-value">+${b.remaining}회</span>
-                </div>
-            `;
-        }).join('');
+        const trialStatus = bonusSystem ? bonusSystem.getTrialStatus() : { isNewUser: false };
+        const isTrialEnded = !trialStatus.isNewUser; // 7일 체험 종료 여부
         
         const html = `
             <div class="bonus-modal-overlay" onclick="closeModal(event)">
-                <div class="bonus-modal usage-detail-modal" onclick="event.stopPropagation()">
-                    <div class="bonus-modal-content">
-                        <h2 class="modal-title">
-                            📊 사용 횟수 상세
-                        </h2>
-                        
-                        <div class="usage-section">
-                            <div class="usage-section-title">🔹 기본 제공</div>
-                            <div class="usage-item">
-                                <span class="usage-item-label">${trialStatus.statusText}</span>
-                                <span class="usage-item-value">${data.baseLimit}회/일</span>
+                <div class="bonus-modal usage-detail-modal" onclick="event.stopPropagation()" style="max-width: 520px;">
+                    <div class="bonus-modal-content" style="padding: 40px 32px;">
+                        <!-- 제목 -->
+                        <div style="text-align: center; margin-bottom: 24px;">
+                            <div style="font-size: 1.8rem; font-weight: 800; color: #1a202c; margin-bottom: 16px;">
+                                ${isTrialEnded ? '🎉 7일 체험이 종료되었습니다' : '💎 사용 횟수 안내'}
                             </div>
-                            <div class="usage-item">
-                                <span class="usage-item-label">사용</span>
-                                <span class="usage-item-value">${data.baseUsage}회</span>
-                            </div>
-                            <div class="usage-item">
-                                <span class="usage-item-label">남음</span>
-                                <span class="usage-item-value">${baseRemaining}회</span>
+                            <div style="font-size: 1.1rem; color: #4b5563; font-weight: 500;">
+                                Repost가 마음에 드셨나요?
                             </div>
                         </div>
                         
-                        ${data.bonuses.length > 0 ? `
-                            <div class="usage-section">
-                                <div class="usage-section-title">🎁 보너스</div>
-                                ${bonusesHtml}
-                                <div class="usage-item" style="border-top: 2px solid #667eea; margin-top: 8px; padding-top: 12px;">
-                                    <span class="usage-item-label" style="font-weight: 700;">총 보너스</span>
-                                    <span class="usage-item-value">${bonusTotal}회</span>
+                        <!-- 설명 -->
+                        <div style="background: #f9fafb; border-radius: 16px; padding: 20px; margin-bottom: 28px; text-align: center; line-height: 1.7;">
+                            <p style="font-size: 1rem; color: #374151; margin: 0;">
+                                오늘부터 하루 <strong style="color: #667eea;">3회</strong>로 제한되지만,<br>
+                                걱정 마세요! 보너스로 더 받을 수 있어요 😊
+                            </p>
+                        </div>
+                        
+                        <!-- 보너스 옵션 리스트 -->
+                        <div style="margin-bottom: 28px;">
+                            <div style="background: white; border-radius: 16px; border: 2px solid #e5e7eb; overflow: hidden;">
+                                <!-- 친구 추천 -->
+                                <div style="padding: 18px 20px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <span style="font-size: 1.5rem;">👥</span>
+                                        <span style="font-size: 1rem; font-weight: 600; color: #1a202c;">친구 추천</span>
+                                    </div>
+                                    <span style="font-size: 1.1rem; font-weight: 700; color: #667eea;">+5회</span>
+                                </div>
+                                
+                                <!-- SNS 공유 -->
+                                <div style="padding: 18px 20px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <span style="font-size: 1.5rem;">📢</span>
+                                        <span style="font-size: 1rem; font-weight: 600; color: #1a202c;">SNS 공유</span>
+                                    </div>
+                                    <span style="font-size: 1.1rem; font-weight: 700; color: #667eea;">+3회</span>
+                                </div>
+                                
+                                <!-- Basic 플랜 -->
+                                <div style="padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <span style="font-size: 1.5rem;">💎</span>
+                                        <span style="font-size: 1rem; font-weight: 600; color: #1a202c;">Basic 플랜</span>
+                                    </div>
+                                    <a href="/pricing" style="font-size: 1rem; font-weight: 700; color: #667eea; text-decoration: none;">무제한</a>
                                 </div>
                             </div>
-                        ` : ''}
+                        </div>
                         
-                <div class="total-remaining-box">
-                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">총 남은 횟수</div>
-                    <div class="remaining-count ${total === 0 ? 'zero-count' : ''}" style="font-size: ${total === 0 ? '48px' : '36px'}; font-weight: 900; color: ${total === 0 ? '#f59e0b' : '#667eea'};">${total}회</div>
-                    <div style="font-size: 12px; color: #9ca3af; margin-top: 8px;">📅 내일 자정 초기화</div>
-                </div>
-                
-                <div style="margin-top: 24px;">
-                    <div style="font-size: 16px; font-weight: 700; color: #1a202c; margin-bottom: 8px; text-align: center;">
-                        ${total === 0 ? '🚨 지금 바로 보너스 받으세요!' : '💡 더 많은 보너스 받기'}
-                    </div>
-                    ${total === 0 ? '<div style="font-size: 13px; color: #6b7280; margin-bottom: 16px; text-align: center;">친구 추천 5회 즉시 지급!</div>' : ''}
-                    
-                    <div class="bonus-actions">
-                        <button class="bonus-action-btn ${total === 0 ? 'pulse' : ''}" onclick="showReferralModal()" style="width: 100%;">
+                        <!-- 친구 추천 큰 버튼 -->
+                        <button class="bonus-action-btn" onclick="showReferralModal()" style="
+                            width: 100%;
+                            padding: 18px 24px;
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            border: none;
+                            border-radius: 16px;
+                            color: white;
+                            font-size: 1.1rem;
+                            font-weight: 700;
+                            cursor: pointer;
+                            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+                            transition: all 0.3s ease;
+                            margin-bottom: 16px;
+                        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 32px rgba(102, 126, 234, 0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 24px rgba(102, 126, 234, 0.4)'">
                             👥 친구 추천 (+5회) | 7일간 최대 25회
                         </button>
-                    </div>
-                </div>
                         
-                <button class="bonus-btn-close" onclick="closeModal()" style="width: 100%; margin-top: 20px;">
-                    닫기
-                </button>
+                        <!-- 3회로 계속 사용 버튼 -->
+                        <button onclick="closeModal()" style="
+                            width: 100%;
+                            padding: 14px;
+                            background: transparent;
+                            border: none;
+                            color: #9ca3af;
+                            font-size: 0.95rem;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.color='#6b7280'" onmouseout="this.style.color='#9ca3af'">
+                            3회로 계속 사용
+                        </button>
                     </div>
                 </div>
             </div>
