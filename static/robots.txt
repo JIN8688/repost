@@ -1,10 +1,40 @@
+# Repost - AI 블로그 댓글 자동 추천
+# https://repost.kr
+
 User-agent: *
 Allow: /
+Allow: /tools
+Allow: /pricing
+Allow: /guide
+Allow: /faq
+
+# Disallow admin and API endpoints
+Disallow: /admin
+Disallow: /api/
+Disallow: /mypage
+Disallow: /login
+Disallow: /signup
+Disallow: /logout
+
+# Allow search engines to index images
+Allow: /static/images/
+Allow: /static/css/
+Allow: /static/js/
+
+# Crawl delay
+Crawl-delay: 1
 
 # Sitemap
 Sitemap: https://repost.kr/sitemap.xml
-Sitemap: https://www.repost.kr/sitemap.xml
 
-# 크롤링 제외 (있다면)
-Disallow: /api/
+# Google
+User-agent: Googlebot
+Allow: /
 
+# Naver
+User-agent: Yeti
+Allow: /
+
+# Bing
+User-agent: Bingbot
+Allow: /

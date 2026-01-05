@@ -3,14 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Repost - AI 블로거 도구{% endblock %}</title>
+    
+    <!-- SEO 기본 메타 태그 -->
+    <title>{% block title %}Repost - AI 블로그 댓글 자동 추천 | 블로그 네트워킹 시간 90% 절감{% endblock %}</title>
+    <meta name="description" content="{% block description %}네이버 블로그 URL만 입력하면 AI가 자연스러운 댓글을 자동 생성. 블로그 네트워킹 시간을 90% 절약하세요. 무료 체험 가능!{% endblock %}">
+    <meta name="keywords" content="리포스트, Repost, AI 댓글, 블로그 댓글, 네이버 블로그, 자동 댓글, 블로그 네트워킹, 댓글 자동 생성, 블로거 도구">
+    <meta name="author" content="Repost">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <link rel="canonical" href="{% block canonical %}https://repost.kr{% endblock %}">
+    
+    <!-- Open Graph (Facebook, LinkedIn) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Repost">
+    <meta property="og:title" content="{% block og_title %}Repost - AI 블로그 댓글 자동 추천{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}블로그 URL만 넣으면 AI가 자동으로 자연스러운 댓글 생성. 블로그 네트워킹 시간 90% 절감!{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}https://repost.kr{% endblock %}">
+    <meta property="og:image" content="https://repost.kr/static/images/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Repost - AI 블로그 댓글 자동 추천 서비스">
+    <meta property="og:locale" content="ko_KR">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Repost - AI 블로그 댓글 자동 추천{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}블로그 URL만 넣으면 AI가 자동으로 자연스러운 댓글 생성{% endblock %}">
+    <meta name="twitter:image" content="https://repost.kr/static/images/og-image.png">
+    <meta name="twitter:image:alt" content="Repost 로고">
+    <meta name="twitter:site" content="@repost_kr">
+    <meta name="twitter:creator" content="@repost_kr">
+    
+    <!-- 추가 SEO -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Repost">
+    <meta name="application-name" content="Repost">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-TileImage" content="/static/images/ms-icon-144x144.png">
     
     <!-- Favicon -->
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     
-    <!-- Google Fonts -->
+    <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
