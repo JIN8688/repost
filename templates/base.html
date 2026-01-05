@@ -870,7 +870,11 @@
 
     <script>
         // 페이지 타입에 따른 body 클래스 추가
-        const isMainPage = window.location.pathname === '/';
+        const currentPath = window.location.pathname;
+        const isMainPage = currentPath === '/';
+        const isToolsPage = currentPath === '/tools';
+        const isPricingPage = currentPath === '/pricing';
+        
         if (isMainPage) {
             document.body.classList.add('main-page');
         }
@@ -879,8 +883,11 @@
         const header = document.getElementById('mainHeader');
         const isMobile = window.innerWidth <= 768;
         
-        if (isMainPage && !isMobile) {
-            // 메인 페이지 PC: 스크롤 시 헤더 표시
+        // 홈, 블로거 도구, 요금제 페이지는 스크롤 시 헤더 표시
+        const isScrollHeader = isMainPage || isToolsPage || isPricingPage;
+        
+        if (isScrollHeader && !isMobile) {
+            // 스크롤 시 헤더 표시
             let lastScroll = 0;
             window.addEventListener('scroll', () => {
                 const currentScroll = window.pageYOffset;
@@ -911,7 +918,6 @@
         }
 
         // 현재 페이지 네비게이션 활성화
-        const currentPath = window.location.pathname;
         document.querySelectorAll('.nav-link, .mobile-menu-item').forEach(link => {
             if (link.getAttribute('href') === currentPath) {
                 link.classList.add('active');

@@ -15,10 +15,27 @@
         background-attachment: fixed !important;
     }
 
+    /* 홈과 동일한 중앙 정렬 */
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
     .pricing-container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 40px 20px 80px;
+        padding: 60px 20px 80px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    @media (min-width: 769px) {
+        .pricing-container {
+            padding-top: 0;
+        }
     }
 
     .pricing-header {

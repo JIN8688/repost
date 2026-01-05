@@ -15,11 +15,25 @@
         background-attachment: fixed !important;
     }
 
+    /* 홈과 동일한 중앙 정렬 */
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
     .tools-hero {
         text-align: center;
-        padding: 40px 20px 40px;
+        padding: 0 20px 40px;
         max-width: 800px;
         margin: 0 auto;
+        padding-top: 60px;
+    }
+    
+    @media (min-width: 769px) {
+        .tools-hero {
+            padding-top: 0;
+        }
     }
 
     .tools-hero h1 {
@@ -52,6 +66,10 @@
         max-width: 1400px;
         margin: 0 auto;
         padding: 0 20px 100px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
     .tools-grid {
