@@ -556,9 +556,72 @@ function showUsageDetail() {
         const data = JSON.parse(localStorage.getItem('repost_usage_data'));
         if (!data) return;
         
+        // 마스터 계정 체크
+        const isMaster = localStorage.getItem('repost_admin') === 'true';
+        
         // 체험 기간 상태 조회
-        const trialStatus = bonusSystem ? bonusSystem.getTrialStatus() : { isNewUser: false };
-        const isTrialEnded = !trialStatus.isNewUser; // 7일 체험 종료 여부
+        const trialStatus = bonusSystem ? bonusSystem.getTrialStatus() : { isNewUser: false, daysLeft: 0 };
+        const isNewUser = trialStatus.isNewUser;
+        
+        // 남은 횟수 계산
+        const remaining = bonusSystem ? bonusSystem.getRemainingUsage() : 0;
+        const hasUsage = remaining > 0;
+        
+        // 📊 5가지 상황 분류
+        let situation = '';
+        let title = '';
+        let subtitle = '';
+        let description = '';
+        let emoji = '💎';
+        let showReferralBtn = true;
+        let showPricingBtn = true;
+        let closeButtonText = '닫기';
+        
+        if (isMaster) {
+            // 1️⃣ 마스터 계정
+            situation = 'master';
+            emoji = '🔑';
+            title = '마스터 계정 활성화!';
+            subtitle = '무제한으로 모든 기능을 사용하세요';
+            description = '마스터 계정은 모든 사용 제한이 해제됩니다. 댓글 추천, 블로그 도구를 무제한으로 사용할 수 있어요! 🚀';
+            showReferralBtn = false;
+            showPricingBtn = false;
+            closeButtonText = '계속 사용하기';
+        } else if (isNewUser && hasUsage) {
+            // 2️⃣ 신규 유저 + 남은 횟수 있음
+            situation = 'new_user_with_usage';
+            emoji = '✨';
+            title = `체험 기간 중 ${remaining}회 남았어요!`;
+            subtitle = `앞으로 ${trialStatus.daysLeft}일간 하루 7회 사용 가능`;
+            description = `지금은 <strong style="color: #667eea;">7일 무료 체험 기간</strong>입니다! 매일 자정에 7회로 초기화되니 마음껏 사용해보세요 😊`;
+            closeButtonText = '계속 사용하기';
+        } else if (isNewUser && !hasUsage) {
+            // 3️⃣ 신규 유저 + 0회
+            situation = 'new_user_no_usage';
+            emoji = '⏰';
+            title = '오늘 사용 횟수를 모두 사용했어요!';
+            subtitle = '내일 자정에 다시 7회로 초기화됩니다';
+            description = `아직 <strong style="color: #667eea;">${trialStatus.daysLeft}일</strong> 체험 기간이 남았어요! 내일 다시 7회를 사용할 수 있습니다. 또는 보너스로 더 받으세요! 🎁`;
+            closeButtonText = '내일 다시 올게요';
+        } else if (!isNewUser && hasUsage) {
+            // 4️⃣ 일반 유저 + 남은 횟수 있음
+            situation = 'regular_user_with_usage';
+            emoji = '💡';
+            title = `하루 3회 제한, 지금 ${remaining}회 남음`;
+            subtitle = '7일 체험이 종료되었습니다';
+            description = `체험 기간이 종료되어 하루 <strong style="color: #667eea;">3회</strong>로 제한됩니다. 보너스로 더 받거나, 무제한 사용을 원하시면 플랜을 확인해보세요! 🚀`;
+            closeButtonText = '3회로 계속 사용';
+        } else {
+            // 5️⃣ 일반 유저 + 0회
+            situation = 'regular_user_no_usage';
+            emoji = '🎉';
+            title = '오늘 사용 횟수를 모두 사용했어요!';
+            subtitle = 'Repost가 마음에 드셨나요?';
+            description = `오늘은 하루 <strong style="color: #667eea;">3회</strong>를 모두 사용하셨네요! 내일 자정에 다시 3회로 초기화됩니다. 또는 보너스로 더 받으세요! 😊`;
+            closeButtonText = '내일 다시 올게요';
+        }
+        
+        console.log(`📊 팝업 상황: ${situation}, 신규유저: ${isNewUser}, 남은횟수: ${remaining}`)
         
         const html = `
             <div class="bonus-modal-overlay" onclick="closeModal(event)">
@@ -567,21 +630,21 @@ function showUsageDetail() {
                         <!-- 제목 -->
                         <div style="text-align: center; margin-bottom: 24px;">
                             <div style="font-size: 1.8rem; font-weight: 800; color: #1a202c; margin-bottom: 16px;">
-                                ${isTrialEnded ? '🎉 7일 체험이 종료되었습니다' : '💎 사용 횟수 안내'}
+                                ${emoji} ${title}
                             </div>
                             <div style="font-size: 1.1rem; color: #4b5563; font-weight: 500;">
-                                Repost가 마음에 드셨나요?
+                                ${subtitle}
                             </div>
                         </div>
                         
                         <!-- 설명 -->
                         <div style="background: #f9fafb; border-radius: 16px; padding: 20px; margin-bottom: 28px; text-align: center; line-height: 1.7;">
                             <p style="font-size: 1rem; color: #374151; margin: 0;">
-                                오늘부터 하루 <strong style="color: #667eea;">3회</strong>로 제한되지만,<br>
-                                걱정 마세요! 보너스로 더 받을 수 있어요 😊
+                                ${description}
                             </p>
                         </div>
                         
+                        ${isMaster ? '' : `
                         <!-- 보너스 옵션 리스트 -->
                         <div style="margin-bottom: 28px;">
                             <div style="background: white; border-radius: 16px; border: 2px solid #e5e7eb; overflow: hidden;">
@@ -613,7 +676,9 @@ function showUsageDetail() {
                                 </div>
                             </div>
                         </div>
+                        `}
                         
+                        ${showReferralBtn ? `
                         <!-- 친구 추천 큰 버튼 -->
                         <button class="bonus-action-btn" onclick="showReferralModal()" style="
                             width: 100%;
@@ -631,7 +696,9 @@ function showUsageDetail() {
                         " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 32px rgba(102, 126, 234, 0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 24px rgba(102, 126, 234, 0.4)'">
                             👥 친구 추천하고 +5회 받기
                         </button>
+                        ` : ''}
                         
+                        ${showPricingBtn ? `
                         <!-- 요금제 보기 버튼 -->
                         <a href="/pricing" style="
                             display: block;
@@ -651,8 +718,9 @@ function showUsageDetail() {
                         " onmouseover="this.style.transform='translateY(-2px)'; this.style.background='linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%)'" onmouseout="this.style.transform='translateY(0)'; this.style.background='linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'">
                             💎 요금제 보기 (하루 100회)
                         </a>
+                        ` : ''}
                         
-                        <!-- 3회로 계속 사용 버튼 -->
+                        <!-- 닫기 버튼 -->
                         <button onclick="closeModal()" style="
                             width: 100%;
                             padding: 14px;
@@ -664,7 +732,7 @@ function showUsageDetail() {
                             cursor: pointer;
                             transition: all 0.3s ease;
                         " onmouseover="this.style.color='#6b7280'" onmouseout="this.style.color='#9ca3af'">
-                            3회로 계속 사용
+                            ${closeButtonText}
                         </button>
                     </div>
                 </div>
