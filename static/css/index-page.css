@@ -217,7 +217,7 @@ body {
    =========================================== */
 .section-header {
     text-align: center;
-    margin-bottom: 25px;
+    margin: 25px 0;
     animation: fadeInUp 0.8s ease-out 0.6s backwards;
 }
 
