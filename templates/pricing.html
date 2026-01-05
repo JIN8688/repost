@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}요금제 - Repost{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pricing-container {
+        max-width: 1200px;
+        margin: 60px auto;
+        padding: 20px;
+    }
+
+    .pricing-header {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+
+    .pricing-title {
+        font-size: 3rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 16px;
+    }
+
+    .pricing-subtitle {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 30px;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .pricing-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 40px 32px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .pricing-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+    }
+
+    .pricing-card.featured {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transform: scale(1.05);
+        box-shadow: 0 30px 80px rgba(102, 126, 234, 0.4);
+    }
+
+    .pricing-card.featured .plan-name,
+    .pricing-card.featured .plan-price,
+    .pricing-card.featured .plan-period,
+    .pricing-card.featured .plan-desc,
+    .pricing-card.featured .feature-item {
+        color: white;
+    }
+
+    .pricing-card.featured .feature-icon {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .popular-badge {
+        position: absolute;
+        top: 20px;
+        right: -30px;
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        padding: 6px 40px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        transform: rotate(45deg);
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+    }
+
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 12px;
+    }
+
+    .plan-desc {
+        color: var(--text-gray);
+        margin-bottom: 24px;
+        line-height: 1.6;
+    }
+
+    .plan-price {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-bottom: 8px;
+    }
+
+    .plan-price span {
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+
+    .plan-period {
+        color: var(--text-gray);
+        margin-bottom: 32px;
+    }
+
+    .plan-features {
+        list-style: none;
+        margin-bottom: 32px;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+        color: var(--text-dark);
+        line-height: 1.5;
+    }
+
+    .feature-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        background: rgba(99, 102, 241, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.9rem;
+    }
+
+    .btn-plan {
+        width: 100%;
+        padding: 16px;
+        border-radius: 12px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+    }
+
+    .btn-plan-outline {
+        background: transparent;
+        color: var(--text-dark);
+        border: 2px solid rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-plan-outline:hover {
+        background: rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .btn-plan-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-plan-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .pricing-card.featured .btn-plan {
+        background: white;
+        color: var(--primary);
+    }
+
+    .pricing-card.featured .btn-plan:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+    }
+
+    @media (max-width: 768px) {
+        .pricing-title {
+            font-size: 2rem;
+        }
+
+        .pricing-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .pricing-card.featured {
+            transform: scale(1);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pricing-container">
+    <div class="pricing-header">
+        <h1 class="pricing-title">블로그 성공을 위한 완벽한 플랜</h1>
+        <p class="pricing-subtitle">필요한 기능만 선택하여 시작하세요</p>
+    </div>
+
+    <div class="pricing-grid">
+        <!-- 무료 플랜 -->
+        <div class="pricing-card">
+            <div class="plan-name">무료</div>
+            <div class="plan-desc">블로거를 위한 기본 도구를 무료로 사용해보세요</div>
+            <div class="plan-price">₩0<span></span></div>
+            <div class="plan-period">영원히 무료</div>
+            
+            <ul class="plan-features">
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>텍스트 분석기 (3회/일)</span>
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>제목 생성기 (2회/일)</span>
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>SEO 점수 체커 (1회/일)</span>
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">✗</span>
+                    <span>AI 글쓰기 도우미</span>
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">✗</span>
+                    <span>경쟁 블로그 분석</span>
+                </li>
+            </ul>
+
+            <a href="/signup" class="btn-plan btn-plan-outline">무료로 시작하기</a>
+        </div>
+
+        <!-- 베이직 플랜 -->
+        <div class="pricing-card">
+            <div class="plan-name">베이직</div>
+            <div class="plan-desc">본격적으로 블로그를 성장시키고 싶은 분들에게</div>
+            <div class="plan-price">₩9,900<span>/월</span></div>
+            <div class="plan-period">월 결제 (언제든 취소 가능)</div>
+            
+            <ul class="plan-features">
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Tier S 도구 무제한</span>
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>AI 글쓰기 (10회/월)</span>
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>경쟁 블로그 분석 (5회/월)</span>
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>키워드 추천 (20회/월)</span>
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>이메일 지원</span>
+                </li>
+            </ul>
+
+            <button onclick="subscribe('basic')" class="btn-plan btn-plan-primary">베이직 플랜 시작하기</button>
+        </div>
+
+        <!-- 프로 플랜 -->
+        <div class="pricing-card featured">
+            <div class="popular-badge">인기</div>
+            <div class="plan-name">프로</div>
+            <div class="plan-desc">전문 블로거와 콘텐츠 크리에이터를 위한 플랜</div>
+            <div class="plan-price">₩19,900<span>/월</span></div>
+            <div class="plan-period">월 결제 (언제든 취소 가능)</div>
+            
+            <ul class="plan-features">
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>모든 도구 무제한</span>
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>AI 글쓰기 무제한</span>
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>경쟁 블로그 분석 무제한</span>
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>키워드 추천 무제한</span>
+                </li>
+                <li class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>우선 지원 & 전담 매니저</span>
+                </li>
+            </ul>
+
+            <button onclick="subscribe('pro')" class="btn-plan">프로 플랜 시작하기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function subscribe(plan) {
+        {% if not session.get('user_id') %}
+        alert('로그인이 필요합니다!');
+        window.location.href = '/login-page';
+        return;
+        {% endif %}
+
+        if (confirm(`${plan === 'basic' ? '베이직' : '프로'} 플랜 결제를 진행하시겠습니까?`)) {
+            try {
+                const response = await fetch('/api/create-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 메인페이 결제창 연동 (실제 구현 필요)
+                    alert(`결제 금액: ${data.amount}원\n상품명: ${data.product_name}\n\n메인페이 연동 후 결제가 진행됩니다.`);
+                    // 실제로는 메인페이 결제 페이지로 리다이렉트
+                } else {
+                    alert(data.error || '결제 생성 실패');
+                }
+            } catch (error) {
+                alert('결제 처리 중 오류가 발생했습니다.');
+            }
+        }
+    }
+</script>
+{% endblock %}
+

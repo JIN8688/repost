@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Repost - AI 블로거 도구{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --success: #10b981;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
+            
+            --header-height: 70px;
+            --header-bg: rgba(255, 255, 255, 0.8);
+            --header-border: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: var(--header-height);
+        }
+
+        /* ============================================
+           🍎 iOS 스타일 헤더 (Fixed Navigation)
+        ============================================ */
+        .main-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--header-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--header-border);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .main-header.scrolled {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            height: 100%;
+            padding: 0 max(20px, env(safe-area-inset-right));
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* 로고 */
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: transform 0.2s ease;
+        }
+
+        .header-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-icon {
+            font-size: 1.8rem;
+        }
+
+        /* 네비게이션 */
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        /* 버튼들 */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-header {
+            padding: 10px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-header-outline {
+            background: transparent;
+            color: var(--text-dark);
+            border: 1.5px solid rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-header-outline:hover {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.25);
+        }
+
+        .btn-header-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-header-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        /* 모바일 메뉴 버튼 */
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .mobile-menu-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .mobile-menu-btn span {
+            width: 24px;
+            height: 2px;
+            background: var(--text-dark);
+            border-radius: 2px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mobile-menu-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translateY(7px);
+        }
+
+        .mobile-menu-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .mobile-menu-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translateY(-7px);
+        }
+
+        /* 모바일 메뉴 */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--header-border);
+            padding: 20px;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .mobile-menu.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .mobile-menu-item {
+            display: block;
+            padding: 16px 20px;
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .mobile-menu-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+        }
+
+        /* ============================================
+           🍎 iOS 스타일 풋터
+        ============================================ */
+        .main-footer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 80px;
+            padding: 60px 20px 40px;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 50px;
+        }
+
+        .footer-brand {
+            max-width: 350px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .footer-tagline {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 12px;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+        }
+
+        .footer-section h3 {
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .footer-link:hover {
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .footer-bottom {
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+        }
+
+        .footer-legal {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-legal a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-legal a:hover {
+            color: white;
+        }
+
+        /* ============================================
+           📱 반응형 디자인
+        ============================================ */
+        @media (max-width: 768px) {
+            .header-nav,
+            .header-actions {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .footer-legal {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* ============================================
+           🎨 콘텐츠 영역
+        ============================================ */
+        .main-content {
+            min-height: calc(100vh - var(--header-height) - 400px);
+        }
+
+        /* ============================================
+           ✨ 애니메이션
+        ============================================ */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fadeIn {
+            animation: fadeInDown 0.6s ease-out;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- 🍎 iOS 스타일 헤더 -->
+    <header class="main-header" id="mainHeader">
+        <div class="header-container">
+            <!-- 로고 -->
+            <a href="/" class="header-logo">
+                <span class="logo-icon">🎨</span>
+                <span>Repost</span>
+            </a>
+
+            <!-- 데스크톱 네비게이션 -->
+            <nav class="header-nav">
+                <a href="/" class="nav-link">홈</a>
+                <a href="/tools" class="nav-link">블로거 도구</a>
+                <a href="/pricing" class="nav-link">요금제</a>
+            </nav>
+
+            <!-- 액션 버튼 -->
+            <div class="header-actions">
+                {% if session.get('user_id') %}
+                <a href="/mypage" class="btn-header btn-header-outline">마이페이지</a>
+                <a href="/logout" class="btn-header btn-header-primary">로그아웃</a>
+                {% else %}
+                <a href="/login-page" class="btn-header btn-header-outline">로그인</a>
+                <a href="/signup" class="btn-header btn-header-primary">무료 시작하기</a>
+                {% endif %}
+            </div>
+
+            <!-- 모바일 메뉴 버튼 -->
+            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 모바일 메뉴 -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="/" class="mobile-menu-item">홈</a>
+        <a href="/tools" class="mobile-menu-item">블로거 도구</a>
+        <a href="/pricing" class="mobile-menu-item">요금제</a>
+        {% if session.get('user_id') %}
+        <a href="/mypage" class="mobile-menu-item">마이페이지</a>
+        <a href="/logout" class="mobile-menu-item">로그아웃</a>
+        {% else %}
+        <a href="/login-page" class="mobile-menu-item">로그인</a>
+        <a href="/signup" class="mobile-menu-item">무료 시작하기</a>
+        {% endif %}
+    </div>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 🍎 iOS 스타일 풋터 -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- 브랜드 -->
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <span>🎨</span>
+                        <span>Repost</span>
+                    </div>
+                    <p class="footer-tagline">
+                        AI 기반 블로거 필수 도구.<br>
+                        글쓰기부터 SEO까지, 블로그 성공을 위한 완벽한 솔루션.
+                    </p>
+                    <div class="footer-social">
+                        <a href="#" class="social-link">📘</a>
+                        <a href="#" class="social-link">📸</a>
+                        <a href="#" class="social-link">🐦</a>
+                        <a href="#" class="social-link">📺</a>
+                    </div>
+                </div>
+
+                <!-- 제품 -->
+                <div class="footer-section">
+                    <h3>제품</h3>
+                    <div class="footer-links">
+                        <a href="/tools/text-analyzer" class="footer-link">텍스트 분석기</a>
+                        <a href="/tools/title-generator" class="footer-link">제목 생성기</a>
+                        <a href="/tools/seo-checker" class="footer-link">SEO 체커</a>
+                        <a href="/tools/ai-writer" class="footer-link">AI 글쓰기</a>
+                        <a href="/tools" class="footer-link">모든 도구 보기</a>
+                    </div>
+                </div>
+
+                <!-- 회사 -->
+                <div class="footer-section">
+                    <h3>회사</h3>
+                    <div class="footer-links">
+                        <a href="#" class="footer-link">소개</a>
+                        <a href="#" class="footer-link">블로그</a>
+                        <a href="#" class="footer-link">채용</a>
+                        <a href="#" class="footer-link">문의하기</a>
+                    </div>
+                </div>
+
+                <!-- 지원 -->
+                <div class="footer-section">
+                    <h3>지원</h3>
+                    <div class="footer-links">
+                        <a href="#" class="footer-link">도움말</a>
+                        <a href="#" class="footer-link">FAQ</a>
+                        <a href="#" class="footer-link">이용약관</a>
+                        <a href="#" class="footer-link">개인정보처리방침</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단 -->
+            <div class="footer-bottom">
+                <div>&copy; 2025 Repost. All rights reserved.</div>
+                <div class="footer-legal">
+                    <a href="#">이용약관</a>
+                    <a href="#">개인정보처리방침</a>
+                    <a href="#">사업자정보</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 스크롤시 헤더 스타일 변경
+        let lastScroll = 0;
+        const header = document.getElementById('mainHeader');
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+            
+            lastScroll = currentScroll;
+        });
+
+        // 모바일 메뉴 토글
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const btn = document.getElementById('mobileMenuBtn');
+            
+            menu.classList.toggle('show');
+            btn.classList.toggle('active');
+        }
+
+        // 현재 페이지 네비게이션 활성화
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-link, .mobile-menu-item').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+
