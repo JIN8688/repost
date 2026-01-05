@@ -176,34 +176,30 @@
             <div id="commentsList"></div>
         </div>
     </div>
-</div>
-
-<!-- 🎯 사용 횟수 표시 (하단 중앙 플로팅 버튼 - 박스 밖) -->
-<div class="usage-counter-floating" id="usageCounter" onclick="showUsageDetail()" style="
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 10px 24px;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
-    backdrop-filter: blur(20px);
-    border-radius: 50px;
-    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 999;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-" onmouseover="this.style.transform='translateX(-50%) translateY(-4px)'; this.style.boxShadow='0 12px 40px rgba(102, 126, 234, 0.5)'" onmouseout="this.style.transform='translateX(-50%) translateY(0)'; this.style.boxShadow='0 8px 32px rgba(102, 126, 234, 0.4)'">
-    <span style="font-size: 1.2rem;">💎</span>
-    <span id="remainingCount" style="
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: white;
-    ">
-        -- 회남음
-    </span>
+    
+    <!-- 🎯 사용 횟수 표시 (컨텐츠 박스 바로 아래) -->
+    <div class="usage-counter-floating" id="usageCounter" onclick="showUsageDetail()" style="
+        margin: 30px auto 0;
+        padding: 10px 24px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+        backdrop-filter: blur(20px);
+        border-radius: 50px;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 40px rgba(102, 126, 234, 0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 32px rgba(102, 126, 234, 0.4)'">
+        <span style="font-size: 1.2rem;">💎</span>
+        <span id="remainingCount" style="
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+        ">
+            -- 회남음
+        </span>
+    </div>
 </div>
 
 <!-- 🎁 보너스 시스템 모달 -->
@@ -217,10 +213,15 @@
 <script src="{{ url_for('static', filename='js/usage-counter.js') }}"></script>
 
 <style>
-    /* 플로팅 버튼 반응형 */
+    /* 사용 횟수 버튼 중앙 정렬 */
+    .container {
+        text-align: center;
+    }
+    
+    /* 반응형 */
     @media (max-width: 768px) {
         .usage-counter-floating {
-            bottom: 20px !important;
+            margin: 20px auto 0 !important;
             padding: 10px 20px !important;
         }
         .usage-counter-floating span:first-child {
