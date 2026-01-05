@@ -176,24 +176,33 @@
             }
         }
 
+        // 페이지 초기화 (새로고침 시)
+        function initializePage() {
+            // 모든 결과 영역 숨기기
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('loading').classList.remove('show');
+            document.getElementById('blogInfo').classList.remove('show');
+            document.getElementById('commentsSection').classList.remove('show');
+            document.getElementById('goToBlogBtn').classList.remove('show');
+            document.getElementById('errorMsg').classList.remove('show');
+            
+            // 3가지 강점 카드 표시
+            const features = document.querySelector('.features');
+            if (features) {
+                features.style.display = 'grid';
+            }
+            
+            // 현재 블로그 URL 초기화
+            currentBlogUrl = '';
+        }
+
         // 입력란 초기화 함수
         function resetInput() {
             // 입력란 초기화
             document.getElementById('blogUrl').value = '';
             
-            // 결과 영역 숨기기
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('blogInfo').classList.remove('show');
-            document.getElementById('commentsSection').classList.remove('show');
-            
-            // 현재 블로그 URL 초기화
-            currentBlogUrl = '';
-            
-            // 3가지 강점 카드 다시 표시
-            const features = document.querySelector('.features');
-            if (features) {
-                features.style.display = 'grid';
-            }
+            // 페이지 초기화 실행
+            initializePage();
             
             // 입력란에 포커스
             document.getElementById('blogUrl').focus();
@@ -568,8 +577,12 @@
             return { deviceType, browser, os };
         }
 
-        // 📊 페이지 로드 시 방문자 추적 (브라우저/디바이스 정보 포함)
+        // 📊 페이지 로드 시 초기화 및 방문자 추적
         window.addEventListener('load', () => {
+            // 페이지 초기화 (새로고침 시 결과 숨기기)
+            initializePage();
+            
+            // 방문자 추적 (브라우저/디바이스 정보 포함)
             const deviceInfo = getDeviceInfo();
             trackEvent('page_view', deviceInfo);
         });
