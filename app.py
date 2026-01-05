@@ -20,7 +20,7 @@ import hmac
 from database import db
 from oauth import init_oauth, get_google_user_info, get_kakao_user_info, get_naver_user_info
 from auth_decorators import login_required, check_usage_limit
-from email_utils import send_verification_email, send_password_reset_email, send_welcome_email, generate_verification_code, generate_temp_password
+from email_utils import send_verification_email, send_password_reset_email, generate_verification_code, generate_temp_password
 
 # 🇰🇷 한국 시간대 설정
 KST = pytz.timezone('Asia/Seoul')
@@ -3450,17 +3450,15 @@ def signup():
         # 인증 완료 플래그 삭제
         redis_client.delete(f'verified:{email}')
         
-        # 환영 이메일 발송 (비동기로 실행하면 더 좋지만 일단 동기로)
-        try:
-            send_welcome_email(email, name)
-        except Exception as e:
-            log(f"⚠️ 환영 이메일 발송 실패: {e}", "WARNING")
-        
         log(f"✅ 회원가입 성공: {email}", "AUTH")
         
         return jsonify({
             'success': True,
-            'message': '회원가입이 완료되었습니다!'
+            'message': '회원가입이 완료되었습니다!',
+            'user': {
+                'name': user['name'],
+                'email': user['email']
+            }
         }), 200
     
     except Exception as e:

@@ -912,14 +912,8 @@ async function handleSignup(e) {
         const data = await response.json();
         
         if (data.success) {
-            showToast(
-                '회원가입 성공! 🎉',
-                '로그인 페이지로 이동합니다...',
-                'success'
-            );
-            setTimeout(() => {
-                window.location.href = '/login-page';
-            }, 1500);
+            // 폭죽 효과 시작!
+            celebrateSignup(data.user.name);
         } else {
             showToast('회원가입 실패', data.error || '다시 시도해주세요', 'error');
             submitBtn.disabled = false;
@@ -931,5 +925,132 @@ async function handleSignup(e) {
         submitBtn.textContent = '무료로 시작하기 🚀';
     }
 }
+
+// 🎉 회원가입 축하 폭죽 효과
+function celebrateSignup(userName) {
+    // 폭죽 효과 여러 번 발사
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+
+    function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            // 폭죽 끝나면 환영 메시지 표시
+            showWelcomeModal(userName);
+            return;
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        
+        // 왼쪽에서
+        confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        });
+        
+        // 오른쪽에서
+        confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        });
+    }, 250);
+}
+
+// 환영 모달 표시
+function showWelcomeModal(userName) {
+    const modal = document.createElement('div');
+    modal.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease-out;
+        ">
+            <div style="
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+                backdrop-filter: blur(30px);
+                border-radius: 32px;
+                padding: 60px 40px;
+                text-align: center;
+                max-width: 500px;
+                width: 90%;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.5);
+                animation: slideUp 0.5s ease-out;
+            ">
+                <div style="font-size: 80px; margin-bottom: 20px;">🎉</div>
+                <h2 style="
+                    font-size: 2.5rem;
+                    font-weight: 800;
+                    margin: 0 0 16px 0;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                ">환영합니다!</h2>
+                <p style="
+                    font-size: 1.3rem;
+                    color: #1a1a2e;
+                    margin: 0 0 12px 0;
+                    font-weight: 600;
+                ">${userName}님, 가입을 축하드립니다!</p>
+                <p style="
+                    font-size: 1rem;
+                    color: #64748b;
+                    margin: 0 0 40px 0;
+                    line-height: 1.6;
+                ">
+                    1만 명의 블로거가 선택한<br>
+                    AI 글쓰기 플랫폼에 오신 것을 환영합니다!
+                </p>
+                <button onclick="window.location.href='/login-page'" style="
+                    padding: 16px 48px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    border-radius: 16px;
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+                    transition: transform 0.2s ease;
+                " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    로그인하러 가기 →
+                </button>
+            </div>
+        </div>
+        <style>
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateY(30px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        </style>
+    `;
+    document.body.appendChild(modal);
+}
 </script>
+
+<!-- Canvas Confetti 라이브러리 -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
 {% endblock %}
