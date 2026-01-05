@@ -480,13 +480,15 @@
 .feedback-title {
     font-size: 1.3em;
     font-weight: 700;
-    color: #1e293b;
+    color: rgba(0, 0, 0, 0.85);
     margin-bottom: 5px;
+    line-height: 1.3;
 }
 
 .feedback-subtitle {
     font-size: 0.95em;
-    color: #64748b;
+    color: rgba(0, 0, 0, 0.55);
+    margin: 0;
 }
 
 .feedback-buttons {
