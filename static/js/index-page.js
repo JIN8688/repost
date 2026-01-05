@@ -1,52 +1,6 @@
         // 현재 블로그 URL 저장
         let currentBlogUrl = '';
 
-        // 🎬 전광판 효과 (모바일 Placeholder)
-        function setupMarqueePlaceholder() {
-            const input = document.getElementById('blogUrl');
-            const fullText = '네이버 블로그 URL을 입력하세요 (예: https://blog.naver.com/...)';
-            
-            // 모바일에서만 실행
-            if (window.innerWidth <= 768) {
-                let charIndex = 0;
-                let direction = 1; // 1: 앞으로, -1: 뒤로
-                let currentText = '';
-                const visibleChars = 20; // 화면에 보이는 글자 수
-                
-                // 처음에는 전체 텍스트를 한 번 흘러가게
-                const scrollInterval = setInterval(() => {
-                    if (direction === 1) {
-                        // 앞으로 스크롤
-                        if (charIndex < fullText.length - visibleChars) {
-                            currentText = fullText.substring(charIndex, charIndex + visibleChars);
-                            charIndex++;
-                        } else {
-                            // 끝까지 도달 - 잠깐 멈춤 후 처음으로
-                            setTimeout(() => {
-                                charIndex = 0;
-                                currentText = fullText.substring(0, visibleChars);
-                            }, 2000);
-                            clearInterval(scrollInterval);
-                            // 3초 후 처음 상태로
-                            setTimeout(() => {
-                                input.placeholder = fullText.substring(0, visibleChars) + '...';
-                            }, 2000);
-                        }
-                    }
-                    input.placeholder = currentText + '...';
-                }, 100); // 100ms마다 한 글자씩 이동
-                
-                // 입력 시작하면 애니메이션 중지
-                input.addEventListener('focus', () => {
-                    clearInterval(scrollInterval);
-                    input.placeholder = '예: https://blog.naver.com/...';
-                }, { once: true });
-            }
-        }
-        
-        // 페이지 로드 시 실행
-        window.addEventListener('load', setupMarqueePlaceholder);
-
         // Enter 키로 분석 실행
         document.getElementById('blogUrl').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
