@@ -197,6 +197,21 @@
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
     }
+    
+    .badge-tier-s {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: white;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
 
     .coming-soon {
         text-align: center;
@@ -280,6 +295,7 @@
                 <li>중복 표현 자동 감지</li>
                 <li>가독성 점수 분석</li>
             </ul>
+            <span class="tool-badge badge-tier-s">⭐ Tier S</span>
             <span class="tool-badge badge-free">무료</span>
         </a>
 
@@ -296,6 +312,7 @@
                 <li>제목 평가 및 개선 제안</li>
                 <li>5가지 스타일 선택</li>
             </ul>
+            <span class="tool-badge badge-tier-s">⭐ Tier S</span>
             <span class="tool-badge badge-popular">인기</span>
         </a>
 
@@ -312,6 +329,7 @@
                 <li>즉시 개선 가능한 항목 제안</li>
                 <li>등급별 상세 피드백</li>
             </ul>
+            <span class="tool-badge badge-tier-s">⭐ Tier S</span>
             <span class="tool-badge badge-new">NEW</span>
         </a>
 
