@@ -815,7 +815,7 @@
                     <div class="footer-section">
                         <h4 class="footer-title">서비스</h4>
                         <ul class="footer-menu">
-                            <li><a href="/">댓글 자동 추천</a></li>
+                            <li><a href="#" onclick="scrollToTop(); return false;">댓글 자동 추천</a></li>
                             <li><a href="/tools">블로거 도구</a></li>
                             <li><a href="/pricing">요금제</a></li>
                         </ul>
@@ -927,6 +927,16 @@
 
     <!-- 🚀 공통 JavaScript -->
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    
+    <!-- 스크롤 함수 -->
+    <script>
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>
