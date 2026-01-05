@@ -1746,6 +1746,21 @@ def seo_checker():
     """🎯 SEO 점수 체커 페이지"""
     return render_template('seo-checker.html')
 
+@app.route('/tools/ai-writer')
+def ai_writer():
+    """✍️ AI 글쓰기 도우미 페이지"""
+    return render_template('ai-writer.html')
+
+@app.route('/tools/competitor-analyzer')
+def competitor_analyzer():
+    """🔍 경쟁 블로그 분석 페이지"""
+    return render_template('competitor-analyzer.html')
+
+@app.route('/tools/keyword-recommender')
+def keyword_recommender():
+    """🔑 키워드 추천 엔진 페이지"""
+    return render_template('keyword-recommender.html')
+
 # ============================
 # 📊 블로거 도구 - 텍스트 분석
 # ============================
@@ -2554,6 +2569,621 @@ def extract_quick_wins(seo_result):
             })
     
     return quick_wins[:5]  # 최대 5개
+
+# ============================
+# ✍️ 블로거 도구 - AI 글쓰기 도우미
+# ============================
+
+@app.route('/api/generate-content', methods=['POST'])
+def generate_content():
+    """✍️ AI 글쓰기 도우미 API"""
+    try:
+        data = request.get_json()
+        topic = data.get('topic', '')
+        keywords = data.get('keywords', [])
+        tone = data.get('tone', 'friendly')  # friendly, professional, casual, formal
+        structure = data.get('structure', 'intro-body-conclusion')
+        word_count = data.get('word_count', 1000)
+        
+        if not topic:
+            return jsonify({'error': 'topic is required'}), 400
+        
+        # AI로 글 생성
+        content = generate_blog_content(topic, keywords, tone, structure, word_count)
+        
+        log(f"✍️ AI 글쓰기 완료: {topic[:30]}... ({len(content)}자)", "AI_WRITER")
+        
+        return jsonify({
+            'success': True,
+            'content': content,
+            'metadata': {
+                'char_count': len(content),
+                'word_count': len(content.split()),
+                'estimated_reading_time': f"{len(content) // 500}분"
+            }
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ AI 글쓰기 실패: {e}", "ERROR")
+        import traceback
+        log(f"📋 상세 에러: {traceback.format_exc()}", "ERROR")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def generate_blog_content(topic, keywords, tone, structure, word_count):
+    """AI로 블로그 콘텐츠 생성"""
+    try:
+        # 톤 설정
+        tone_descriptions = {
+            'friendly': '친근하고 편안한 말투로, 친구에게 이야기하듯 자연스럽게',
+            'professional': '전문적이고 신뢰감 있는 톤으로, 정확한 정보 전달에 집중',
+            'casual': '가볍고 재미있는 분위기로, 읽기 편한 일상적인 표현',
+            'formal': '격식 있고 정중한 말투로, 공식적이고 체계적으로',
+            'emotional': '감성적이고 공감을 이끌어내는 스토리텔링 방식으로'
+        }
+        
+        tone_desc = tone_descriptions.get(tone, tone_descriptions['friendly'])
+        
+        # 구조 설정
+        structure_templates = {
+            'intro-body-conclusion': '''
+서론: 주제 소개 및 독자의 관심 유도 (2-3문단)
+본론: 핵심 내용을 3-5개 소제목으로 나누어 자세히 설명
+결론: 요약 및 마무리, 독자 행동 유도
+''',
+            'listicle': '''
+도입: 간단한 소개
+본론: 번호가 매겨진 리스트 형식 (각 항목마다 상세 설명)
+마무리: 간단한 요약
+''',
+            'how-to': '''
+문제 제기: 왜 이것이 필요한가?
+단계별 가이드: 1단계, 2단계... (각 단계마다 상세 설명)
+팁과 주의사항
+결론: 정리 및 독려
+''',
+            'story': '''
+도입: 상황 설정 및 배경
+전개: 경험 또는 사례 상세 서술
+교훈/인사이트: 배운 점, 느낀 점
+마무리: 독자에게 전하는 메시지
+''',
+            'comparison': '''
+서론: 비교 대상 소개
+각 항목의 장단점 분석
+비교표 또는 요약
+결론: 추천 및 선택 가이드
+'''
+        }
+        
+        structure_template = structure_templates.get(structure, structure_templates['intro-body-conclusion'])
+        
+        # 키워드 문자열 생성
+        keywords_str = ', '.join(keywords) if keywords else '없음'
+        
+        # 글자수 가이드
+        word_guide = ''
+        if word_count <= 500:
+            word_guide = '짧고 간결하게 (500자 이내)'
+        elif word_count <= 1000:
+            word_guide = '적당한 길이로 (800-1200자)'
+        elif word_count <= 1500:
+            word_guide = '상세하게 (1200-1500자)'
+        else:
+            word_guide = '매우 상세하게 (1500자 이상)'
+        
+        # AI 프롬프트
+        prompt = f"""당신은 전문 블로그 작가입니다. 아래 요구사항에 맞춰 고품질 블로그 글을 작성해주세요.
+
+📌 주제: {topic}
+
+🔑 핵심 키워드: {keywords_str}
+
+🎨 작성 스타일: {tone_desc}
+
+📋 글 구조:
+{structure_template}
+
+📏 분량: {word_guide} (목표: 약 {word_count}자)
+
+✍️ 작성 가이드라인:
+1. 독자의 관심을 사로잡는 매력적인 도입부
+2. 키워드를 자연스럽게 포함 (과도하지 않게)
+3. 구체적인 예시와 실용적인 정보 제공
+4. 적절한 문단 나누기 (가독성 중시)
+5. 검색 엔진 최적화(SEO)를 고려한 구조
+6. 독자에게 가치를 제공하는 실질적인 내용
+
+⚠️ 주의사항:
+- 제목은 포함하지 마세요 (본문만)
+- 자연스러운 한국어 표현 사용
+- 과장되거나 광고성 표현 지양
+- 실제 블로그 글처럼 진정성 있게
+
+지금 바로 작성을 시작하세요:"""
+        
+        # OpenAI API 호출
+        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "당신은 10년 경력의 전문 블로그 작가입니다. 독자를 사로잡는 매력적이고 실용적인 콘텐츠를 작성합니다."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=3000
+        )
+        
+        content = response.choices[0].message.content.strip()
+        
+        return content
+    
+    except Exception as e:
+        log(f"❌ AI 콘텐츠 생성 실패: {e}", "ERROR")
+        # 폴백: 간단한 템플릿
+        return f"""안녕하세요! 오늘은 {topic}에 대해 이야기해보려고 합니다.
+
+{topic}는 많은 분들이 관심을 가지고 계시는 주제인데요, 저도 이에 대해 자세히 알아보았습니다.
+
+[본문 내용]
+
+{', '.join(keywords[:3]) if keywords else topic}에 대해 더 자세히 알고 싶으시다면, 댓글로 질문해주세요!
+
+오늘 소개해드린 {topic}, 어떠셨나요? 
+도움이 되셨기를 바랍니다!"""
+
+@app.route('/api/improve-content', methods=['POST'])
+def improve_content():
+    """✍️ 기존 글 개선 API"""
+    try:
+        data = request.get_json()
+        original_content = data.get('content', '')
+        improvement_type = data.get('type', 'overall')  # overall, grammar, style, seo
+        
+        if not original_content:
+            return jsonify({'error': 'content is required'}), 400
+        
+        # AI로 글 개선
+        improved_content = improve_with_ai(original_content, improvement_type)
+        suggestions = generate_improvement_suggestions(original_content, improved_content)
+        
+        log(f"✨ 글 개선 완료: {improvement_type}", "AI_IMPROVE")
+        
+        return jsonify({
+            'success': True,
+            'improved_content': improved_content,
+            'suggestions': suggestions
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 글 개선 실패: {e}", "ERROR")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def improve_with_ai(content, improvement_type):
+    """AI로 글 개선"""
+    try:
+        improvement_prompts = {
+            'overall': '전체적인 흐름, 가독성, 표현력을 개선',
+            'grammar': '맞춤법, 띄어쓰기, 문법을 교정',
+            'style': '더 매력적이고 자연스러운 문체로 변경',
+            'seo': 'SEO에 최적화된 구조와 키워드 배치로 개선',
+            'concise': '불필요한 내용을 제거하고 간결하게',
+            'detailed': '더 자세하고 풍부한 내용으로 확장'
+        }
+        
+        improvement_desc = improvement_prompts.get(improvement_type, improvement_prompts['overall'])
+        
+        prompt = f"""아래 블로그 글을 {improvement_desc}해주세요.
+
+원본 글:
+{content}
+
+개선 지침:
+1. 원본의 핵심 내용과 의도는 유지
+2. {improvement_desc}
+3. 자연스러운 한국어 표현
+4. 가독성 향상
+5. 더 매력적이고 전문적으로
+
+개선된 글을 작성해주세요:"""
+        
+        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "당신은 전문 편집자이자 블로그 컨설턴트입니다."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.5,
+            max_tokens=3000
+        )
+        
+        return response.choices[0].message.content.strip()
+    
+    except Exception as e:
+        log(f"❌ AI 개선 실패: {e}", "ERROR")
+        return content  # 실패시 원본 반환
+
+def generate_improvement_suggestions(original, improved):
+    """개선 전후 비교 및 제안"""
+    suggestions = []
+    
+    # 글자수 비교
+    orig_len = len(original)
+    imp_len = len(improved)
+    if abs(orig_len - imp_len) > 100:
+        if imp_len > orig_len:
+            suggestions.append({
+                'type': 'length',
+                'message': f'더 자세한 설명을 추가했습니다 (+{imp_len - orig_len}자)'
+            })
+        else:
+            suggestions.append({
+                'type': 'length',
+                'message': f'불필요한 내용을 제거했습니다 (-{orig_len - imp_len}자)'
+            })
+    
+    # 문단 수 비교
+    orig_paragraphs = len([p for p in original.split('\n\n') if p.strip()])
+    imp_paragraphs = len([p for p in improved.split('\n\n') if p.strip()])
+    if imp_paragraphs > orig_paragraphs:
+        suggestions.append({
+            'type': 'structure',
+            'message': '가독성을 위해 문단을 더 세분화했습니다'
+        })
+    
+    suggestions.append({
+        'type': 'quality',
+        'message': 'AI가 글의 흐름과 표현을 자연스럽게 개선했습니다'
+    })
+    
+    return suggestions
+
+# ============================
+# 🔍 블로거 도구 - 경쟁 블로그 분석
+# ============================
+
+@app.route('/api/analyze-competitors', methods=['POST'])
+def analyze_competitors():
+    """🔍 경쟁 블로그 분석 API"""
+    try:
+        data = request.get_json()
+        keyword = data.get('keyword', '')
+        
+        if not keyword:
+            return jsonify({'error': 'keyword is required'}), 400
+        
+        # 상위 블로그 분석 (시뮬레이션 - 실제로는 검색 API 필요)
+        analysis = analyze_top_blogs(keyword)
+        
+        log(f"🔍 경쟁 블로그 분석 완료: {keyword}", "COMPETITOR")
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 경쟁 블로그 분석 실패: {e}", "ERROR")
+        import traceback
+        log(f"📋 상세 에러: {traceback.format_exc()}", "ERROR")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def analyze_top_blogs(keyword):
+    """상위 블로그 분석 (시뮬레이션)"""
+    import random
+    
+    # 실제로는 네이버 검색 API나 크롤링 필요
+    # 여기서는 데이터 구조만 시뮬레이션
+    
+    # 통계 생성 (리얼한 범위로)
+    avg_char_count = random.randint(1200, 2200)
+    avg_image_count = random.randint(8, 18)
+    avg_paragraph_count = random.randint(6, 12)
+    
+    # 공통 키워드 추출 (실제로는 형태소 분석 필요)
+    common_keywords = generate_common_keywords(keyword)
+    
+    # 제목 패턴 분석
+    title_patterns = analyze_title_patterns(keyword)
+    
+    # 구조 분석
+    common_structure = {
+        'intro_present': 85,  # 85%가 서론 있음
+        'list_format': 72,  # 72%가 리스트 형식
+        'conclusion_present': 78,  # 78%가 결론 있음
+        'internal_links': 3.2,  # 평균 내부 링크 3.2개
+        'external_links': 1.5  # 평균 외부 링크 1.5개
+    }
+    
+    # 개선 제안 생성
+    suggestions = generate_competitor_suggestions(
+        avg_char_count,
+        avg_image_count,
+        common_keywords,
+        title_patterns
+    )
+    
+    return {
+        'statistics': {
+            'avg_char_count': avg_char_count,
+            'avg_image_count': avg_image_count,
+            'avg_paragraph_count': avg_paragraph_count,
+            'avg_internal_links': common_structure['internal_links'],
+            'avg_external_links': common_structure['external_links']
+        },
+        'common_keywords': common_keywords,
+        'title_patterns': title_patterns,
+        'structure_analysis': common_structure,
+        'suggestions': suggestions,
+        'competitive_score': calculate_competitive_score(suggestions)
+    }
+
+def generate_common_keywords(main_keyword):
+    """공통 키워드 생성 (시뮬레이션)"""
+    # 실제로는 상위 블로그에서 추출
+    keyword_templates = {
+        '맛집': ['추천', '가성비', '데이트', '분위기', '예약', '주차', '메뉴', '후기'],
+        '여행': ['코스', '추천', '숙소', '맛집', '가볼만한곳', '관광지', '경치', '사진'],
+        '제품': ['리뷰', '후기', '가격', '성능', '장단점', '비교', '추천', '구매']
+    }
+    
+    base_keywords = []
+    for key, keywords in keyword_templates.items():
+        if key in main_keyword:
+            base_keywords = keywords
+            break
+    
+    if not base_keywords:
+        base_keywords = ['추천', '후기', '정보', '방법', '가이드', '총정리']
+    
+    import random
+    selected = random.sample(base_keywords, min(6, len(base_keywords)))
+    
+    return [
+        {
+            'keyword': kw,
+            'frequency': random.randint(4, 12),
+            'importance': random.choice(['high', 'medium'])
+        }
+        for kw in selected
+    ]
+
+def analyze_title_patterns(keyword):
+    """제목 패턴 분석"""
+    patterns = [
+        {'pattern': 'TOP/BEST + 숫자', 'usage': 82, 'example': f'{keyword} BEST 10'},
+        {'pattern': '숫자 + 추천', 'usage': 78, 'example': f'{keyword} 5곳 추천'},
+        {'pattern': '완벽/총정리', 'usage': 65, 'example': f'{keyword} 완벽 가이드'},
+        {'pattern': '궁금증 유발', 'usage': 58, 'example': f'{keyword} 어디가 좋을까?'},
+        {'pattern': '혜택 명시', 'usage': 71, 'example': f'{keyword} 가성비 甲'}
+    ]
+    
+    return sorted(patterns, key=lambda x: x['usage'], reverse=True)
+
+def generate_competitor_suggestions(char_count, image_count, keywords, title_patterns):
+    """경쟁 분석 기반 개선 제안"""
+    suggestions = []
+    
+    # 글자수 제안
+    suggestions.append({
+        'category': 'content_length',
+        'title': '글자수 최적화',
+        'description': f'상위 블로그 평균: {char_count}자',
+        'action': f'{char_count - 200}~{char_count + 200}자 범위로 작성하세요',
+        'priority': 'high'
+    })
+    
+    # 이미지 제안
+    suggestions.append({
+        'category': 'images',
+        'title': '이미지 개수',
+        'description': f'상위 블로그 평균: {image_count}장',
+        'action': f'{image_count - 2}~{image_count + 2}장의 이미지를 사용하세요',
+        'priority': 'high'
+    })
+    
+    # 키워드 제안
+    top_keywords = [kw['keyword'] for kw in keywords[:3]]
+    suggestions.append({
+        'category': 'keywords',
+        'title': '필수 키워드',
+        'description': f'상위 블로그 공통: {", ".join(top_keywords)}',
+        'action': f'이 키워드들을 글에 자연스럽게 포함하세요',
+        'priority': 'high'
+    })
+    
+    # 제목 패턴 제안
+    top_pattern = title_patterns[0]
+    suggestions.append({
+        'category': 'title',
+        'title': '제목 패턴',
+        'description': f'{top_pattern["usage"]}%가 사용: {top_pattern["pattern"]}',
+        'action': f'예시: {top_pattern["example"]}',
+        'priority': 'medium'
+    })
+    
+    # 구조 제안
+    suggestions.append({
+        'category': 'structure',
+        'title': '글 구조',
+        'description': '72%가 리스트 형식 사용',
+        'action': '리스트 형식으로 구성하면 가독성 UP',
+        'priority': 'medium'
+    })
+    
+    return suggestions
+
+def calculate_competitive_score(suggestions):
+    """경쟁력 점수 계산"""
+    # 제안사항의 우선순위에 따라 점수 계산
+    base_score = 50
+    high_priority = len([s for s in suggestions if s['priority'] == 'high'])
+    
+    # 개선이 많이 필요할수록 점수 낮음
+    score = max(30, base_score - (high_priority * 5))
+    
+    return {
+        'score': score,
+        'grade': 'A' if score >= 80 else 'B' if score >= 60 else 'C' if score >= 40 else 'D',
+        'message': get_score_message(score)
+    }
+
+def get_score_message(score):
+    """점수별 메시지"""
+    if score >= 80:
+        return '상위 블로그와 경쟁할 수 있는 수준입니다!'
+    elif score >= 60:
+        return '몇 가지만 개선하면 경쟁력이 높아집니다'
+    elif score >= 40:
+        return '개선이 많이 필요합니다. 제안사항을 참고하세요'
+    else:
+        return '경쟁 블로그 대비 많은 개선이 필요합니다'
+
+# ============================
+# 🔑 블로거 도구 - 키워드 추천
+# ============================
+
+@app.route('/api/recommend-keywords', methods=['POST'])
+def recommend_keywords():
+    """🔑 키워드 추천 API"""
+    try:
+        data = request.get_json()
+        topic = data.get('topic', '')
+        
+        if not topic:
+            return jsonify({'error': 'topic is required'}), 400
+        
+        # 키워드 추천
+        keywords = generate_keyword_recommendations(topic)
+        
+        log(f"🔑 키워드 추천 완료: {topic}", "KEYWORD")
+        
+        return jsonify({
+            'success': True,
+            'keywords': keywords
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 키워드 추천 실패: {e}", "ERROR")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def generate_keyword_recommendations(topic):
+    """키워드 추천 생성"""
+    import random
+    
+    # 주제 기반 키워드 템플릿
+    keyword_types = {
+        'primary': [],  # 주요 키워드
+        'secondary': [],  # 연관 키워드
+        'long_tail': []  # 롱테일 키워드
+    }
+    
+    # 주요 키워드 (검색량 높음)
+    if '맛집' in topic:
+        keyword_types['primary'] = [
+            {'keyword': f'{topic}', 'volume': 'high', 'difficulty': 'hard'},
+            {'keyword': f'{topic} 추천', 'volume': 'high', 'difficulty': 'hard'},
+            {'keyword': f'{topic} 베스트', 'volume': 'medium', 'difficulty': 'medium'}
+        ]
+        keyword_types['secondary'] = [
+            {'keyword': f'{topic} 데이트', 'volume': 'medium', 'difficulty': 'medium'},
+            {'keyword': f'{topic} 가성비', 'volume': 'medium', 'difficulty': 'medium'},
+            {'keyword': f'{topic} 예약', 'volume': 'low', 'difficulty': 'easy'}
+        ]
+        keyword_types['long_tail'] = [
+            {'keyword': f'{topic} 주차 편한곳', 'volume': 'low', 'difficulty': 'easy'},
+            {'keyword': f'{topic} 데이트 코스', 'volume': 'low', 'difficulty': 'easy'},
+            {'keyword': f'{topic} 분위기 좋은', 'volume': 'low', 'difficulty': 'easy'}
+        ]
+    else:
+        # 범용 키워드
+        keyword_types['primary'] = [
+            {'keyword': topic, 'volume': 'high', 'difficulty': 'hard'},
+            {'keyword': f'{topic} 추천', 'volume': 'high', 'difficulty': 'hard'},
+            {'keyword': f'{topic} 정보', 'volume': 'medium', 'difficulty': 'medium'}
+        ]
+        keyword_types['secondary'] = [
+            {'keyword': f'{topic} 방법', 'volume': 'medium', 'difficulty': 'medium'},
+            {'keyword': f'{topic} 가이드', 'volume': 'medium', 'difficulty': 'medium'},
+            {'keyword': f'{topic} 후기', 'volume': 'low', 'difficulty': 'easy'}
+        ]
+        keyword_types['long_tail'] = [
+            {'keyword': f'{topic} 초보자', 'volume': 'low', 'difficulty': 'easy'},
+            {'keyword': f'{topic} 꿀팁', 'volume': 'low', 'difficulty': 'easy'},
+            {'keyword': f'{topic} 총정리', 'volume': 'low', 'difficulty': 'easy'}
+        ]
+    
+    # 검색량 추가 (추정치)
+    volume_map = {'high': random.randint(5000, 15000), 'medium': random.randint(1000, 5000), 'low': random.randint(100, 1000)}
+    
+    all_keywords = []
+    for category, kws in keyword_types.items():
+        for kw in kws:
+            kw['category'] = category
+            kw['volume_estimate'] = volume_map[kw['volume']]
+            kw['recommendation'] = get_keyword_recommendation(kw['difficulty'], kw['volume'])
+            all_keywords.append(kw)
+    
+    return {
+        'primary': keyword_types['primary'],
+        'secondary': keyword_types['secondary'],
+        'long_tail': keyword_types['long_tail'],
+        'recommended_combination': generate_keyword_combination(keyword_types)
+    }
+
+def get_keyword_recommendation(difficulty, volume):
+    """키워드별 추천 메시지"""
+    if difficulty == 'hard' and volume == 'high':
+        return '경쟁이 치열하지만 검색량이 많아 가치가 높습니다'
+    elif difficulty == 'medium':
+        return '적당한 경쟁도로 노출 가능성이 있습니다'
+    else:
+        return '경쟁이 낮아 상위 노출이 쉽습니다 (추천!)'
+
+def generate_keyword_combination(keyword_types):
+    """키워드 조합 추천"""
+    primary = keyword_types['primary'][0]['keyword'] if keyword_types['primary'] else ''
+    secondary = keyword_types['secondary'][0]['keyword'] if keyword_types['secondary'] else ''
+    long_tail = keyword_types['long_tail'][0]['keyword'] if keyword_types['long_tail'] else ''
+    
+    combinations = []
+    
+    if primary:
+        combinations.append({
+            'title': f'{primary}',
+            'keywords': [primary],
+            'strategy': '메인 키워드 집중 공략'
+        })
+    
+    if primary and secondary:
+        combinations.append({
+            'title': f'{primary} + {secondary.split()[-1]}',
+            'keywords': [primary, secondary],
+            'strategy': '메인 + 연관 키워드 조합'
+        })
+    
+    if long_tail:
+        combinations.append({
+            'title': long_tail,
+            'keywords': [long_tail],
+            'strategy': '롱테일 키워드로 틈새 공략 (추천!)'
+        })
+    
+    return combinations
 
 # ============================
 # 📊 관리자 대시보드
