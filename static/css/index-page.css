@@ -26,9 +26,13 @@ body {
     background: transparent;
     max-width: min(900px, 100vw);
     width: 100%;
-    padding: 0 40px 50px;
+    padding: 0 40px 30px;
     margin: 0 auto;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: center;
 }
 
 /* ===========================================
@@ -36,8 +40,8 @@ body {
    =========================================== */
 .header {
     text-align: center;
-    margin-bottom: 20px;
-    margin-top: 40px;
+    margin-bottom: 15px;
+    margin-top: 0;
     position: relative;
     z-index: 1;
 }
@@ -49,7 +53,7 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     word-break: keep-all;
     letter-spacing: -0.02em;
     animation: fadeInDown 0.8s ease-out 0.2s backwards;
@@ -57,12 +61,12 @@ body {
 }
 
 .header .tagline {
-    font-size: clamp(1.3em, 3.5vw, 1.8em);
+    font-size: clamp(1.2em, 3.5vw, 1.7em);
     color: white;
     font-weight: 700;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     word-break: keep-all;
-    line-height: 1.5;
+    line-height: 1.4;
     animation: fadeInDown 0.8s ease-out 0.4s backwards;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
@@ -109,9 +113,10 @@ body {
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(10px);
     border-radius: 30px;
-    padding: 40px;
+    padding: 35px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
     animation: fadeInUp 0.8s ease-out 0.8s backwards;
+    margin-top: 15px;
 }
 
 /* ===========================================
@@ -119,8 +124,8 @@ body {
    =========================================== */
 .features {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
     margin-bottom: 0;
     position: relative;
     z-index: 1;
