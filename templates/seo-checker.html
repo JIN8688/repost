@@ -541,7 +541,7 @@
             const response = await fetch('/api/check-seo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content, keyword })
+                body: JSON.stringify({ title, text: content, keyword })
             });
 
             if (!response.ok) {

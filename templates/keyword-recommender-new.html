@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}경쟁 블로그 분석 - Repost{% endblock %}
+{% block title %}키워드 추천 엔진 - Repost{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -130,7 +130,7 @@
         color: #94a3b8;
     }
 
-    .analyze-btn {
+    .generate-btn {
         width: 100%;
         padding: 16px;
         background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
@@ -144,17 +144,17 @@
         box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
     }
 
-    .analyze-btn:hover:not(:disabled) {
+    .generate-btn:hover:not(:disabled) {
         transform: translateY(-3px);
         box-shadow: 0 12px 32px rgba(139, 92, 246, 0.5);
     }
 
-    .analyze-btn:disabled {
+    .generate-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
     }
 
-    .copy-btn {
+    .copy-all-btn {
         width: 100%;
         padding: 14px;
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -166,103 +166,116 @@
         cursor: pointer;
         transition: all 0.3s ease;
         box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
-        margin-top: 20px;
+        margin-bottom: 20px;
     }
 
-    .copy-btn:hover {
+    .copy-all-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
     }
 
-    .copy-btn.copied {
+    .copy-all-btn.copied {
         background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
     }
 
-    .analysis-section {
-        margin-bottom: 30px;
-    }
-
-    .section-title {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #1a1a2e;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .metrics-grid {
+    .keywords-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 15px;
-        margin-bottom: 20px;
     }
 
-    .metric-card {
+    .keyword-card {
         background: #f8fafc;
         border: 2px solid #e2e8f0;
         border-radius: 16px;
         padding: 20px;
-        text-align: center;
+        cursor: pointer;
         transition: all 0.3s ease;
+        animation: slideIn 0.5s ease-out;
     }
 
-    .metric-card:hover {
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .keyword-card:hover {
+        background: white;
         transform: translateY(-3px);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        border-color: #8b5cf6;
     }
 
-    .metric-value {
-        font-size: 2rem;
-        font-weight: 800;
-        color: #8b5cf6;
-        margin-bottom: 5px;
-    }
-
-    .metric-label {
-        font-size: 0.9rem;
-        color: #64748b;
-        font-weight: 600;
-    }
-
-    .insight-list {
-        list-style: none;
-        padding: 0;
-    }
-
-    .insight-item {
-        background: #f8fafc;
-        border-left: 4px solid #8b5cf6;
-        padding: 15px 20px;
-        margin-bottom: 12px;
-        border-radius: 8px;
-        font-weight: 500;
-        color: #475569;
-    }
-
-    .strategy-box {
-        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        border: 2px solid #fbbf24;
-        border-radius: 18px;
-        padding: 25px;
-        margin-top: 20px;
-    }
-
-    .strategy-title {
+    .keyword-text {
         font-size: 1.2rem;
         font-weight: 700;
-        color: #92400e;
-        margin-bottom: 12px;
+        color: #1a1a2e;
+        margin-bottom: 10px;
+    }
+
+    .keyword-meta {
         display: flex;
         align-items: center;
         gap: 8px;
+        flex-wrap: wrap;
     }
 
-    .strategy-text {
-        color: #78350f;
-        font-weight: 500;
-        line-height: 1.7;
+    .keyword-badge {
+        padding: 4px 10px;
+        background: rgba(139, 92, 246, 0.15);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #6d28d9;
+    }
+
+    .difficulty-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .difficulty-low {
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #059669;
+    }
+
+    .difficulty-medium {
+        background: rgba(245, 158, 11, 0.15);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        color: #d97706;
+    }
+
+    .difficulty-high {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #dc2626;
+    }
+
+    .copy-keyword-btn {
+        width: 100%;
+        padding: 8px;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        border: none;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.85rem;
+        margin-top: 10px;
+    }
+
+    .copy-keyword-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .copy-keyword-btn.copied {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     }
 
     .loading {
@@ -351,8 +364,8 @@
             padding: 24px;
         }
         
-        .metrics-grid {
-            grid-template-columns: repeat(2, 1fr);
+        .keywords-grid {
+            grid-template-columns: 1fr;
         }
         
         .toast {
@@ -366,49 +379,49 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>🔍 경쟁 블로그 분석<span class="tier-badge">💎 PRO</span></h1>
-    <p>경쟁 블로그를 분석하고 이길 수 있는 전략을 AI가 제시합니다</p>
+    <h1>🔑 키워드 추천 엔진<span class="tier-badge">💎 PRO</span></h1>
+    <p>검색 노출에 최적화된 키워드를 AI가 찾아드립니다</p>
 </div>
 
 <div class="container">
     <!-- 📝 입력 섹션 -->
     <div class="glass-card">
         <h2 class="card-title">
-            <span>🎯</span>
-            경쟁 블로그 URL 입력
+            <span>✍️</span>
+            주제 입력
         </h2>
         
         <div class="input-group">
-            <label class="input-label">경쟁 블로그 URL</label>
+            <label class="input-label">블로그 주제 또는 분야</label>
             <input type="text" 
-                   id="urlInput" 
+                   id="topicInput" 
                    class="input-field" 
-                   placeholder="예: https://blog.naver.com/...">
+                   placeholder="예: 강남 맛집, 육아 팁, 여행 추천">
         </div>
 
-        <button id="analyzeBtn" class="analyze-btn" onclick="analyzeCompetitor()">
-            🔍 경쟁 블로그 분석 시작
+        <button id="generateBtn" class="generate-btn" onclick="generateKeywords()">
+            🔑 AI 키워드 추천 받기
         </button>
     </div>
 
     <!-- 📊 결과 섹션 -->
-    <div class="glass-card" id="resultsCard" style="display: none;">
+    <div class="glass-card">
         <h2 class="card-title">
-            <span>📈</span>
-            분석 결과
+            <span>🎯</span>
+            추천 키워드
         </h2>
 
-        <div id="resultsContainer"></div>
-
-        <button id="copyBtn" class="copy-btn" onclick="copyResults()">
-            📋 분석 결과 복사하기
-        </button>
+        <div id="keywordsContainer">
+            <div class="empty-state">
+                <div class="empty-icon">🔑</div>
+                <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; color: #1a1a2e;">아직 추천된 키워드가 없습니다</div>
+                <div style="font-size: 0.95rem; opacity: 0.7;">위에서 주제를 입력하고 키워드를 받아보세요</div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    let analysisData = '';
-
     // Toast 알림
     function showToast(message, type = 'info') {
         const existingToast = document.querySelector('.toast');
@@ -441,45 +454,44 @@
         });
     }
 
-    // 결과 복사
-    function copyResults() {
-        const button = document.getElementById('copyBtn');
-        copyToClipboard(analysisData, button, '분석 결과가 복사되었습니다!');
+    // 모든 키워드 복사
+    function copyAllKeywords() {
+        const keywords = Array.from(document.querySelectorAll('.keyword-text')).map(el => el.textContent).join(', ');
+        const button = event.target;
+        copyToClipboard(keywords, button, '모든 키워드가 복사되었습니다!');
     }
 
-    async function analyzeCompetitor() {
-        const url = document.getElementById('urlInput').value.trim();
-        const btn = document.getElementById('analyzeBtn');
-        const resultsCard = document.getElementById('resultsCard');
-        const container = document.getElementById('resultsContainer');
+    // 개별 키워드 복사
+    function copyKeyword(button, keyword) {
+        copyToClipboard(keyword, button, `"${keyword}" 키워드가 복사되었습니다!`);
+    }
 
-        if (!url) {
-            showToast('경쟁 블로그 URL을 입력해주세요!', 'error');
-            document.getElementById('urlInput').focus();
-            return;
-        }
+    async function generateKeywords() {
+        const topic = document.getElementById('topicInput').value.trim();
+        const btn = document.getElementById('generateBtn');
+        const container = document.getElementById('keywordsContainer');
 
-        if (!url.includes('blog.naver.com')) {
-            showToast('네이버 블로그 URL을 입력해주세요!', 'error');
+        if (!topic) {
+            showToast('주제를 입력해주세요!', 'error');
+            document.getElementById('topicInput').focus();
             return;
         }
 
         btn.disabled = true;
-        btn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">🔍</span> 경쟁 블로그 분석 중...';
-        resultsCard.style.display = 'block';
+        btn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">🔑</span> AI가 키워드를 찾고 있습니다...';
         container.innerHTML = `
             <div class="loading">
                 <div class="spinner"></div>
-                <div class="loading-text">AI가 경쟁 블로그를 분석하고 있습니다...</div>
-                <div style="color: #94a3b8; font-size: 0.9rem; margin-top: 10px;">잠시만 기다려주세요 (최대 30초)</div>
+                <div class="loading-text">검색량 높은 키워드를 찾고 있습니다...</div>
+                <div style="color: #94a3b8; font-size: 0.9rem; margin-top: 10px;">잠시만 기다려주세요</div>
             </div>
         `;
 
         try {
-            const response = await fetch('/api/analyze-competitors', {
+            const response = await fetch('/api/recommend-keywords', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ keyword: url })
+                body: JSON.stringify({ topic })
             });
 
             if (!response.ok) {
@@ -489,79 +501,64 @@
             const data = await response.json();
 
             if (data.success) {
-                displayResults(data.analysis);
-                showToast('경쟁 블로그 분석이 완료되었습니다!', 'success');
+                displayKeywords(data.keywords);
+                showToast('키워드 추천이 완료되었습니다!', 'success');
             } else {
-                throw new Error(data.error || '분석 실패');
+                throw new Error(data.error || '키워드 추천 실패');
             }
         } catch (error) {
-            console.error('분석 오류:', error);
+            console.error('추천 오류:', error);
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">❌</div>
-                    <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; color: #dc2626;">분석 중 오류가 발생했습니다</div>
+                    <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; color: #dc2626;">키워드 추천 중 오류가 발생했습니다</div>
                     <div style="font-size: 0.95rem; opacity: 0.7; margin-bottom: 20px;">${error.message}</div>
-                    <button onclick="analyzeCompetitor()" style="padding: 10px 20px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                    <button onclick="generateKeywords()" style="padding: 10px 20px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
                         🔄 다시 시도
                     </button>
                 </div>
             `;
-            showToast('분석 중 오류가 발생했습니다', 'error');
+            showToast('키워드 추천 중 오류가 발생했습니다', 'error');
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '🔍 경쟁 블로그 분석 시작';
+            btn.innerHTML = '🔑 AI 키워드 추천 받기';
         }
     }
 
-    function displayResults(analysis) {
-        const container = document.getElementById('resultsContainer');
+    function displayKeywords(keywords) {
+        const container = document.getElementById('keywordsContainer');
         
-        // 복사용 텍스트 저장
-        analysisData = JSON.stringify(analysis, null, 2);
+        let html = '<button class="copy-all-btn" onclick="copyAllKeywords()">📋 모든 키워드 한번에 복사하기</button>';
+        html += '<div class="keywords-grid">';
         
-        let html = '';
+        keywords.forEach((item, index) => {
+            const difficultyClass = item.difficulty === 'low' ? 'difficulty-low' : 
+                                  item.difficulty === 'medium' ? 'difficulty-medium' : 'difficulty-high';
+            const difficultyText = item.difficulty === 'low' ? '쉬움' : 
+                                 item.difficulty === 'medium' ? '보통' : '어려움';
+            
+            html += `
+                <div class="keyword-card" style="animation-delay: ${index * 0.05}s">
+                    <div class="keyword-text">${item.keyword}</div>
+                    <div class="keyword-meta">
+                        <span class="keyword-badge">🔍 ${item.search_volume || '검색량 높음'}</span>
+                        <span class="difficulty-badge ${difficultyClass}">⚡ ${difficultyText}</span>
+                    </div>
+                    <button class="copy-keyword-btn" onclick="copyKeyword(this, '${item.keyword.replace(/'/g, "\\'")}')">
+                        📋 복사하기
+                    </button>
+                </div>
+            `;
+        });
         
-        // 기본 정보
-        html += '<div class="analysis-section">';
-        html += '<div class="section-title">📋 블로그 기본 정보</div>';
-        html += '<div class="metrics-grid">';
-        html += `<div class="metric-card"><div class="metric-value">${analysis.metrics?.total_posts || 'N/A'}</div><div class="metric-label">총 포스팅 수</div></div>`;
-        html += `<div class="metric-card"><div class="metric-value">${analysis.metrics?.avg_length || 'N/A'}</div><div class="metric-label">평균 글자 수</div></div>`;
-        html += `<div class="metric-card"><div class="metric-value">${analysis.metrics?.posting_frequency || 'N/A'}</div><div class="metric-label">포스팅 빈도</div></div>`;
-        html += '</div></div>';
-        
-        // 강점 분석
-        if (analysis.strengths && analysis.strengths.length > 0) {
-            html += '<div class="analysis-section">';
-            html += '<div class="section-title">💪 경쟁 블로그의 강점</div>';
-            html += '<ul class="insight-list">';
-            analysis.strengths.forEach(s => {
-                html += `<li class="insight-item">${s}</li>`;
-            });
-            html += '</ul></div>';
-        }
-        
-        // 약점 분석
-        if (analysis.weaknesses && analysis.weaknesses.length > 0) {
-            html += '<div class="analysis-section">';
-            html += '<div class="section-title">🎯 경쟁 블로그의 약점 (기회 요소)</div>';
-            html += '<ul class="insight-list">';
-            analysis.weaknesses.forEach(w => {
-                html += `<li class="insight-item">${w}</li>`;
-            });
-            html += '</ul></div>';
-        }
-        
-        // 승리 전략
-        if (analysis.strategy) {
-            html += '<div class="strategy-box">';
-            html += '<div class="strategy-title">🏆 승리 전략</div>';
-            html += `<div class="strategy-text">${analysis.strategy}</div>`;
-            html += '</div>';
-        }
-        
+        html += '</div>';
         container.innerHTML = html;
     }
+
+    // Enter로 키워드 생성
+    document.getElementById('topicInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') generateKeywords();
+    });
 </script>
 {% endblock %}
 

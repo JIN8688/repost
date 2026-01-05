@@ -476,10 +476,10 @@
         `;
 
         try {
-            const response = await fetch('/api/analyze-competitors', {
+            const response = await fetch('/api/analyze-competitor', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ keyword: url })
+                body: JSON.stringify({ url })
             });
 
             if (!response.ok) {

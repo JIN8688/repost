@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}경쟁 블로그 분석 - Repost{% endblock %}
+{% block title %}AI 글쓰기 도우미 - Repost{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -61,9 +61,21 @@
     }
 
     .container {
-        max-width: 1200px;
+        max-width: 1400px;
         margin: 0 auto;
         padding: 0 20px 80px;
+    }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     .glass-card {
@@ -77,12 +89,6 @@
                     0 0 0 1px rgba(255, 255, 255, 0.5),
                     inset 0 1px 0 rgba(255, 255, 255, 0.8);
         margin-bottom: 30px;
-        animation: fadeInUp 0.8s ease-out;
-    }
-
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .card-title {
@@ -130,7 +136,43 @@
         color: #94a3b8;
     }
 
-    .analyze-btn {
+    textarea.input-field {
+        resize: vertical;
+        min-height: 150px;
+    }
+
+    .mode-selector {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .mode-option {
+        padding: 14px 16px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        color: #475569;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .mode-option:hover {
+        background: #f8fafc;
+        transform: translateY(-2px);
+    }
+
+    .mode-option.active {
+        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        border-color: #8b5cf6;
+        color: white;
+        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    }
+
+    .generate-btn {
         width: 100%;
         padding: 16px;
         background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
@@ -144,12 +186,12 @@
         box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
     }
 
-    .analyze-btn:hover:not(:disabled) {
+    .generate-btn:hover:not(:disabled) {
         transform: translateY(-3px);
         box-shadow: 0 12px 32px rgba(139, 92, 246, 0.5);
     }
 
-    .analyze-btn:disabled {
+    .generate-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
     }
@@ -178,91 +220,16 @@
         background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
     }
 
-    .analysis-section {
-        margin-bottom: 30px;
-    }
-
-    .section-title {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #1a1a2e;
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-
-    .metric-card {
+    .output-container {
         background: #f8fafc;
         border: 2px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 20px;
-        text-align: center;
-        transition: all 0.3s ease;
-    }
-
-    .metric-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .metric-value {
-        font-size: 2rem;
-        font-weight: 800;
-        color: #8b5cf6;
-        margin-bottom: 5px;
-    }
-
-    .metric-label {
-        font-size: 0.9rem;
-        color: #64748b;
-        font-weight: 600;
-    }
-
-    .insight-list {
-        list-style: none;
-        padding: 0;
-    }
-
-    .insight-item {
-        background: #f8fafc;
-        border-left: 4px solid #8b5cf6;
-        padding: 15px 20px;
-        margin-bottom: 12px;
-        border-radius: 8px;
-        font-weight: 500;
-        color: #475569;
-    }
-
-    .strategy-box {
-        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        border: 2px solid #fbbf24;
         border-radius: 18px;
-        padding: 25px;
-        margin-top: 20px;
-    }
-
-    .strategy-title {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #92400e;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .strategy-text {
-        color: #78350f;
-        font-weight: 500;
-        line-height: 1.7;
+        padding: 30px;
+        min-height: 400px;
+        line-height: 1.8;
+        color: #1a1a2e;
+        font-size: 1.05rem;
+        white-space: pre-wrap;
     }
 
     .loading {
@@ -342,7 +309,11 @@
         }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 968px) {
+        .main-grid {
+            grid-template-columns: 1fr;
+        }
+        
         .page-header {
             padding: 40px 20px 30px;
         }
@@ -351,8 +322,8 @@
             padding: 24px;
         }
         
-        .metrics-grid {
-            grid-template-columns: repeat(2, 1fr);
+        .mode-selector {
+            grid-template-columns: 1fr;
         }
         
         .toast {
@@ -366,48 +337,80 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>🔍 경쟁 블로그 분석<span class="tier-badge">💎 PRO</span></h1>
-    <p>경쟁 블로그를 분석하고 이길 수 있는 전략을 AI가 제시합니다</p>
+    <h1>✍️ AI 글쓰기 도우미<span class="tier-badge">💎 PRO</span></h1>
+    <p>전문 블로거처럼 자연스럽고 매력적인 글을 AI가 작성합니다</p>
 </div>
 
 <div class="container">
-    <!-- 📝 입력 섹션 -->
-    <div class="glass-card">
-        <h2 class="card-title">
-            <span>🎯</span>
-            경쟁 블로그 URL 입력
-        </h2>
-        
-        <div class="input-group">
-            <label class="input-label">경쟁 블로그 URL</label>
-            <input type="text" 
-                   id="urlInput" 
-                   class="input-field" 
-                   placeholder="예: https://blog.naver.com/...">
+    <div class="main-grid">
+        <!-- 📝 입력 섹션 -->
+        <div class="glass-card">
+            <h2 class="card-title">
+                <span>📝</span>
+                글쓰기 설정
+            </h2>
+            
+            <div class="input-group">
+                <label class="input-label">모드 선택</label>
+                <div class="mode-selector">
+                    <div class="mode-option active" data-mode="generate">✨ 새 글 작성</div>
+                    <div class="mode-option" data-mode="improve">🔧 기존 글 개선</div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">주제 또는 키워드</label>
+                <input type="text" 
+                       id="topicInput" 
+                       class="input-field" 
+                       placeholder="예: 강남 파스타 맛집 리뷰">
+            </div>
+
+            <div class="input-group" id="contentGroup" style="display: none;">
+                <label class="input-label">개선할 글</label>
+                <textarea id="contentInput" 
+                          class="input-field" 
+                          placeholder="개선하고 싶은 글을 붙여넣으세요..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">추가 요청사항 (선택)</label>
+                <textarea id="requestInput" 
+                          class="input-field" 
+                          placeholder="예: 친근한 말투로, 맛 중심으로 설명, 가격 정보 포함"
+                          style="min-height: 100px;"></textarea>
+            </div>
+
+            <button id="generateBtn" class="generate-btn" onclick="generateContent()">
+                ✨ AI 글쓰기 시작
+            </button>
         </div>
 
-        <button id="analyzeBtn" class="analyze-btn" onclick="analyzeCompetitor()">
-            🔍 경쟁 블로그 분석 시작
-        </button>
-    </div>
+        <!-- 📊 결과 섹션 -->
+        <div class="glass-card">
+            <h2 class="card-title">
+                <span>📄</span>
+                생성된 글
+            </h2>
 
-    <!-- 📊 결과 섹션 -->
-    <div class="glass-card" id="resultsCard" style="display: none;">
-        <h2 class="card-title">
-            <span>📈</span>
-            분석 결과
-        </h2>
+            <div id="outputContainer" class="output-container">
+                <div class="empty-state">
+                    <div class="empty-icon">✍️</div>
+                    <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; color: #1a1a2e;">아직 생성된 글이 없습니다</div>
+                    <div style="font-size: 0.95rem; opacity: 0.7;">왼쪽에서 주제를 입력하고 생성을 시작하세요</div>
+                </div>
+            </div>
 
-        <div id="resultsContainer"></div>
-
-        <button id="copyBtn" class="copy-btn" onclick="copyResults()">
-            📋 분석 결과 복사하기
-        </button>
+            <button id="copyBtn" class="copy-btn" onclick="copyContent()" style="display: none;">
+                📋 생성된 글 복사하기
+            </button>
+        </div>
     </div>
 </div>
 
 <script>
-    let analysisData = '';
+    let selectedMode = 'generate';
+    let generatedText = '';
 
     // Toast 알림
     function showToast(message, type = 'info') {
@@ -441,45 +444,65 @@
         });
     }
 
-    // 결과 복사
-    function copyResults() {
+    // 모드 선택
+    document.querySelectorAll('.mode-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.mode-option').forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+            selectedMode = option.dataset.mode;
+            
+            const contentGroup = document.getElementById('contentGroup');
+            contentGroup.style.display = selectedMode === 'improve' ? 'block' : 'none';
+        });
+    });
+
+    // 글 복사
+    function copyContent() {
         const button = document.getElementById('copyBtn');
-        copyToClipboard(analysisData, button, '분석 결과가 복사되었습니다!');
+        copyToClipboard(generatedText, button, '생성된 글이 복사되었습니다!');
     }
 
-    async function analyzeCompetitor() {
-        const url = document.getElementById('urlInput').value.trim();
-        const btn = document.getElementById('analyzeBtn');
-        const resultsCard = document.getElementById('resultsCard');
-        const container = document.getElementById('resultsContainer');
+    async function generateContent() {
+        const topic = document.getElementById('topicInput').value.trim();
+        const content = document.getElementById('contentInput').value.trim();
+        const request = document.getElementById('requestInput').value.trim();
+        const btn = document.getElementById('generateBtn');
+        const container = document.getElementById('outputContainer');
+        const copyBtn = document.getElementById('copyBtn');
 
-        if (!url) {
-            showToast('경쟁 블로그 URL을 입력해주세요!', 'error');
-            document.getElementById('urlInput').focus();
+        if (!topic) {
+            showToast('주제를 입력해주세요!', 'error');
+            document.getElementById('topicInput').focus();
             return;
         }
 
-        if (!url.includes('blog.naver.com')) {
-            showToast('네이버 블로그 URL을 입력해주세요!', 'error');
+        if (selectedMode === 'improve' && !content) {
+            showToast('개선할 글을 입력해주세요!', 'error');
+            document.getElementById('contentInput').focus();
             return;
         }
 
         btn.disabled = true;
-        btn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">🔍</span> 경쟁 블로그 분석 중...';
-        resultsCard.style.display = 'block';
+        btn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">✨</span> AI가 글을 작성하는 중...';
+        copyBtn.style.display = 'none';
         container.innerHTML = `
             <div class="loading">
                 <div class="spinner"></div>
-                <div class="loading-text">AI가 경쟁 블로그를 분석하고 있습니다...</div>
+                <div class="loading-text">전문 블로거처럼 글을 작성하고 있습니다...</div>
                 <div style="color: #94a3b8; font-size: 0.9rem; margin-top: 10px;">잠시만 기다려주세요 (최대 30초)</div>
             </div>
         `;
 
         try {
-            const response = await fetch('/api/analyze-competitors', {
+            const endpoint = selectedMode === 'generate' ? '/api/generate-content' : '/api/improve-content';
+            const payload = selectedMode === 'generate' 
+                ? { topic, request }
+                : { content, request };
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ keyword: url })
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) {
@@ -489,78 +512,30 @@
             const data = await response.json();
 
             if (data.success) {
-                displayResults(data.analysis);
-                showToast('경쟁 블로그 분석이 완료되었습니다!', 'success');
+                generatedText = data.content;
+                container.innerHTML = generatedText;
+                copyBtn.style.display = 'block';
+                showToast('글 작성이 완료되었습니다!', 'success');
             } else {
-                throw new Error(data.error || '분석 실패');
+                throw new Error(data.error || '글 생성 실패');
             }
         } catch (error) {
-            console.error('분석 오류:', error);
+            console.error('생성 오류:', error);
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">❌</div>
-                    <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; color: #dc2626;">분석 중 오류가 발생했습니다</div>
+                    <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; color: #dc2626;">글 생성 중 오류가 발생했습니다</div>
                     <div style="font-size: 0.95rem; opacity: 0.7; margin-bottom: 20px;">${error.message}</div>
-                    <button onclick="analyzeCompetitor()" style="padding: 10px 20px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                    <button onclick="generateContent()" style="padding: 10px 20px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
                         🔄 다시 시도
                     </button>
                 </div>
             `;
-            showToast('분석 중 오류가 발생했습니다', 'error');
+            showToast('글 생성 중 오류가 발생했습니다', 'error');
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '🔍 경쟁 블로그 분석 시작';
+            btn.innerHTML = '✨ AI 글쓰기 시작';
         }
-    }
-
-    function displayResults(analysis) {
-        const container = document.getElementById('resultsContainer');
-        
-        // 복사용 텍스트 저장
-        analysisData = JSON.stringify(analysis, null, 2);
-        
-        let html = '';
-        
-        // 기본 정보
-        html += '<div class="analysis-section">';
-        html += '<div class="section-title">📋 블로그 기본 정보</div>';
-        html += '<div class="metrics-grid">';
-        html += `<div class="metric-card"><div class="metric-value">${analysis.metrics?.total_posts || 'N/A'}</div><div class="metric-label">총 포스팅 수</div></div>`;
-        html += `<div class="metric-card"><div class="metric-value">${analysis.metrics?.avg_length || 'N/A'}</div><div class="metric-label">평균 글자 수</div></div>`;
-        html += `<div class="metric-card"><div class="metric-value">${analysis.metrics?.posting_frequency || 'N/A'}</div><div class="metric-label">포스팅 빈도</div></div>`;
-        html += '</div></div>';
-        
-        // 강점 분석
-        if (analysis.strengths && analysis.strengths.length > 0) {
-            html += '<div class="analysis-section">';
-            html += '<div class="section-title">💪 경쟁 블로그의 강점</div>';
-            html += '<ul class="insight-list">';
-            analysis.strengths.forEach(s => {
-                html += `<li class="insight-item">${s}</li>`;
-            });
-            html += '</ul></div>';
-        }
-        
-        // 약점 분석
-        if (analysis.weaknesses && analysis.weaknesses.length > 0) {
-            html += '<div class="analysis-section">';
-            html += '<div class="section-title">🎯 경쟁 블로그의 약점 (기회 요소)</div>';
-            html += '<ul class="insight-list">';
-            analysis.weaknesses.forEach(w => {
-                html += `<li class="insight-item">${w}</li>`;
-            });
-            html += '</ul></div>';
-        }
-        
-        // 승리 전략
-        if (analysis.strategy) {
-            html += '<div class="strategy-box">';
-            html += '<div class="strategy-title">🏆 승리 전략</div>';
-            html += `<div class="strategy-text">${analysis.strategy}</div>`;
-            html += '</div>';
-        }
-        
-        container.innerHTML = html;
     }
 </script>
 {% endblock %}

@@ -2859,15 +2859,20 @@ def analyze_competitors():
     """🔍 경쟁 블로그 분석 API"""
     try:
         data = request.get_json()
-        keyword = data.get('keyword', '')
+        url = data.get('keyword', '')  # 'keyword' 파라미터로 URL을 받음 (호환성)
         
-        if not keyword:
-            return jsonify({'error': 'keyword is required'}), 400
+        if not url:
+            return jsonify({'error': 'URL is required'}), 400
         
-        # 상위 블로그 분석 (시뮬레이션 - 실제로는 검색 API 필요)
-        analysis = analyze_top_blogs(keyword)
+        # URL에서 블로그 내용 크롤링
+        blog_data = scrape_blog(url)
+        if not blog_data or not blog_data.get('content'):
+            return jsonify({'error': '블로그 내용을 가져올 수 없습니다'}), 400
         
-        log(f"🔍 경쟁 블로그 분석 완료: {keyword}", "COMPETITOR")
+        # AI로 블로그 분석
+        analysis = analyze_competitor_blog_with_ai(blog_data)
+        
+        log(f"🔍 경쟁 블로그 분석 완료: {url}", "COMPETITOR")
         
         return jsonify({
             'success': True,
@@ -2882,6 +2887,76 @@ def analyze_competitors():
             'success': False,
             'error': str(e)
         }), 500
+
+def analyze_competitor_blog_with_ai(blog_data):
+    """AI로 경쟁 블로그 분석"""
+    try:
+        title = blog_data.get('title', '')
+        content = blog_data.get('content', '')
+        
+        # 기본 메트릭 계산
+        word_count = len(content)
+        paragraph_count = len([p for p in content.split('\n\n') if p.strip()])
+        
+        # AI 분석 프롬프트
+        prompt = f"""다음 블로그 글을 분석하고, JSON 형식으로 결과를 제공하세요.
+
+제목: {title}
+본문: {content[:2000]}... (총 {word_count}자)
+
+분석 항목:
+1. 이 블로그의 주요 강점 3-5가지
+2. 이 블로그의 약점 또는 개선점 3-5가지
+3. 이 블로그를 이기기 위한 구체적인 전략
+
+JSON 형식:
+{{
+    "metrics": {{
+        "total_posts": "추정값",
+        "avg_length": "{word_count}자",
+        "posting_frequency": "추정 빈도"
+    }},
+    "strengths": ["강점1", "강점2", "강점3"],
+    "weaknesses": ["약점1", "약점2", "약점3"],
+    "strategy": "구체적인 승리 전략 (200자 이상)"
+}}"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "당신은 블로그 마케팅 전문가입니다. 경쟁 블로그를 분석하고 실행 가능한 전략을 제시합니다."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.7
+        )
+        
+        result = json.loads(response.choices[0].message.content)
+        log(f"✅ AI 경쟁 블로그 분석 완료", "COMPETITOR")
+        
+        return result
+        
+    except Exception as e:
+        log(f"❌ AI 분석 실패, 기본 분석 사용: {e}", "ERROR")
+        # AI 실패 시 기본 분석
+        return {
+            "metrics": {
+                "total_posts": "N/A",
+                "avg_length": f"{len(content)}자",
+                "posting_frequency": "N/A"
+            },
+            "strengths": [
+                "체계적인 글 구성",
+                "풍부한 정보 제공",
+                "독자 친화적인 문체"
+            ],
+            "weaknesses": [
+                "SEO 최적화 개선 필요",
+                "시각 자료 보강 필요",
+                "독창성 향상 가능"
+            ],
+            "strategy": "경쟁 블로그보다 더 상세한 정보와 실용적인 팁을 제공하고, SEO를 강화하여 검색 노출을 높이세요. 독자들이 궁금해하는 질문에 먼저 답하는 방식으로 차별화하세요."
+        }
 
 def analyze_top_blogs(keyword):
     """상위 블로그 분석 (시뮬레이션)"""
