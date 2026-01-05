@@ -25,6 +25,22 @@
             // 📊 백엔드: 블로그 이동 이벤트
             trackEvent('blog_visit', { url: currentBlogUrl.slice(0, 100) });
             
+            // 🎁 행동 보상: 블로그 방문 시 +1회 (1일 1회만)
+            const visitBonusKey = 'visit_bonus_' + new Date().toDateString();
+            if (!localStorage.getItem(visitBonusKey)) {
+                usageCounter.addBonus('블로그 방문', 1, 7);
+                localStorage.setItem(visitBonusKey, 'true');
+                
+                // 보너스 알림
+                if (bonusSystem) {
+                    bonusSystem.showToast(
+                        '보너스 획득! 🎁',
+                        '블로그 방문으로 +1회 추가!',
+                        'success'
+                    );
+                }
+            }
+            
             // 카카오톡/인앱 브라우저 감지
             const isInAppBrowser = /KAKAOTALK|Messenger|Instagram|Line|NAVER/.test(navigator.userAgent);
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -216,6 +232,15 @@
         }
 
         async function analyzeBlog() {
+            // 🎯 사용 횟수 체크
+            const usageCheck = usageCounter.decrementUsage();
+            
+            if (!usageCheck.success) {
+                // 사용 횟수 초과 - 업그레이드 팝업 표시
+                showUpgradePopup('limit_reached');
+                return;
+            }
+            
             const url = document.getElementById('blogUrl').value.trim();
             const analyzeBtn = document.getElementById('analyzeBtn');
             const loading = document.getElementById('loading');
@@ -385,6 +410,24 @@
                 
                 // 📊 백엔드: 댓글 복사 이벤트
                 trackEvent('comment_copied', { comment: text.slice(0, 50) });
+                
+                // 🎁 행동 보상: 댓글 복사 시 +2회 (1일 1회만)
+                const copyBonusKey = 'copy_bonus_' + new Date().toDateString();
+                if (!localStorage.getItem(copyBonusKey)) {
+                    usageCounter.addBonus('댓글 복사', 2, 7);
+                    localStorage.setItem(copyBonusKey, 'true');
+                    
+                    // 보너스 알림
+                    setTimeout(() => {
+                        if (bonusSystem) {
+                            bonusSystem.showToast(
+                                '보너스 획득! 🎁',
+                                '댓글 복사로 +2회 추가!',
+                                'success'
+                            );
+                        }
+                    }, 1000);
+                }
 
                 // 💬 댓글 복사 후 3초 뒤 피드백 위젯 표시
                 setTimeout(() => {
