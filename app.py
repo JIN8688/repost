@@ -3360,6 +3360,82 @@ def login_page():
     """로그인 페이지"""
     return render_template('login.html')
 
+@app.route('/forgot-password')
+def forgot_password_page():
+    """비밀번호 찾기 페이지"""
+    return render_template('forgot-password.html')
+
+@app.route('/api/forgot-password', methods=['POST'])
+def forgot_password():
+    """비밀번호 찾기 - 임시 비밀번호 발송"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip().lower()
+        
+        if not email:
+            return jsonify({'success': False, 'error': '이메일을 입력해주세요'}), 400
+        
+        # 사용자 확인
+        user = db.get_user_by_email(email)
+        
+        if not user:
+            # 보안을 위해 사용자가 없어도 성공 메시지 반환 (이메일 탐색 방지)
+            return jsonify({
+                'success': True,
+                'message': '등록된 이메일이면 임시 비밀번호가 발송됩니다'
+            }), 200
+        
+        # OAuth 사용자는 비밀번호 재설정 불가
+        if user.get('oauth_provider'):
+            return jsonify({
+                'success': False,
+                'error': f'{user["oauth_provider"].title()} 로그인 사용자입니다. 소셜 로그인을 이용해주세요.'
+            }), 400
+        
+        # 임시 비밀번호 생성 (8자리 영문+숫자)
+        import random
+        import string
+        temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+        
+        # 임시 비밀번호로 업데이트
+        import bcrypt
+        password_hash = bcrypt.hashpw(temp_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        conn = db.get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE users
+            SET password_hash = %s
+            WHERE email = %s
+        """, (password_hash, email))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        # 이메일 발송 (실제 프로덕션에서는 이메일 서비스 사용)
+        log(f"📧 임시 비밀번호 발송: {email} / {temp_password}", "AUTH")
+        
+        # TODO: 실제 이메일 발송 구현 (SendGrid, AWS SES 등)
+        # send_email(email, "임시 비밀번호", f"임시 비밀번호: {temp_password}")
+        
+        # 개발 중에는 콘솔에 출력
+        print(f"\n{'='*50}")
+        print(f"📧 임시 비밀번호 (개발 모드)")
+        print(f"이메일: {email}")
+        print(f"임시 비밀번호: {temp_password}")
+        print(f"{'='*50}\n")
+        
+        return jsonify({
+            'success': True,
+            'message': '임시 비밀번호가 이메일로 발송되었습니다',
+            # 개발 모드에서만 임시 비밀번호 반환
+            'temp_password': temp_password if os.getenv('FLASK_ENV') == 'development' else None
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 비밀번호 찾기 실패: {e}", "ERROR")
+        return jsonify({'success': False, 'error': '서버 오류가 발생했습니다'}), 500
+
 @app.route('/login', methods=['POST'])
 def login():
     """로그인"""

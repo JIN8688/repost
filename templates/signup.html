@@ -497,8 +497,8 @@
             <div class="form-group">
                 <label class="form-label">비밀번호</label>
                 <div class="input-wrapper">
-                    <input type="password" id="password" class="form-input" placeholder="8자 이상, 영문+숫자 조합" required>
-                    <span class="input-icon" id="passwordIcon"></span>
+                    <input type="password" id="password" class="form-input" placeholder="8자 이상, 영문+숫자 조합" required style="padding-right: 50px;">
+                    <span class="input-icon password-toggle" id="passwordToggle" onclick="togglePasswordVisibility('password', 'passwordToggle')" style="cursor: pointer;">👁️</span>
                 </div>
                 <div class="password-strength" id="passwordStrength">
                     <div class="strength-bar">
@@ -507,6 +507,16 @@
                     <div class="strength-text" id="strengthText"></div>
                 </div>
                 <div class="error-message" id="passwordError"></div>
+            </div>
+
+            <!-- 비밀번호 확인 -->
+            <div class="form-group">
+                <label class="form-label">비밀번호 확인</label>
+                <div class="input-wrapper">
+                    <input type="password" id="passwordConfirm" class="form-input" placeholder="비밀번호를 다시 입력하세요" required style="padding-right: 50px;">
+                    <span class="input-icon password-toggle" id="passwordConfirmToggle" onclick="togglePasswordVisibility('passwordConfirm', 'passwordConfirmToggle')" style="cursor: pointer;">👁️</span>
+                </div>
+                <div class="error-message" id="passwordConfirmError"></div>
             </div>
 
             <!-- 약관 동의 -->
@@ -665,6 +675,55 @@ document.querySelectorAll('.term-checkbox').forEach(cb => {
     });
 });
 
+// 비밀번호 보기/숨기기 토글
+function togglePasswordVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = '🙈'; // 숨기기
+    } else {
+        input.type = 'password';
+        icon.textContent = '👁️'; // 보기
+    }
+}
+
+// 비밀번호 일치 확인
+document.getElementById('passwordConfirm').addEventListener('input', (e) => {
+    const password = document.getElementById('password').value;
+    const passwordConfirm = e.target.value;
+    const errorElement = document.getElementById('passwordConfirmError');
+    const input = e.target;
+    
+    if (passwordConfirm.length === 0) {
+        errorElement.textContent = '';
+        input.classList.remove('error', 'success');
+        return;
+    }
+    
+    if (password === passwordConfirm) {
+        errorElement.textContent = '✓ 비밀번호가 일치합니다';
+        errorElement.style.color = '#10b981';
+        input.classList.remove('error');
+        input.classList.add('success');
+    } else {
+        errorElement.textContent = '✗ 비밀번호가 일치하지 않습니다';
+        errorElement.style.color = '#ef4444';
+        input.classList.remove('success');
+        input.classList.add('error');
+    }
+});
+
+// 비밀번호 변경 시에도 확인란 검증
+document.getElementById('password').addEventListener('input', (e) => {
+    const passwordConfirm = document.getElementById('passwordConfirm').value;
+    if (passwordConfirm.length > 0) {
+        // 비밀번호 확인란에 input 이벤트 트리거
+        document.getElementById('passwordConfirm').dispatchEvent(new Event('input'));
+    }
+});
+
 // 소셜 로그인
 function socialLogin(provider) {
     // OAuth 인증 페이지로 리다이렉트
@@ -678,6 +737,7 @@ async function handleSignup(e) {
     const name = document.getElementById('name').value.trim();
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('passwordConfirm').value;
     const terms = document.getElementById('terms').checked;
     const privacy = document.getElementById('privacy').checked;
     const marketing = document.getElementById('marketing').checked;
@@ -691,6 +751,12 @@ async function handleSignup(e) {
     // 비밀번호 검증
     if (password.length < 8) {
         showToast('비밀번호 오류', '비밀번호는 8자 이상이어야 합니다', 'error');
+        return;
+    }
+    
+    // 비밀번호 일치 확인
+    if (password !== passwordConfirm) {
+        showToast('비밀번호 불일치', '비밀번호와 비밀번호 확인이 일치하지 않습니다', 'error');
         return;
     }
     
