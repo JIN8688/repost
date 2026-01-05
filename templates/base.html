@@ -37,11 +37,24 @@
             font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding-top: var(--header-height);
+        }
+
+        /* 모바일에서만 body padding */
+        @media (max-width: 768px) {
+            body {
+                padding-top: var(--header-height);
+            }
+        }
+
+        /* PC에서 비메인 페이지에만 padding */
+        @media (min-width: 769px) {
+            body:not(.main-page) {
+                padding-top: var(--header-height);
+            }
         }
 
         /* ============================================
-           🌐 구글 스타일 헤더 - Hidden & Show on Scroll
+           🌐 구글 스타일 헤더 - PC & 모바일 분리
         ============================================ */
         .main-header {
             position: fixed;
@@ -61,6 +74,35 @@
         .main-header.visible {
             transform: translateY(0);
             opacity: 1;
+        }
+
+        /* 모바일 헤더 - 완전 불투명 & 완전 분리 */
+        @media (max-width: 768px) {
+            .main-header {
+                background: #ffffff;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            .nav-link {
+                color: var(--text-dark);
+            }
+
+            .nav-link:hover {
+                background: rgba(102, 126, 234, 0.1);
+            }
+
+            .nav-link.active {
+                background: rgba(102, 126, 234, 0.15);
+                color: #667eea;
+            }
+
+            .mobile-menu-btn span {
+                background: var(--text-dark);
+            }
         }
 
         .header-container {
@@ -198,14 +240,15 @@
             top: var(--header-height);
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--header-border);
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             padding: 20px;
             opacity: 0;
             transform: translateY(-20px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
+            max-height: calc(100vh - var(--header-height));
+            overflow-y: auto;
         }
 
         .mobile-menu.show {
@@ -451,9 +494,14 @@
     </footer>
 
     <script>
+        // 페이지 타입에 따른 body 클래스 추가
+        const isMainPage = window.location.pathname === '/';
+        if (isMainPage) {
+            document.body.classList.add('main-page');
+        }
+
         // 스크롤 시 헤더 표시 로직
         const header = document.getElementById('mainHeader');
-        const isMainPage = window.location.pathname === '/';
         const isMobile = window.innerWidth <= 768;
         
         if (isMainPage && !isMobile) {

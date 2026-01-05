@@ -582,9 +582,17 @@ button:disabled {
    9. 반응형 (모바일)
    =========================================== */
 @media (max-width: 768px) {
+    body {
+        padding-top: var(--header-height);
+    }
+
     .container {
-        padding: 10px 20px 35px;
+        padding: 0 20px 35px;
         margin: 0 auto;
+        min-height: calc(100vh - var(--header-height));
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
     .header h1 {
