@@ -490,7 +490,23 @@
                     <input type="email" id="email" class="form-input" placeholder="example@email.com" required>
                     <span class="input-icon" id="emailIcon"></span>
                 </div>
+                <button type="button" class="btn-verification" id="sendCodeBtn" onclick="sendVerificationCode()" style="margin-top: 10px; width: 100%; padding: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">
+                    📧 인증 코드 발송
+                </button>
                 <div class="error-message" id="emailError"></div>
+            </div>
+
+            <!-- 이메일 인증 코드 -->
+            <div class="form-group" id="verificationGroup" style="display: none;">
+                <label class="form-label">인증 코드 (6자리)</label>
+                <div class="input-wrapper">
+                    <input type="text" id="verificationCode" class="form-input" placeholder="123456" maxlength="6" pattern="\d{6}">
+                    <span class="input-icon" id="verificationIcon"></span>
+                </div>
+                <button type="button" class="btn-verification" id="verifyCodeBtn" onclick="verifyEmailCode()" style="margin-top: 10px; width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">
+                    ✓ 인증 확인
+                </button>
+                <div class="error-message" id="verificationError"></div>
             </div>
 
             <!-- 비밀번호 -->
@@ -675,6 +691,9 @@ document.querySelectorAll('.term-checkbox').forEach(cb => {
     });
 });
 
+// 전역 변수
+let isEmailVerified = false;
+
 // 비밀번호 보기/숨기기 토글
 function togglePasswordVisibility(inputId, iconId) {
     const input = document.getElementById(inputId);
@@ -686,6 +705,114 @@ function togglePasswordVisibility(inputId, iconId) {
     } else {
         input.type = 'password';
         icon.textContent = '👁️'; // 보기
+    }
+}
+
+// 이메일 인증 코드 발송
+async function sendVerificationCode() {
+    const email = document.getElementById('email').value.trim();
+    const sendCodeBtn = document.getElementById('sendCodeBtn');
+    const emailError = document.getElementById('emailError');
+    
+    // 이메일 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        emailError.textContent = '올바른 이메일 형식이 아닙니다';
+        emailError.style.color = '#ef4444';
+        return;
+    }
+    
+    sendCodeBtn.disabled = true;
+    sendCodeBtn.textContent = '발송 중...';
+    
+    try {
+        const response = await fetch('/api/send-verification-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('발송 완료!', data.message, 'success');
+            document.getElementById('verificationGroup').style.display = 'block';
+            emailError.textContent = '✓ 인증 코드가 발송되었습니다';
+            emailError.style.color = '#10b981';
+            
+            // 이메일 입력 비활성화
+            document.getElementById('email').disabled = true;
+            
+            // 버튼 텍스트 변경
+            sendCodeBtn.textContent = '✓ 발송 완료';
+            sendCodeBtn.style.background = '#94a3b8';
+        } else {
+            showToast('오류', data.error, 'error');
+            emailError.textContent = data.error;
+            emailError.style.color = '#ef4444';
+            sendCodeBtn.disabled = false;
+            sendCodeBtn.textContent = '📧 인증 코드 발송';
+        }
+    } catch (error) {
+        console.error('인증 코드 발송 오류:', error);
+        showToast('오류', '서버 오류가 발생했습니다', 'error');
+        sendCodeBtn.disabled = false;
+        sendCodeBtn.textContent = '📧 인증 코드 발송';
+    }
+}
+
+// 이메일 인증 코드 확인
+async function verifyEmailCode() {
+    const email = document.getElementById('email').value.trim();
+    const code = document.getElementById('verificationCode').value.trim();
+    const verifyCodeBtn = document.getElementById('verifyCodeBtn');
+    const verificationError = document.getElementById('verificationError');
+    const verificationIcon = document.getElementById('verificationIcon');
+    
+    if (!code || code.length !== 6) {
+        verificationError.textContent = '6자리 인증 코드를 입력해주세요';
+        verificationError.style.color = '#ef4444';
+        return;
+    }
+    
+    verifyCodeBtn.disabled = true;
+    verifyCodeBtn.textContent = '확인 중...';
+    
+    try {
+        const response = await fetch('/api/verify-email-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('인증 완료!', data.message, 'success');
+            verificationError.textContent = '✓ 이메일 인증이 완료되었습니다';
+            verificationError.style.color = '#10b981';
+            verificationIcon.textContent = '✓';
+            verificationIcon.style.color = '#10b981';
+            
+            // 인증 완료 플래그
+            isEmailVerified = true;
+            
+            // 인증 코드 입력 비활성화
+            document.getElementById('verificationCode').disabled = true;
+            verifyCodeBtn.textContent = '✓ 인증 완료';
+            verifyCodeBtn.style.background = '#94a3b8';
+        } else {
+            showToast('오류', data.error, 'error');
+            verificationError.textContent = data.error;
+            verificationError.style.color = '#ef4444';
+            verifyCodeBtn.disabled = false;
+            verifyCodeBtn.textContent = '✓ 인증 확인';
+        }
+    } catch (error) {
+        console.error('이메일 인증 오류:', error);
+        showToast('오류', '서버 오류가 발생했습니다', 'error');
+        verifyCodeBtn.disabled = false;
+        verifyCodeBtn.textContent = '✓ 인증 확인';
     }
 }
 
@@ -741,6 +868,12 @@ async function handleSignup(e) {
     const terms = document.getElementById('terms').checked;
     const privacy = document.getElementById('privacy').checked;
     const marketing = document.getElementById('marketing').checked;
+    
+    // 이메일 인증 확인
+    if (!isEmailVerified) {
+        showToast('이메일 인증 필요', '이메일 인증을 완료해주세요', 'error');
+        return;
+    }
     
     // 필수 약관 체크
     if (!terms || !privacy) {

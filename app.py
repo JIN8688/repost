@@ -16,10 +16,11 @@ import pytz
 import hashlib
 import hmac
 
-# 🚀 Neon PostgreSQL & OAuth
+# 🚀 Neon PostgreSQL & OAuth & Email
 from database import db
 from oauth import init_oauth, get_google_user_info, get_kakao_user_info, get_naver_user_info
 from auth_decorators import login_required, check_usage_limit
+from email_utils import send_verification_email, send_password_reset_email, send_welcome_email, generate_verification_code, generate_temp_password
 
 # 🇰🇷 한국 시간대 설정
 KST = pytz.timezone('Asia/Seoul')
@@ -3313,6 +3314,99 @@ def login_required_user(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# =====================================
+# 📧 이메일 인증
+# =====================================
+
+@app.route('/api/send-verification-code', methods=['POST'])
+def send_verification_code():
+    """이메일 인증 코드 발송"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip().lower()
+        
+        if not email:
+            return jsonify({'success': False, 'error': '이메일을 입력해주세요'}), 400
+        
+        # 이메일 형식 검증
+        import re
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_regex, email):
+            return jsonify({'success': False, 'error': '올바른 이메일 형식이 아닙니다'}), 400
+        
+        # 이메일 중복 체크
+        existing_user = db.get_user_by_email(email)
+        if existing_user:
+            return jsonify({'success': False, 'error': '이미 가입된 이메일입니다'}), 400
+        
+        # 인증 코드 생성
+        verification_code = generate_verification_code()
+        
+        # Redis에 저장 (10분 유효)
+        redis_client.setex(
+            f'verification:{email}',
+            600,  # 10분
+            verification_code
+        )
+        
+        # 이메일 발송
+        send_verification_email(email, verification_code)
+        
+        log(f"✅ 인증 코드 발송: {email}", "EMAIL")
+        
+        return jsonify({
+            'success': True,
+            'message': '인증 코드가 발송되었습니다. 이메일을 확인해주세요.'
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 인증 코드 발송 실패: {e}", "ERROR")
+        return jsonify({'success': False, 'error': '서버 오류가 발생했습니다'}), 500
+
+@app.route('/api/verify-email-code', methods=['POST'])
+def verify_email_code():
+    """이메일 인증 코드 검증"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip().lower()
+        code = data.get('code', '').strip()
+        
+        if not email or not code:
+            return jsonify({'success': False, 'error': '이메일과 인증 코드를 입력해주세요'}), 400
+        
+        # Redis에서 저장된 코드 가져오기
+        stored_code = redis_client.get(f'verification:{email}')
+        
+        if not stored_code:
+            return jsonify({'success': False, 'error': '인증 코드가 만료되었습니다. 다시 발송해주세요.'}), 400
+        
+        stored_code = stored_code.decode() if isinstance(stored_code, bytes) else stored_code
+        
+        # 코드 검증
+        if stored_code != code:
+            return jsonify({'success': False, 'error': '인증 코드가 일치하지 않습니다'}), 400
+        
+        # 검증 성공 - 인증 완료 플래그 저장 (30분 유효)
+        redis_client.setex(
+            f'verified:{email}',
+            1800,  # 30분
+            'true'
+        )
+        
+        # 사용된 인증 코드 삭제
+        redis_client.delete(f'verification:{email}')
+        
+        log(f"✅ 이메일 인증 성공: {email}", "EMAIL")
+        
+        return jsonify({
+            'success': True,
+            'message': '이메일 인증이 완료되었습니다!'
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 이메일 인증 실패: {e}", "ERROR")
+        return jsonify({'success': False, 'error': '서버 오류가 발생했습니다'}), 500
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     """회원가입 (일반 + OAuth)"""
@@ -3333,6 +3427,15 @@ def signup():
         if not password or len(password) < 8:
             return jsonify({'success': False, 'error': '비밀번호는 8자 이상이어야 합니다'}), 400
         
+        # 이메일 인증 확인
+        verified = redis_client.get(f'verified:{email}')
+        if not verified:
+            return jsonify({
+                'success': False, 
+                'error': '이메일 인증이 필요합니다',
+                'need_verification': True
+            }), 400
+        
         # 이메일 중복 체크
         existing_user = db.get_user_by_email(email)
         if existing_user:
@@ -3343,6 +3446,15 @@ def signup():
         
         if not user:
             return jsonify({'success': False, 'error': '회원가입에 실패했습니다. 다시 시도해주세요'}), 500
+        
+        # 인증 완료 플래그 삭제
+        redis_client.delete(f'verified:{email}')
+        
+        # 환영 이메일 발송 (비동기로 실행하면 더 좋지만 일단 동기로)
+        try:
+            send_welcome_email(email, name)
+        except Exception as e:
+            log(f"⚠️ 환영 이메일 발송 실패: {e}", "WARNING")
         
         log(f"✅ 회원가입 성공: {email}", "AUTH")
         
@@ -3392,10 +3504,8 @@ def forgot_password():
                 'error': f'{user["oauth_provider"].title()} 로그인 사용자입니다. 소셜 로그인을 이용해주세요.'
             }), 400
         
-        # 임시 비밀번호 생성 (8자리 영문+숫자)
-        import random
-        import string
-        temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+        # 임시 비밀번호 생성
+        temp_password = generate_temp_password()
         
         # 임시 비밀번호로 업데이트
         import bcrypt
@@ -3412,24 +3522,14 @@ def forgot_password():
         cur.close()
         conn.close()
         
-        # 이메일 발송 (실제 프로덕션에서는 이메일 서비스 사용)
-        log(f"📧 임시 비밀번호 발송: {email} / {temp_password}", "AUTH")
+        # 이메일 발송
+        send_password_reset_email(email, temp_password)
         
-        # TODO: 실제 이메일 발송 구현 (SendGrid, AWS SES 등)
-        # send_email(email, "임시 비밀번호", f"임시 비밀번호: {temp_password}")
-        
-        # 개발 중에는 콘솔에 출력
-        print(f"\n{'='*50}")
-        print(f"📧 임시 비밀번호 (개발 모드)")
-        print(f"이메일: {email}")
-        print(f"임시 비밀번호: {temp_password}")
-        print(f"{'='*50}\n")
+        log(f"📧 임시 비밀번호 발송: {email}", "AUTH")
         
         return jsonify({
             'success': True,
-            'message': '임시 비밀번호가 이메일로 발송되었습니다',
-            # 개발 모드에서만 임시 비밀번호 반환
-            'temp_password': temp_password if os.getenv('FLASK_ENV') == 'development' else None
+            'message': '임시 비밀번호가 이메일로 발송되었습니다'
         }), 200
     
     except Exception as e:
