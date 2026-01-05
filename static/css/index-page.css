@@ -752,7 +752,7 @@ button:disabled {
     }
 
     input[type="text"] {
-        padding: 14px 16px;
+        padding: 17px 16px;
         width: 100%;
         flex: 1 1 100%;
         order: 1;
@@ -770,7 +770,7 @@ button:disabled {
 
     #analyzeBtn {
         flex: 1 !important;
-        padding: 14px 20px;
+        padding: 12px 20px;
         order: 3;
     }
 
