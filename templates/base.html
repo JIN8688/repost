@@ -255,15 +255,19 @@
             position: fixed;
             top: 70px;
             right: 12px;
-            width: 280px;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            padding: 16px;
+            width: 300px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 20px;
+            box-shadow: 
+                0 20px 60px rgba(102, 126, 234, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.7);
+            padding: 8px;
             opacity: 0;
-            transform: translateY(-10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(-10px) scale(0.95);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             pointer-events: none;
             z-index: 999;
             max-height: calc(100vh - 90px);
@@ -273,25 +277,91 @@
         .mobile-menu.show {
             display: block;
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
             pointer-events: all;
         }
 
         .mobile-menu-item {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 12px;
             padding: 14px 16px;
             text-decoration: none;
             color: var(--text-dark);
-            font-weight: 500;
+            font-weight: 600;
             font-size: 0.95rem;
-            border-radius: 10px;
+            border-radius: 12px;
             margin-bottom: 4px;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mobile-menu-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-menu-item:hover::before {
+            opacity: 1;
         }
 
         .mobile-menu-item:hover {
-            background: rgba(102, 126, 234, 0.1);
-            color: var(--primary);
+            background: rgba(102, 126, 234, 0.08);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .mobile-menu-item:active {
+            transform: translateX(4px) scale(0.98);
+        }
+
+        .menu-icon {
+            font-size: 1.3rem;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .menu-text {
+            flex: 1;
+        }
+
+        /* 구분선 */
+        .menu-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.1) 50%, transparent 100%);
+            margin: 8px 12px;
+        }
+
+        /* Primary 버튼 (무료 시작하기) */
+        .mobile-menu-item-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 700;
+            margin-top: 4px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .mobile-menu-item-primary::before {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+        }
+
+        .mobile-menu-item-primary:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+            transform: translateX(4px) translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
         }
 
         .mobile-menu-item:last-child {
@@ -602,15 +672,39 @@
 
     <!-- 모바일 메뉴 -->
     <div class="mobile-menu" id="mobileMenu">
-        <a href="/" class="mobile-menu-item">홈</a>
-        <a href="/tools" class="mobile-menu-item">블로거 도구</a>
-        <a href="/pricing" class="mobile-menu-item">요금제</a>
+        <a href="/" class="mobile-menu-item">
+            <span class="menu-icon">🏠</span>
+            <span class="menu-text">홈</span>
+        </a>
+        <a href="/tools" class="mobile-menu-item">
+            <span class="menu-icon">🛠️</span>
+            <span class="menu-text">블로거 도구</span>
+        </a>
+        <a href="/pricing" class="mobile-menu-item">
+            <span class="menu-icon">💎</span>
+            <span class="menu-text">요금제</span>
+        </a>
+        
+        <div class="menu-divider"></div>
+        
         {% if session.get('user_id') %}
-        <a href="/mypage" class="mobile-menu-item">마이페이지</a>
-        <a href="/logout" class="mobile-menu-item">로그아웃</a>
+        <a href="/mypage" class="mobile-menu-item">
+            <span class="menu-icon">👤</span>
+            <span class="menu-text">마이페이지</span>
+        </a>
+        <a href="/logout" class="mobile-menu-item">
+            <span class="menu-icon">🚪</span>
+            <span class="menu-text">로그아웃</span>
+        </a>
         {% else %}
-        <a href="/login-page" class="mobile-menu-item">로그인</a>
-        <a href="/signup" class="mobile-menu-item">무료 시작하기</a>
+        <a href="/login-page" class="mobile-menu-item">
+            <span class="menu-icon">🔐</span>
+            <span class="menu-text">로그인</span>
+        </a>
+        <a href="/signup" class="mobile-menu-item mobile-menu-item-primary">
+            <span class="menu-icon">✨</span>
+            <span class="menu-text">무료 시작하기</span>
+        </a>
         {% endif %}
     </div>
 
