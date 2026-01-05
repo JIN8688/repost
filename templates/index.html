@@ -101,34 +101,6 @@
             <p class="section-description-large">블로그 링크만 입력하면 <span class="break-mobile">자연스러운 <br class="mobile-only"><span class="highlight-ai">AI 댓글</span></span> 8개를 바로 생성해드립니다</p>
         </div>
         
-        <!-- 🎯 사용 횟수 표시 (하단 중앙 플로팅 버튼) -->
-        <div class="usage-counter-floating" id="usageCounter" onclick="showUsageDetail()" style="
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 14px 32px;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
-            backdrop-filter: blur(20px);
-            border-radius: 50px;
-            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        " onmouseover="this.style.transform='translateX(-50%) translateY(-4px)'; this.style.boxShadow='0 12px 40px rgba(102, 126, 234, 0.5)'" onmouseout="this.style.transform='translateX(-50%) translateY(0)'; this.style.boxShadow='0 8px 32px rgba(102, 126, 234, 0.4)'">
-            <span style="font-size: 1.5rem;">💎</span>
-            <span id="remainingCount" style="
-                font-size: 1.3rem;
-                font-weight: 700;
-                color: white;
-            ">
-                -- 회남음
-            </span>
-        </div>
-        
         <div class="input-section">
             <div class="input-group">
                 <input 
@@ -206,6 +178,34 @@
     </div>
 </div>
 
+<!-- 🎯 사용 횟수 표시 (하단 중앙 플로팅 버튼 - 박스 밖) -->
+<div class="usage-counter-floating" id="usageCounter" onclick="showUsageDetail()" style="
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 24px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+    backdrop-filter: blur(20px);
+    border-radius: 50px;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+" onmouseover="this.style.transform='translateX(-50%) translateY(-4px)'; this.style.boxShadow='0 12px 40px rgba(102, 126, 234, 0.5)'" onmouseout="this.style.transform='translateX(-50%) translateY(0)'; this.style.boxShadow='0 8px 32px rgba(102, 126, 234, 0.4)'">
+    <span style="font-size: 1.2rem;">💎</span>
+    <span id="remainingCount" style="
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: white;
+    ">
+        -- 회남음
+    </span>
+</div>
+
 <!-- 🎁 보너스 시스템 모달 -->
 <div id="bonusModals"></div>
 {% endblock %}
@@ -221,13 +221,13 @@
     @media (max-width: 768px) {
         .usage-counter-floating {
             bottom: 20px !important;
-            padding: 12px 24px !important;
+            padding: 10px 20px !important;
         }
         .usage-counter-floating span:first-child {
-            font-size: 1.3rem !important;
+            font-size: 1.1rem !important;
         }
         #remainingCount {
-            font-size: 1.1rem !important;
+            font-size: 1rem !important;
         }
     }
 </style>
