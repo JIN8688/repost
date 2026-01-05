@@ -31,10 +31,13 @@
         `;
 
         try {
+            // 🔑 마스터 계정 확인
+            const isAdmin = localStorage.getItem('repost_admin') === 'true';
+            
             const response = await fetch('/api/generate-titles', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, keywords, style: selectedStyle })
+                body: JSON.stringify({ text, keywords, style: selectedStyle, isAdmin })
             });
 
             const data = await response.json();
@@ -106,10 +109,13 @@
         `;
 
         try {
+            // 🔑 마스터 계정 확인
+            const isAdmin = localStorage.getItem('repost_admin') === 'true';
+            
             const response = await fetch('/api/evaluate-title', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title })
+                body: JSON.stringify({ title, isAdmin })
             });
 
             const data = await response.json();

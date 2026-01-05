@@ -22,10 +22,13 @@
         `;
 
         try {
+            // 🔑 마스터 계정 확인
+            const isAdmin = localStorage.getItem('repost_admin') === 'true';
+            
             const response = await fetch('/api/check-seo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, text, keywords, image_count: imageCount })
+                body: JSON.stringify({ title, text, keywords, image_count: imageCount, isAdmin })
             });
 
             const data = await response.json();

@@ -20,12 +20,15 @@
         `;
 
         try {
+            // 🔑 마스터 계정 확인
+            const isAdmin = localStorage.getItem('repost_admin') === 'true';
+            
             const response = await fetch('/api/analyze-text', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ text, title })
+                body: JSON.stringify({ text, title, isAdmin })
             });
 
             const data = await response.json();

@@ -7,9 +7,12 @@
         btn.disabled = true; btn.textContent = '🔍 분석 중...';
         container.innerHTML = '<div class="glass-card"><div class="loading"><div class="spinner"></div><div class="loading-text">최적의 키워드를 찾고 있습니다...</div></div></div>';
         try {
+            // 🔑 마스터 계정 확인
+            const isAdmin = localStorage.getItem('repost_admin') === 'true';
+            
             const response = await fetch('/api/recommend-keywords', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ topic })
+                body: JSON.stringify({ topic, isAdmin })
             });
             const data = await response.json();
             if (data.success) { displayResults(data.keywords); }

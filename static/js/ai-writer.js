@@ -85,6 +85,9 @@
         `;
 
         try {
+            // 🔑 마스터 계정 확인
+            const isAdmin = localStorage.getItem('repost_admin') === 'true';
+            
             const response = await fetch('/api/generate-content', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -93,7 +96,8 @@
                     keywords,
                     tone: selectedTone,
                     structure: selectedStructure,
-                    word_count: wordCount
+                    word_count: wordCount,
+                    isAdmin
                 })
             });
 
