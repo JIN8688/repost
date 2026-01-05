@@ -458,8 +458,8 @@
         window.addEventListener('scroll', () => {
             const currentScroll = window.pageYOffset;
             
-            // 100px 이상 스크롤하면 헤더 표시
-            if (currentScroll > 100) {
+            // 30px 이상 스크롤하면 헤더 즉시 표시
+            if (currentScroll > 30) {
                 header.classList.add('visible');
             } else {
                 header.classList.remove('visible');
