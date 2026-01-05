@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}리포스트 - AI 블로그 댓글 자동 추천 | 무료 댓글 생성{% endblock %}
+
+{% block extra_css %}
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PWN8T3SZVW"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    
+    // GA4 설정 (디버그 모드 활성화)
+    gtag('config', 'G-PWN8T3SZVW', {
+        'debug_mode': true,
+        'send_page_view': true
+    });
+    
+    console.log('✅ GA4 초기화 완료: G-PWN8T3SZVW');
+    
+    // 즉시 테스트 이벤트 전송
+    gtag('event', 'page_load', {
+        'event_category': 'engagement',
+        'event_label': 'initial_load',
+        'value': 1
+    });
+    console.log('📊 GA4 테스트 이벤트 전송: page_load');
+</script>
+
+<!-- SEO 메타 태그 -->
+<meta name="description" content="네이버 블로그 링크를 넣으면 AI가 알맞은 댓글을 자동으로 추천해드립니다. 블로그 네트워킹을 쉽고 빠르게! 무료로 사용해보세요.">
+<meta name="keywords" content="리포스트, repost, 블로그 댓글, AI 댓글, 네이버 블로그, 댓글 추천, 자동 댓글, 블로그 네트워킹, 댓글 생성기">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<link rel="canonical" href="https://repost.kr">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://repost.kr">
+<meta property="og:site_name" content="리포스트">
+<meta property="og:title" content="리포스트 - AI 블로그 댓글 자동 추천">
+<meta property="og:description" content="블로그 링크만 넣으면 AI가 자동으로 댓글을 추천해드립니다. 블로그 네트워킹을 쉽고 빠르게!">
+
+<!-- 🎊 Confetti 라이브러리 -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+<!-- 🎁 보너스 시스템 CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bonus-system.css') }}">
+
+<!-- 🎨 페이지 전용 CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index-page.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- 구조화된 데이터 (JSON-LD) for SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "리포스트",
+  "alternateName": "Repost",
+  "url": "https://repost.kr",
+  "logo": "{{ url_for('static', filename='images/logo-og.png', _external=True) }}",
+  "description": "AI 기반 블로그 댓글 자동 추천 서비스. 네이버 블로그 링크를 넣으면 자동으로 적절한 댓글을 생성해드립니다.",
+  "applicationCategory": "ProductivityApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "KRW"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": "127"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Repost",
+    "url": "https://repost.kr"
+  },
+  "inLanguage": "ko-KR",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://repost.kr/?url={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+<div class="container">
+    <div class="header">
+        <h1>Repost</h1>
+        <p class="tagline">블로그 댓글 자동 추천, 읽은 척은 이제 그만<br>AI가 진짜 읽고 자연스러운 댓글을 만들어드립니다</p>
+        <p class="subtitle">블로그 네트워킹의 시간을 90% 줄이는 AI 비서</p>
+    </div>
+
+    <!-- 🎨 블로거 도구 섹션 -->
+    <div class="blogger-tools-section">
+        <div class="tools-header">
+            <h2>🛠️ 블로거 필수 도구</h2>
+            <p>글쓰기부터 SEO까지, 블로거가 필요한 모든 도구를 한 곳에</p>
+        </div>
+        <div class="tools-grid">
+            <a href="/tools/text-analyzer" class="tool-card">
+                <div class="tool-icon">📊</div>
+                <h3>텍스트 분석기</h3>
+                <p>키워드 밀도, 글자수, 가독성을 실시간으로 분석</p>
+                <div class="tool-badge">무료</div>
+            </a>
+            <a href="/tools/title-generator" class="tool-card">
+                <div class="tool-icon">💡</div>
+                <h3>제목 생성기</h3>
+                <p>AI가 클릭율 높은 제목 10개를 즉시 생성</p>
+                <div class="tool-badge">인기</div>
+            </a>
+            <a href="/tools/seo-checker" class="tool-card">
+                <div class="tool-icon">🎯</div>
+                <h3>SEO 점수 체커</h3>
+                <p>검색 최적화 점수와 개선 방법을 자동 분석</p>
+                <div class="tool-badge">NEW</div>
+            </a>
+            <a href="/tools/ai-writer" class="tool-card">
+                <div class="tool-icon">✍️</div>
+                <h3>AI 글쓰기 도우미</h3>
+                <p>주제만 입력하면 AI가 블로그 초안을 자동 작성</p>
+                <div class="tool-badge">PRO</div>
+            </a>
+            <a href="/tools/competitor-analyzer" class="tool-card">
+                <div class="tool-icon">🔍</div>
+                <h3>경쟁 블로그 분석</h3>
+                <p>상위 블로그를 분석하여 개선 방법 제시</p>
+                <div class="tool-badge">PRO</div>
+            </a>
+            <a href="/tools/keyword-recommender" class="tool-card">
+                <div class="tool-icon">🔑</div>
+                <h3>키워드 추천</h3>
+                <p>검색량과 난이도 기반 최적 키워드 추천</p>
+                <div class="tool-badge">PRO</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- 하얀 배경 컨텐츠 영역 -->
+    <div class="content-wrapper">
+        <div class="input-section">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="blogUrl" 
+                    placeholder="네이버 블로그 URL을 입력하세요 (예: https://blog.naver.com/...)"
+                >
+                <button onclick="resetInput()" id="resetBtn" class="reset-btn" title="입력란 초기화">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px; color: #1a1a2e;">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                    </svg>
+                </button>
+                <button onclick="analyzeBlog()" id="analyzeBtn">
+                    분석하기
+                </button>
+            </div>
+        </div>
+
+        <!-- 3가지 강점 -->
+        <div class="features">
+            <div class="feature-card">
+                <span class="feature-icon">⚡</span>
+                <div class="feature-title">3초면 충분</div>
+                <div class="feature-desc">URL만 붙여넣으면<br>AI가 알아서 분석</div>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🎯</span>
+                <div class="feature-title">진짜처럼</div>
+                <div class="feature-desc">블로그 내용 읽고<br>맞춤 댓글 8개</div>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">💯</span>
+                <div class="feature-title">완벽한 UX</div>
+                <div class="feature-desc">복사→이동→댓글<br>원스톱으로 끝!</div>
+            </div>
+        </div>
+
+        <div class="error" id="errorMsg"></div>
+
+        <!-- 로딩 섹션 -->
+        <div class="loading" id="loading">
+            <div class="loading-animation">
+                <span class="cute-robot">🤖</span>
+                <div class="thinking-dots">
+                    <span>💭</span>
+                    <span>💭</span>
+                    <span>💭</span>
+                </div>
+            </div>
+            
+            <div class="loading-progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="loading-step" id="loadingStep">블로그 내용을 읽고 있어요... 📖</div>
+            <div class="loading-tip" id="loadingTip">💡 댓글을 복사한 후 바로 블로그로 이동할 수 있어요!</div>
+        </div>
+
+        <!-- 블로그 정보 -->
+        <div class="blog-info" id="blogInfo">
+            <h3 id="blogTitle"></h3>
+            <p id="blogContent"></p>
+        </div>
+
+        <!-- 블로그 이동 버튼 -->
+        <button class="go-to-blog-btn" id="goToBlogBtn" onclick="goToBlog()">
+            이 블로그로 이동하기 <span>🔗</span>
+        </button>
+
+        <!-- 댓글 섹션 -->
+        <div class="comments-section" id="commentsSection">
+            <div class="comments-header">✨ AI가 만든 맞춤 댓글</div>
+            <div id="commentsList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 💬 Quick 피드백 위젯 -->
+<div class="feedback-widget" id="feedbackWidget">
+    <button class="feedback-close" onclick="closeFeedbackWidget()">✕</button>
+    
+    <div class="feedback-header" id="feedbackMessage">
+        <div class="feedback-icon">🎉</div>
+        <div class="feedback-title">Repost가 도움이 되셨나요?</div>
+        <p class="feedback-subtitle">솔직한 의견을 들려주세요</p>
+    </div>
+    
+    <div class="feedback-buttons">
+        <button class="feedback-btn" onclick="submitQuickFeedback(5)">
+            <span class="emoji">😍</span>
+            <span class="label">최고예요</span>
+        </button>
+        <button class="feedback-btn" onclick="submitQuickFeedback(4)">
+            <span class="emoji">😊</span>
+            <span class="label">좋아요</span>
+        </button>
+        <button class="feedback-btn" onclick="submitQuickFeedback(3)">
+            <span class="emoji">😐</span>
+            <span class="label">보통</span>
+        </button>
+        <button class="feedback-btn" onclick="submitQuickFeedback(2)">
+            <span class="emoji">😕</span>
+            <span class="label">별로예요</span>
+        </button>
+    </div>
+</div>
+
+<!-- 🎁 보너스 시스템 모달 -->
+<div id="bonusModals"></div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 🚀 페이지 전용 JavaScript -->
+<script src="{{ url_for('static', filename='js/index-page.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bonus-system.js') }}"></script>
+{% endblock %}
+
