@@ -29,11 +29,25 @@ Repost/
 │   │   ├── common.css         # ✨ 공통 스타일 (전역 변수, 유틸리티)
 │   │   ├── header.css         # ✨ 헤더 전용 스타일
 │   │   ├── footer.css         # ✨ 풋터 전용 스타일
-│   │   ├── main.css           # ✨ 메인 페이지 전용 스타일
+│   │   ├── main.css           # ✨ 공통 컴포넌트 스타일
+│   │   ├── index-page.css     # ✨ 메인 페이지 전용 스타일
+│   │   ├── analytics.css      # ✨ 분석 대시보드 스타일
+│   │   ├── text-analyzer.css  # ✨ 텍스트 분석기 스타일
+│   │   ├── ai-writer.css      # ✨ AI 글쓰기 스타일
+│   │   ├── seo-checker.css    # ✨ SEO 체커 스타일
+│   │   ├── title-generator.css # ✨ 제목 생성기 스타일
+│   │   ├── keyword-recommender.css # ✨ 키워드 추천 스타일
 │   │   └── bonus-system.css   # 보너스 시스템 스타일
 │   │
 │   ├── js/
-│   │   ├── common.js          # ✨ 공통 JavaScript (헤더, 유틸리티)
+│   │   ├── common.js          # ✨ 공통 JavaScript (유틸리티)
+│   │   ├── index-page.js      # ✨ 메인 페이지 로직
+│   │   ├── analytics.js       # ✨ 분석 대시보드 로직
+│   │   ├── text-analyzer.js   # ✨ 텍스트 분석기 로직
+│   │   ├── ai-writer.js       # ✨ AI 글쓰기 로직
+│   │   ├── seo-checker.js     # ✨ SEO 체커 로직
+│   │   ├── title-generator.js # ✨ 제목 생성기 로직
+│   │   ├── keyword-recommender.js # ✨ 키워드 추천 로직
 │   │   └── bonus-system.js    # 보너스 시스템 로직
 │   │
 │   └── images/                # 이미지 파일
