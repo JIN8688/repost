@@ -41,55 +41,46 @@
         }
 
         /* ============================================
-           🌐 구글 스타일 헤더 - Borderless One-Page
+           🌐 구글 스타일 헤더 - Floating Transparent
         ============================================ */
         .main-header {
-            position: relative;
-            height: auto;
-            background: transparent;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px) saturate(150%);
+            -webkit-backdrop-filter: blur(10px) saturate(150%);
             z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .header-container {
             max-width: 1400px;
             margin: 0 auto;
             height: 100%;
-            padding: 20px max(24px, env(safe-area-inset-right));
+            padding: 0 max(24px, env(safe-area-inset-right));
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end;
             gap: 20px;
         }
 
-        /* 로고 */
+        /* 로고 숨김 */
         .header-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            transition: transform 0.2s ease;
-        }
-
-        .header-logo:hover {
-            transform: scale(1.05);
+            display: none;
         }
 
         .logo-icon {
-            font-size: 1.8rem;
+            display: none;
         }
 
-        /* 네비게이션 - 오른쪽 정렬 */
+        /* 네비게이션 */
         .header-nav {
             display: flex;
             align-items: center;
             gap: 4px;
-            margin-left: auto;
         }
 
         .nav-link {
@@ -329,7 +320,8 @@
            🎨 콘텐츠 영역
         ============================================ */
         .main-content {
-            min-height: calc(100vh - 400px);
+            min-height: calc(100vh - var(--header-height) - 400px);
+            padding-top: var(--header-height);
         }
 
         /* ============================================
