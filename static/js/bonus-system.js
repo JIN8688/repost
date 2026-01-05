@@ -1347,19 +1347,19 @@ function setupSecretCodeAccess() {
     let clickCount = 0;
     let clickTimer = null;
     
-    console.log('🔍 로고 요소 찾는 중...');
+    console.log('🔍 메인 페이지 로고 요소 찾는 중...');
     
-    // 헤더의 실제 로고 링크 요소 찾기
-    const logo = document.querySelector('.header-logo');
+    // 메인 페이지의 큰 Repost 로고 찾기
+    const logo = document.querySelector('.header h1');
     
     if (!logo) {
-        console.warn('⚠️ 로고 요소를 찾을 수 없습니다. 1초 후 재시도...');
+        console.warn('⚠️ 메인 로고 요소를 찾을 수 없습니다. 1초 후 재시도...');
         // DOM 로드 후 재시도
         setTimeout(setupSecretCodeAccess, 1000);
         return;
     }
     
-    console.log('✅ 헤더 로고 발견:', logo);
+    console.log('✅ 메인 페이지 로고 발견:', logo);
     console.log('✅ 시크릿 코드 시스템 활성화: 로고를 3초 안에 5번 클릭하세요');
     
     // 클릭 가능하도록 스타일 설정
@@ -1381,14 +1381,14 @@ function setupSecretCodeAccess() {
         
         // 5번 클릭 완료
         if (clickCount === 5) {
-            e.preventDefault(); // 5번째 클릭일 때만 페이지 이동 막기
+            e.preventDefault();
             e.stopPropagation();
             clearTimeout(clickTimer);
             clickCount = 0;
             console.log('🔐 시크릿 코드 모달 표시!');
             showSecretCodeModal();
         }
-    }, true); // capture 모드로 우선 처리
+    }, true);
     
     console.log('🎯 이벤트 리스너 등록 완료!');
 }
