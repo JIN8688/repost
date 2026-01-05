@@ -41,34 +41,20 @@
         }
 
         /* ============================================
-           🍎 iOS 스타일 헤더 (Fixed Navigation)
+           🌐 구글 스타일 헤더 - Borderless One-Page
         ============================================ */
         .main-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: var(--header-height);
-            background: var(--header-bg);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid var(--header-border);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            position: relative;
+            height: auto;
+            background: transparent;
             z-index: 1000;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .main-header.scrolled {
-            background: rgba(255, 255, 255, 0.6);
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         .header-container {
             max-width: 1400px;
             margin: 0 auto;
             height: 100%;
-            padding: 0 max(24px, env(safe-area-inset-right));
+            padding: 20px max(24px, env(safe-area-inset-right));
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -247,15 +233,12 @@
         }
 
         /* ============================================
-           🍎 iOS 스타일 풋터 - Frosted Glass
+           🌐 구글 스타일 풋터 - Borderless
         ============================================ */
         .main-footer {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: saturate(180%) blur(20px);
-            -webkit-backdrop-filter: saturate(180%) blur(20px);
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            background: transparent;
             margin-top: 80px;
-            padding: 60px 20px 40px;
+            padding: 50px 20px 35px;
         }
 
         .footer-container {
@@ -273,12 +256,12 @@
             gap: 10px;
             font-size: 1.5rem;
             font-weight: 700;
-            color: white;
+            color: rgba(255, 255, 255, 0.9);
             margin-bottom: 12px;
         }
 
         .footer-tagline {
-            color: rgba(255, 255, 255, 0.75);
+            color: rgba(255, 255, 255, 0.7);
             font-size: 0.95rem;
             line-height: 1.5;
             margin: 0 0 20px 0;
@@ -346,7 +329,7 @@
            🎨 콘텐츠 영역
         ============================================ */
         .main-content {
-            min-height: calc(100vh - var(--header-height) - 400px);
+            min-height: calc(100vh - 400px);
         }
 
         /* ============================================
@@ -468,21 +451,7 @@
     </footer>
 
     <script>
-        // 스크롤시 헤더 스타일 변경
-        let lastScroll = 0;
-        const header = document.getElementById('mainHeader');
-
-        window.addEventListener('scroll', () => {
-            const currentScroll = window.pageYOffset;
-            
-            if (currentScroll > 50) {
-                header.classList.add('scrolled');
-            } else {
-                header.classList.remove('scrolled');
-            }
-            
-            lastScroll = currentScroll;
-        });
+        // 구글 스타일 - 스크롤 이벤트 제거 (원페이지 디자인)
 
         // 모바일 메뉴 토글
         function toggleMobileMenu() {
