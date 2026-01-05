@@ -327,6 +327,18 @@ input[type="text"] {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
+input[type="text"]::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+    font-weight: 400;
+}
+
+/* 모바일에서 placeholder 글자 크기 줄여서 더 많이 보이게 */
+@media (max-width: 768px) {
+    input[type="text"]::placeholder {
+        font-size: 0.75rem;
+    }
+}
+
 input[type="text"]:focus {
     outline: none;
     box-shadow: 0 6px 30px rgba(102, 126, 234, 0.3);
