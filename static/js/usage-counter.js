@@ -89,6 +89,17 @@ class UsageCounter {
 
     // 남은 횟수 계산
     getRemainingCount() {
+        // 🔑 마스터 계정: 무제한 사용
+        if (localStorage.getItem('repost_admin') === 'true') {
+            return {
+                total: 9999,
+                base: 9999,
+                bonus: 0,
+                limit: 9999,
+                isMaster: true
+            };
+        }
+        
         const data = this.getUsageData();
         
         // 기본 사용 가능 횟수
@@ -111,7 +122,8 @@ class UsageCounter {
             total: baseRemaining + bonusRemaining,
             base: baseRemaining,
             bonus: bonusRemaining,
-            limit: data.baseLimit
+            limit: data.baseLimit,
+            isMaster: false
         };
     }
 
@@ -122,14 +134,28 @@ class UsageCounter {
         
         const counterEl = document.getElementById('remainingCount');
         if (counterEl) {
-            counterEl.textContent = `${remaining.total} 회남음`;
+            if (remaining.isMaster) {
+                counterEl.textContent = `9999 회남음`;
+                console.log('🔑 마스터 계정: 무제한 사용 (9999회)');
+            } else {
+                counterEl.textContent = `${remaining.total} 회남음`;
+                console.log(`🎯 남은 횟수: ${remaining.total}회 (기본: ${remaining.base}, 보너스: ${remaining.bonus})`);
+            }
         }
-        
-        console.log(`🎯 남은 횟수: ${remaining.total}회 (기본: ${remaining.base}, 보너스: ${remaining.bonus})`);
     }
 
     // 사용 횟수 차감
     decrementUsage() {
+        // 🔑 마스터 계정: 사용 횟수 차감 안 함
+        if (localStorage.getItem('repost_admin') === 'true') {
+            console.log('🔑 마스터 계정: 무제한 사용 (차감 안 함)');
+            return {
+                success: true,
+                remaining: 9999,
+                isMaster: true
+            };
+        }
+        
         const data = this.getUsageData();
         const remaining = this.getRemainingCount();
         
