@@ -1246,20 +1246,21 @@ function setupSecretCodeAccess() {
     let clickTimer = null;
     
     // 로고 요소 찾기
-    const logo = document.querySelector('.logo-text') || document.querySelector('h1') || document.querySelector('[onclick*="location.reload"]');
+    const logo = document.querySelector('.logo-text') || document.querySelector('.header-logo') || document.querySelector('h1');
     
     if (!logo) {
         console.warn('⚠️ 로고 요소를 찾을 수 없습니다');
         return;
     }
     
-    console.log('✅ 시크릿 코드 시스템 활성화: 로고를 3초 안에 5번 클릭하세요');
+    console.log('✅ 시크릿 코드 시스템 활성화: 로고를 3초 안에 5번 클릭하세요', logo);
     
     logo.style.cursor = 'pointer';
     logo.style.userSelect = 'none';
     
     logo.addEventListener('click', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         clickCount++;
         console.log(`🖱️ 클릭 ${clickCount}/5`);
         
