@@ -231,9 +231,19 @@ body {
 }
 
 .highlight-ai {
-    color: #fbbf24;
+    color: #ec4899;
     font-weight: 700;
-    text-shadow: 0 2px 8px rgba(251, 191, 36, 0.5);
+    text-shadow: 0 2px 8px rgba(236, 72, 153, 0.5);
+}
+
+.mobile-only {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-only {
+        display: inline;
+    }
 }
 
 /* ===========================================
