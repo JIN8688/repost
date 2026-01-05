@@ -454,24 +454,25 @@
         }
 
         .footer-grid {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 80px;
-            margin-bottom: 50px;
-            padding: 0 60px;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+            gap: 80px !important;
+            margin-bottom: 50px !important;
+            padding: 0 60px !important;
         }
 
         /* 우측 섹션들 */
         .footer-sections {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 50px;
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 50px !important;
         }
 
         /* 브랜드 섹션 */
         .footer-brand {
-            max-width: 350px;
+            max-width: 350px !important;
+            flex-shrink: 0 !important;
         }
 
         .footer-logo {
@@ -511,7 +512,19 @@
 
         /* 풋터 섹션 */
         .footer-section {
-            min-width: 0;
+            min-width: 0 !important;
+        }
+        
+        /* 반응형 - 1024px 이하에서도 3컬럼 유지 (PC) */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .footer-grid {
+                gap: 40px !important;
+                padding: 0 30px !important;
+            }
+            
+            .footer-sections {
+                gap: 30px !important;
+            }
         }
 
         .footer-title {
