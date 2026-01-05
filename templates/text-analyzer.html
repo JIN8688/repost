@@ -190,6 +190,30 @@
         font-size: 0.85rem;
         margin-top: 12px;
     }
+    
+    .copy-result-btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        border-radius: 14px;
+        color: white;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        margin-bottom: 20px;
+    }
+    
+    .copy-result-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    }
+    
+    .copy-result-btn.copied {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    }
 
     .results-section {
         display: flex;
@@ -644,10 +668,45 @@
         }
     }
 
+    // 공통 복사 함수
+    function copyToClipboard(text, button, successMessage = '복사 완료!') {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '복사됨! ✓';
+            button.classList.add('copied');
+            
+            showToast(successMessage, 'success');
+            
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('copied');
+            }, 2000);
+        }).catch(err => {
+            showToast('복사에 실패했습니다', 'error');
+            console.error('복사 오류:', err);
+        });
+    }
+    
+    // 전체 결과 복사
+    function copyAllResults() {
+        const resultsDiv = document.getElementById('resultsContainer');
+        const textContent = resultsDiv.innerText;
+        
+        const button = event.target;
+        copyToClipboard(textContent, button, '분석 결과가 복사되었습니다!');
+    }
+
     function displayResults(analysis) {
         const resultsContainer = document.getElementById('resultsContainer');
         
         let html = '<div class="results-section">';
+        
+        // 전체 복사 버튼
+        html += `
+            <button class="copy-result-btn" onclick="copyAllResults()">
+                📋 전체 결과 복사하기
+            </button>
+        `;
 
         // 1️⃣ 가독성 점수
         html += `
