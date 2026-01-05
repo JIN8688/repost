@@ -3802,7 +3802,7 @@ def create_payment():
         # 플랜 정보
         plans = {
             'basic': {'name': '베이직 플랜', 'price': 9900},
-            'pro': {'name': '프로 플랜', 'price': 19900}
+            'pro': {'name': '프로 플랜', 'price': 29900}
         }
         
         plan_info = plans[plan]
