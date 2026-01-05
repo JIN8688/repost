@@ -618,6 +618,83 @@
                 padding: 25px 0;
                 text-align: center;
             }
+            
+            /* 회사정보 아코디언 */
+            .company-accordion {
+                margin-bottom: 10px;
+            }
+            
+            .company-toggle {
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 12px;
+                padding: 14px 20px;
+                color: rgba(255, 255, 255, 0.9);
+                font-size: 0.9rem;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                transition: all 0.3s ease;
+            }
+            
+            .company-toggle:hover {
+                background: rgba(255, 255, 255, 0.15);
+            }
+            
+            .company-toggle-icon {
+                transition: transform 0.3s ease;
+                font-size: 0.8rem;
+            }
+            
+            .company-toggle.active .company-toggle-icon {
+                transform: rotate(180deg);
+            }
+            
+            .company-content {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.4s ease-out;
+                padding: 0 20px;
+            }
+            
+            .company-content.show {
+                max-height: 500px;
+                padding: 20px;
+            }
+            
+            .company-info {
+                background: rgba(255, 255, 255, 0.08);
+                border-radius: 10px;
+                padding: 16px;
+                text-align: left;
+                margin-top: 8px;
+            }
+            
+            .company-info-row {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 10px;
+                font-size: 0.8rem;
+                line-height: 1.5;
+            }
+            
+            .company-info-row:last-child {
+                margin-bottom: 0;
+            }
+            
+            .company-info-label {
+                color: rgba(255, 255, 255, 0.7);
+                font-weight: 600;
+                min-width: 80px;
+                flex-shrink: 0;
+            }
+            
+            .company-info-value {
+                color: rgba(255, 255, 255, 0.9);
+            }
 
             .footer-mobile-links {
                 display: flex;
@@ -864,14 +941,48 @@
             
             <!-- 모바일용 간소화 풋터 -->
             <div class="footer-mobile">
+                <!-- 회사정보 아코디언 -->
+                <div class="company-accordion">
+                    <button class="company-toggle" onclick="toggleCompanyInfo()">
+                        <span>회사정보</span>
+                        <span class="company-toggle-icon">▼</span>
+                    </button>
+                    <div class="company-content" id="companyContent">
+                        <div class="company-info">
+                            <div class="company-info-row">
+                                <span class="company-info-label">회사명</span>
+                                <span class="company-info-value">리포스트(Repost)</span>
+                            </div>
+                            <div class="company-info-row">
+                                <span class="company-info-label">대표</span>
+                                <span class="company-info-value">김태진</span>
+                            </div>
+                            <div class="company-info-row">
+                                <span class="company-info-label">사업자번호</span>
+                                <span class="company-info-value">123-45-67890</span>
+                            </div>
+                            <div class="company-info-row">
+                                <span class="company-info-label">주소</span>
+                                <span class="company-info-value">서울특별시 강남구</span>
+                            </div>
+                            <div class="company-info-row">
+                                <span class="company-info-label">이메일</span>
+                                <span class="company-info-value">contact@repost.kr</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 약관 링크 -->
                 <div class="footer-mobile-links">
                     <a href="/terms">이용약관</a>
                     <span class="footer-divider">·</span>
                     <a href="/privacy">개인정보처리방침</a>
                 </div>
+                
+                <!-- 카피라이트 -->
                 <div class="footer-mobile-info">
                     <p>© 2026 Repost. All rights reserved.</p>
-                    <p class="footer-mobile-contact">contact@repost.kr</p>
                 </div>
             </div>
             
@@ -885,6 +996,15 @@
     </footer>
 
     <script>
+        // 회사정보 아코디언 토글
+        function toggleCompanyInfo() {
+            const toggle = document.querySelector('.company-toggle');
+            const content = document.getElementById('companyContent');
+            
+            toggle.classList.toggle('active');
+            content.classList.toggle('show');
+        }
+        
         // 페이지 타입에 따른 body 클래스 추가
         const currentPath = window.location.pathname;
         const isMainPage = currentPath === '/';
