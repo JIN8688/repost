@@ -583,16 +583,16 @@ button:disabled {
    =========================================== */
 @media (max-width: 768px) {
     body {
-        padding-top: var(--header-height);
+        padding-top: 0;
     }
 
     .container {
-        padding: 0 20px 35px;
+        padding: 30px 20px 35px;
         margin: 0 auto;
-        min-height: calc(100vh - var(--header-height));
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;
     }
 
     .header h1 {
