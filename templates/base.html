@@ -569,6 +569,18 @@
         }
 
         /* ============================================
+           💎 PC/모바일 풋터 분리
+        ============================================ */
+        /* PC 기본: 모바일 풋터 숨김 */
+        .footer-mobile {
+            display: none;
+        }
+
+        .footer-desktop {
+            display: block;
+        }
+
+        /* ============================================
            📱 반응형 디자인
         ============================================ */
         @media (max-width: 768px) {
@@ -581,58 +593,64 @@
                 display: flex;
             }
 
-            .main-footer {
-                padding: 50px 20px 25px;
-                margin-top: 60px;
+            /* PC 풋터 숨김, 모바일 풋터 표시 */
+            .footer-desktop {
+                display: none !important;
             }
 
-            .footer-container {
-                padding: 0 20px;
-            }
-
-            .footer-grid {
-                flex-direction: column;
-                gap: 40px;
-                align-items: center;
-                text-align: center;
-            }
-
-            .footer-brand {
-                max-width: 100%;
+            .footer-mobile {
                 display: flex;
                 flex-direction: column;
-                align-items: center;
+                gap: 15px;
+                padding: 25px 0;
+                text-align: center;
             }
 
-            .footer-logo {
+            .footer-mobile-links {
+                display: flex;
                 justify-content: center;
-            }
-
-            .logo-text {
-                font-size: 1.5rem;
-            }
-
-            .footer-sections {
-                grid-template-columns: 1fr;
-                gap: 40px;
-                width: 100%;
-            }
-
-            .footer-section {
-                text-align: center;
-            }
-
-            .footer-title {
-                text-align: center;
-            }
-
-            .footer-bottom {
                 align-items: center;
+                gap: 10px;
+                font-size: 0.85rem;
             }
 
-            .footer-copyright {
-                text-align: center;
-                font-size: 0.85rem;
+            .footer-mobile-links a {
+                color: rgba(255, 255, 255, 0.8);
+                text-decoration: none;
+                transition: color 0.3s ease;
+                font-weight: 500;
+            }
+
+            .footer-mobile-links a:hover {
+                color: white;
+            }
+
+            .footer-mobile-links .footer-divider {
+                color: rgba(255, 255, 255, 0.4);
+                margin: 0;
+            }
+
+            .footer-mobile-info {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .footer-mobile-info p {
+                color: rgba(255, 255, 255, 0.6);
+                font-size: 0.75rem;
+                margin: 0;
+                line-height: 1.4;
+            }
+
+            .footer-mobile-contact {
+                color: rgba(255, 255, 255, 0.5) !important;
+                font-size: 0.7rem !important;
+            }
+
+            .main-footer {
+                padding: 25px 0 20px !important;
+                margin-top: 40px !important;
             }
         }
 
