@@ -4,6 +4,17 @@
 
 {% block extra_css %}
 <style>
+    /* 홈 배경 그대로 사용 */
+    body {
+        background: 
+            radial-gradient(at 27% 37%, rgba(102, 126, 234, 0.8) 0px, transparent 50%),
+            radial-gradient(at 97% 21%, rgba(125, 235, 200, 0.7) 0px, transparent 50%),
+            radial-gradient(at 52% 99%, rgba(244, 107, 153, 0.7) 0px, transparent 50%),
+            radial-gradient(at 10% 29%, rgba(118, 75, 162, 0.8) 0px, transparent 50%),
+            #1a1a2e !important;
+        background-attachment: fixed !important;
+    }
+
     .page-header {
         text-align: center;
         padding: 60px 20px 40px;
@@ -16,17 +27,37 @@
     }
 
     .page-header h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
+        font-size: clamp(1.8rem, 5vw, 2.5rem);
+        font-weight: 800;
         color: white;
         margin-bottom: 10px;
-        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
     }
 
     .page-header p {
-        font-size: 1.1rem;
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 300;
+        font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 500;
+    }
+    
+    .tier-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: white;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 6px 14px;
+        border-radius: 16px;
+        font-size: 0.8rem;
+        box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+        margin-left: 12px;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
     }
 
     .container {
@@ -48,24 +79,27 @@
     }
 
     .glass-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 24px;
-        padding: 30px;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(30px) saturate(180%);
+        -webkit-backdrop-filter: blur(30px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 28px;
+        padding: 35px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
+                    0 0 0 1px rgba(255, 255, 255, 0.5),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8);
         transition: all 0.3s ease;
     }
 
     .glass-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
     }
 
     .card-title {
         font-size: 1.5rem;
-        font-weight: 600;
-        color: white;
+        font-weight: 700;
+        color: #1a1a2e;
         margin-bottom: 20px;
         display: flex;
         align-items: center;
@@ -84,20 +118,19 @@
 
     .input-label {
         display: block;
-        color: white;
-        font-weight: 500;
+        color: #1a1a2e;
+        font-weight: 600;
         margin-bottom: 8px;
         font-size: 0.95rem;
     }
 
     .input-field {
         width: 100%;
-        padding: 12px 16px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        border-radius: 12px;
-        color: white;
+        padding: 14px 18px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        color: #1a1a2e;
         font-size: 1rem;
         font-family: inherit;
         transition: all 0.3s ease;
@@ -105,13 +138,13 @@
 
     .input-field:focus {
         outline: none;
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.4);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        background: #f8fafc;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
     .input-field::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: #94a3b8;
     }
 
     textarea.input-field {
@@ -123,27 +156,39 @@
     .analyze-btn {
         width: 100%;
         padding: 16px;
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border: none;
-        border-radius: 12px;
+        border-radius: 14px;
         color: white;
         font-size: 1.1rem;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
         margin-top: 20px;
     }
 
-    .analyze-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+    .analyze-btn:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    }
+
+    .analyze-btn:active:not(:disabled) {
+        transform: translateY(-1px);
     }
 
     .analyze-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
         transform: none;
+    }
+
+    .keyboard-hint {
+        text-align: center;
+        color: #64748b;
+        font-size: 0.85rem;
+        margin-top: 12px;
     }
 
     .results-section {
@@ -153,11 +198,10 @@
     }
 
     .result-card {
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 16px;
-        padding: 20px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 24px;
         animation: slideIn 0.5s ease-out;
     }
 
@@ -167,8 +211,9 @@
     }
 
     .result-card h3 {
-        color: white;
+        color: #1a1a2e;
         font-size: 1.2rem;
+        font-weight: 700;
         margin-bottom: 15px;
         display: flex;
         align-items: center;
@@ -176,23 +221,24 @@
     }
 
     .result-item {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 12px 16px;
-        border-radius: 10px;
+        background: white;
+        padding: 14px 18px;
+        border-radius: 12px;
         margin-bottom: 10px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border: 1px solid #e2e8f0;
     }
 
     .result-label {
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 500;
+        color: #475569;
+        font-weight: 600;
     }
 
     .result-value {
-        color: white;
-        font-weight: 600;
+        color: #1a1a2e;
+        font-weight: 700;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -202,28 +248,28 @@
         padding: 4px 12px;
         border-radius: 20px;
         font-size: 0.85rem;
-        font-weight: 600;
+        font-weight: 700;
         display: inline-flex;
         align-items: center;
         gap: 5px;
     }
 
     .status-good {
-        background: rgba(16, 185, 129, 0.2);
-        color: #6ee7b7;
-        border: 1px solid rgba(16, 185, 129, 0.4);
+        background: rgba(16, 185, 129, 0.15);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.3);
     }
 
     .status-warning {
-        background: rgba(245, 158, 11, 0.2);
-        color: #fcd34d;
-        border: 1px solid rgba(245, 158, 11, 0.4);
+        background: rgba(245, 158, 11, 0.15);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.3);
     }
 
     .status-info {
-        background: rgba(59, 130, 246, 0.2);
-        color: #93c5fd;
-        border: 1px solid rgba(59, 130, 246, 0.4);
+        background: rgba(59, 130, 246, 0.15);
+        color: #2563eb;
+        border: 1px solid rgba(59, 130, 246, 0.3);
     }
 
     .keyword-list {
@@ -233,17 +279,18 @@
     }
 
     .keyword-item {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 12px 16px;
-        border-radius: 10px;
+        background: white;
+        padding: 14px 18px;
+        border-radius: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border: 1px solid #e2e8f0;
     }
 
     .keyword-word {
-        color: white;
-        font-weight: 600;
+        color: #1a1a2e;
+        font-weight: 700;
         font-size: 1.1rem;
     }
 
@@ -255,50 +302,57 @@
 
     .keyword-stat {
         font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.8);
+        color: #64748b;
+        font-weight: 600;
     }
 
     .suggestion-box {
-        background: rgba(59, 130, 246, 0.15);
-        border: 1px solid rgba(59, 130, 246, 0.3);
+        background: rgba(59, 130, 246, 0.08);
+        border: 1px solid rgba(59, 130, 246, 0.2);
         border-radius: 10px;
         padding: 12px 16px;
         margin-top: 8px;
-        color: rgba(255, 255, 255, 0.9);
+        color: #1e40af;
         font-size: 0.9rem;
+        font-weight: 500;
     }
 
     .score-display {
         text-align: center;
-        padding: 30px;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 16px;
+        padding: 40px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-radius: 20px;
         margin-bottom: 20px;
+        border: 2px solid rgba(102, 126, 234, 0.2);
     }
 
     .score-number {
         font-size: 4rem;
-        font-weight: 700;
-        color: white;
+        font-weight: 800;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
         line-height: 1;
         margin-bottom: 10px;
     }
 
     .score-label {
-        color: rgba(255, 255, 255, 0.9);
+        color: #475569;
         font-size: 1.1rem;
+        font-weight: 600;
     }
 
     .loading {
         text-align: center;
-        padding: 40px;
+        padding: 60px 20px;
     }
 
     .spinner {
-        width: 50px;
-        height: 50px;
-        border: 4px solid rgba(255, 255, 255, 0.2);
-        border-top-color: white;
+        width: 60px;
+        height: 60px;
+        border: 4px solid #e2e8f0;
+        border-top-color: #667eea;
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin: 0 auto 20px;
@@ -309,48 +363,93 @@
     }
 
     .loading-text {
-        color: white;
+        color: #475569;
         font-size: 1.1rem;
+        font-weight: 600;
     }
 
     .empty-state {
         text-align: center;
-        padding: 60px 20px;
-        color: rgba(255, 255, 255, 0.8);
+        padding: 80px 20px;
+        color: #64748b;
     }
 
     .empty-icon {
-        font-size: 4rem;
+        font-size: 5rem;
         margin-bottom: 20px;
         opacity: 0.5;
     }
 
     .message-box {
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
         border-radius: 10px;
         padding: 12px 16px;
-        color: rgba(255, 255, 255, 0.9);
+        color: #475569;
         font-size: 0.95rem;
         margin-top: 10px;
         display: flex;
         align-items: center;
         gap: 10px;
+        font-weight: 500;
     }
 
     .message-box.warning {
-        background: rgba(245, 158, 11, 0.15);
-        border-color: rgba(245, 158, 11, 0.4);
+        background: rgba(245, 158, 11, 0.08);
+        border-color: rgba(245, 158, 11, 0.2);
+        color: #b45309;
     }
 
     .message-box.info {
-        background: rgba(59, 130, 246, 0.15);
-        border-color: rgba(59, 130, 246, 0.4);
+        background: rgba(59, 130, 246, 0.08);
+        border-color: rgba(59, 130, 246, 0.2);
+        color: #1e40af;
     }
 
     .message-box.success {
-        background: rgba(16, 185, 129, 0.15);
-        border-color: rgba(16, 185, 129, 0.4);
+        background: rgba(16, 185, 129, 0.08);
+        border-color: rgba(16, 185, 129, 0.2);
+        color: #047857;
+    }
+
+    /* Toast 알림 */
+    .toast {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: white;
+        color: #1a1a2e;
+        padding: 16px 24px;
+        border-radius: 14px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 10000;
+        animation: slideInUp 0.3s ease-out;
+        min-width: 300px;
+        border: 2px solid #e2e8f0;
+    }
+
+    .toast.error {
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+
+    .toast.success {
+        background: #f0fdf4;
+        border-color: #bbf7d0;
+    }
+
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     @media (max-width: 1200px) {
@@ -359,23 +458,40 @@
         }
         
         textarea.input-field {
-            min-height: 200px;
+            min-height: 250px;
         }
     }
 
     @media (max-width: 768px) {
-        .page-header h1 { font-size: 2rem; }
-        .page-header p { font-size: 1rem; }
-        .glass-card { padding: 20px; }
-        .score-number { font-size: 3rem; }
+        .page-header {
+            padding: 40px 20px 30px;
+        }
+        
+        .glass-card {
+            padding: 24px;
+        }
+        
+        .score-number {
+            font-size: 3rem;
+        }
+        
+        textarea.input-field {
+            min-height: 200px;
+        }
+        
+        .toast {
+            right: 20px;
+            left: 20px;
+            min-width: auto;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>📊 실시간 텍스트 분석기</h1>
-    <p>블로그 글을 분석하고 최적화하세요</p>
+    <h1>📊 실시간 텍스트 분석기<span class="tier-badge">⭐ Tier S</span></h1>
+    <p>블로그 글을 AI가 실시간으로 분석하고 최적화 방법을 제안합니다</p>
 </div>
 
 <div class="container">
@@ -411,6 +527,10 @@
             <button id="analyzeBtn" class="analyze-btn" onclick="analyzeText()">
                 🔍 분석 시작
             </button>
+            
+            <div class="keyboard-hint">
+                💡 Ctrl + Enter (Mac: Cmd + Enter)로 빠른 분석
+            </div>
         </div>
 
         <!-- 📊 결과 섹션 -->
@@ -423,7 +543,7 @@
             <div id="resultsContainer">
                 <div class="empty-state">
                     <div class="empty-icon">📝</div>
-                    <div style="font-size: 1.2rem; margin-bottom: 10px;">아직 분석 결과가 없습니다</div>
+                    <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; color: #1a1a2e;">아직 분석 결과가 없습니다</div>
                     <div style="font-size: 0.95rem; opacity: 0.7;">왼쪽에 텍스트를 입력하고 분석을 시작하세요</div>
                 </div>
             </div>
@@ -432,23 +552,55 @@
 </div>
 
 <script>
+    // Toast 알림 표시
+    function showToast(message, type = 'info') {
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+        toast.innerHTML = `
+            <span style="font-size: 1.5rem;">${icon}</span>
+            <span style="font-weight: 600;">${message}</span>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideInUp 0.3s ease-out reverse';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
     async function analyzeText() {
         const text = document.getElementById('textInput').value.trim();
         const title = document.getElementById('titleInput').value.trim();
         const btn = document.getElementById('analyzeBtn');
         const resultsContainer = document.getElementById('resultsContainer');
 
+        // 입력 검증
         if (!text) {
-            alert('본문을 입력해주세요!');
+            showToast('본문을 입력해주세요!', 'error');
+            document.getElementById('textInput').focus();
+            return;
+        }
+
+        if (text.length < 50) {
+            showToast('본문이 너무 짧습니다. 최소 50자 이상 입력해주세요.', 'error');
             return;
         }
 
         btn.disabled = true;
-        btn.textContent = '🔄 분석 중...';
+        btn.innerHTML = '<span style="display: inline-block; animation: spin 1s linear infinite;">🔄</span> 분석 중...';
         resultsContainer.innerHTML = `
             <div class="loading">
                 <div class="spinner"></div>
                 <div class="loading-text">AI가 텍스트를 분석하고 있습니다...</div>
+                <div style="color: #94a3b8; font-size: 0.9rem; margin-top: 10px;">잠시만 기다려주세요</div>
             </div>
         `;
 
@@ -461,10 +613,15 @@
                 body: JSON.stringify({ text, title })
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: 서버 오류`);
+            }
+
             const data = await response.json();
 
             if (data.success) {
                 displayResults(data.analysis);
+                showToast('분석이 완료되었습니다!', 'success');
             } else {
                 throw new Error(data.error || '분석 실패');
             }
@@ -473,13 +630,17 @@
             resultsContainer.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">❌</div>
-                    <div style="font-size: 1.2rem;">분석 중 오류가 발생했습니다</div>
-                    <div style="font-size: 0.95rem; opacity: 0.7;">${error.message}</div>
+                    <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; color: #dc2626;">분석 중 오류가 발생했습니다</div>
+                    <div style="font-size: 0.95rem; opacity: 0.7; margin-bottom: 20px;">${error.message}</div>
+                    <button onclick="analyzeText()" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                        🔄 다시 시도
+                    </button>
                 </div>
             `;
+            showToast('분석 중 오류가 발생했습니다', 'error');
         } finally {
             btn.disabled = false;
-            btn.textContent = '🔍 분석 시작';
+            btn.innerHTML = '🔍 분석 시작';
         }
     }
 
@@ -491,7 +652,7 @@
         // 1️⃣ 가독성 점수
         html += `
             <div class="score-display">
-                <div class="score-number">${analysis.readability.score}<span style="font-size: 2rem;">/100</span></div>
+                <div class="score-number">${analysis.readability.score}<span style="font-size: 2rem; opacity: 0.7;">/100</span></div>
                 <div class="score-label">가독성 점수</div>
             </div>
         `;
@@ -673,6 +834,11 @@
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             analyzeText();
         }
+    });
+    
+    // 페이지 로드 시 포커스
+    window.addEventListener('load', function() {
+        document.getElementById('textInput').focus();
     });
 </script>
 {% endblock %}
