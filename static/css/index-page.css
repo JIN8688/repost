@@ -110,13 +110,15 @@ body {
    3. 컨텐츠 래퍼
    =========================================== */
 .content-wrapper {
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
     border-radius: 30px;
     padding: 35px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
     animation: fadeInUp 0.8s ease-out 0.8s backwards;
     margin-top: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* ===========================================
