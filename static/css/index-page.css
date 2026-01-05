@@ -583,8 +583,8 @@ button:disabled {
    =========================================== */
 @media (max-width: 768px) {
     .container {
-        padding: 35px 25px;
-        margin: auto;
+        padding: 10px 20px 35px;
+        margin: 0 auto;
     }
 
     .header h1 {

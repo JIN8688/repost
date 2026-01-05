@@ -451,12 +451,13 @@
     </footer>
 
     <script>
-        // 스크롤 시 헤더 표시 (메인 페이지만)
+        // 스크롤 시 헤더 표시 로직
         const header = document.getElementById('mainHeader');
         const isMainPage = window.location.pathname === '/';
+        const isMobile = window.innerWidth <= 768;
         
-        if (isMainPage) {
-            // 메인 페이지: 스크롤 시 헤더 표시
+        if (isMainPage && !isMobile) {
+            // 메인 페이지 PC: 스크롤 시 헤더 표시
             let lastScroll = 0;
             window.addEventListener('scroll', () => {
                 const currentScroll = window.pageYOffset;
@@ -471,7 +472,7 @@
                 lastScroll = currentScroll;
             });
         } else {
-            // 다른 페이지: 헤더 항상 표시
+            // 모바일 또는 다른 페이지: 헤더 항상 표시
             header.classList.add('visible');
         }
 
