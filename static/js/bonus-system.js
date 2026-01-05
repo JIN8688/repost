@@ -1349,23 +1349,8 @@ function setupSecretCodeAccess() {
     
     console.log('🔍 로고 요소 찾는 중...');
     
-    // 로고 요소 찾기 (여러 선택자 시도)
-    const logoSelectors = [
-        '.logo-text',           // Repost 텍스트
-        '.header-logo',         // 로고 링크
-        '.header-logo span',    // 로고 내부 span
-        'a[href="/"]',          // 홈 링크
-        '.logo-icon'            // 이모지 아이콘
-    ];
-    
-    let logo = null;
-    for (const selector of logoSelectors) {
-        logo = document.querySelector(selector);
-        if (logo) {
-            console.log(`✅ 로고 발견: ${selector}`, logo);
-            break;
-        }
-    }
+    // 헤더의 실제 로고 링크 요소 찾기
+    const logo = document.querySelector('.header-logo');
     
     if (!logo) {
         console.warn('⚠️ 로고 요소를 찾을 수 없습니다. 1초 후 재시도...');
@@ -1374,6 +1359,7 @@ function setupSecretCodeAccess() {
         return;
     }
     
+    console.log('✅ 헤더 로고 발견:', logo);
     console.log('✅ 시크릿 코드 시스템 활성화: 로고를 3초 안에 5번 클릭하세요');
     
     // 클릭 가능하도록 스타일 설정
