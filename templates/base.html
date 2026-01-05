@@ -1091,6 +1091,10 @@
     </script>
     
     {% block extra_js %}{% endblock %}
+    
+    <!-- 🔑 마스터 계정 시스템 (모든 페이지) -->
+    <div id="bonusModals"></div>
+    <script src="{{ url_for('static', filename='js/bonus-system.js') }}"></script>
 </body>
 </html>
 

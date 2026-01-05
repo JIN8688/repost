@@ -609,7 +609,7 @@ function showUsageDetail() {
                                         <span style="font-size: 1.5rem;">💎</span>
                                         <span style="font-size: 1rem; font-weight: 600; color: #1a202c;">Basic 플랜</span>
                                     </div>
-                                    <a href="/pricing" style="font-size: 1rem; font-weight: 700; color: #667eea; text-decoration: none;">무제한</a>
+                                    <a href="/pricing" style="font-size: 1rem; font-weight: 700; color: #667eea; text-decoration: none;">하루 100회</a>
                                 </div>
                             </div>
                         </div>
@@ -627,10 +627,30 @@ function showUsageDetail() {
                             cursor: pointer;
                             box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
                             transition: all 0.3s ease;
-                            margin-bottom: 16px;
+                            margin-bottom: 12px;
                         " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 32px rgba(102, 126, 234, 0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 24px rgba(102, 126, 234, 0.4)'">
-                            👥 친구 추천 (+5회) | 7일간 최대 25회
+                            👥 친구 추천하고 +5회 받기
                         </button>
+                        
+                        <!-- 요금제 보기 버튼 -->
+                        <a href="/pricing" style="
+                            display: block;
+                            width: 100%;
+                            padding: 16px 24px;
+                            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+                            border: 2px solid #667eea;
+                            border-radius: 16px;
+                            color: #667eea;
+                            font-size: 1rem;
+                            font-weight: 700;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            text-align: center;
+                            text-decoration: none;
+                            margin-bottom: 12px;
+                        " onmouseover="this.style.transform='translateY(-2px)'; this.style.background='linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%)'" onmouseout="this.style.transform='translateY(0)'; this.style.background='linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'">
+                            💎 요금제 보기 (하루 100회)
+                        </a>
                         
                         <!-- 3회로 계속 사용 버튼 -->
                         <button onclick="closeModal()" style="
@@ -1259,26 +1279,48 @@ function setupSecretCodeAccess() {
     let clickCount = 0;
     let clickTimer = null;
     
-    // 로고 요소 찾기
-    const logo = document.querySelector('.logo-text') || document.querySelector('.header-logo') || document.querySelector('h1');
+    console.log('🔍 로고 요소 찾는 중...');
+    
+    // 로고 요소 찾기 (여러 선택자 시도)
+    const logoSelectors = [
+        '.logo-text',           // Repost 텍스트
+        '.header-logo',         // 로고 링크
+        '.header-logo span',    // 로고 내부 span
+        'a[href="/"]',          // 홈 링크
+        '.logo-icon'            // 이모지 아이콘
+    ];
+    
+    let logo = null;
+    for (const selector of logoSelectors) {
+        logo = document.querySelector(selector);
+        if (logo) {
+            console.log(`✅ 로고 발견: ${selector}`, logo);
+            break;
+        }
+    }
     
     if (!logo) {
-        console.warn('⚠️ 로고 요소를 찾을 수 없습니다');
+        console.warn('⚠️ 로고 요소를 찾을 수 없습니다. 1초 후 재시도...');
+        // DOM 로드 후 재시도
+        setTimeout(setupSecretCodeAccess, 1000);
         return;
     }
     
-    console.log('✅ 시크릿 코드 시스템 활성화: 로고를 3초 안에 5번 클릭하세요', logo);
+    console.log('✅ 시크릿 코드 시스템 활성화: 로고를 3초 안에 5번 클릭하세요');
     
+    // 클릭 가능하도록 스타일 설정
     logo.style.cursor = 'pointer';
     logo.style.userSelect = 'none';
     
+    // 이벤트 리스너 등록
     logo.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
+        
         clickCount++;
         console.log(`🖱️ 클릭 ${clickCount}/5`);
         
-        // 3초 이내에 5번 클릭
+        // 첫 클릭 시 타이머 시작
         if (clickCount === 1) {
             clickTimer = setTimeout(() => {
                 console.log('⏱️ 타임아웃: 클릭 카운트 초기화');
@@ -1286,13 +1328,24 @@ function setupSecretCodeAccess() {
             }, 3000);
         }
         
+        // 5번 클릭 완료
         if (clickCount === 5) {
             clearTimeout(clickTimer);
             clickCount = 0;
             console.log('🔐 시크릿 코드 모달 표시!');
             showSecretCodeModal();
         }
-    });
+    }, { capture: true }); // capture 모드로 우선 처리
+    
+    console.log('🎯 이벤트 리스너 등록 완료!');
+}
+
+// 🚀 페이지 로드 시 자동 실행
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupSecretCodeAccess);
+} else {
+    // 이미 로드된 경우 즉시 실행
+    setupSecretCodeAccess();
 }
 
 // Secret Code 입력 모달
