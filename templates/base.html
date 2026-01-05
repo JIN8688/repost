@@ -259,71 +259,38 @@
         }
 
         .footer-container {
-            max-width: 1400px;
+            max-width: 800px;
             margin: 0 auto;
         }
 
-        .footer-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 60px;
-            margin-bottom: 50px;
-        }
-
-        .footer-brand {
-            max-width: 350px;
+        .footer-content {
+            text-align: center;
         }
 
         .footer-logo {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 10px;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: 700;
             color: white;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .footer-tagline {
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-
-        .footer-social {
-            display: flex;
-            gap: 12px;
-        }
-
-        .social-link {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-        }
-
-        .social-link:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-3px);
-        }
-
-        .footer-section h3 {
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0 0 20px 0;
         }
 
         .footer-links {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .footer-link {
@@ -331,37 +298,22 @@
             text-decoration: none;
             font-size: 0.9rem;
             transition: all 0.2s ease;
-            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
         }
 
         .footer-link:hover {
             color: white;
-            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        .footer-bottom {
-            padding-top: 30px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: rgba(255, 255, 255, 0.7);
+        .footer-divider {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .footer-copyright {
+            color: rgba(255, 255, 255, 0.6);
             font-size: 0.85rem;
-        }
-
-        .footer-legal {
-            display: flex;
-            gap: 20px;
-        }
-
-        .footer-legal a {
-            color: rgba(255, 255, 255, 0.7);
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-
-        .footer-legal a:hover {
-            color: white;
         }
 
         /* ============================================
@@ -377,26 +329,16 @@
                 display: flex;
             }
 
-            .footer-grid {
-                grid-template-columns: 1fr;
-                gap: 40px;
+            .main-footer {
+                padding: 40px 20px 30px;
             }
 
-            .footer-bottom {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
+            .footer-logo {
+                font-size: 1.3rem;
             }
 
-            .footer-legal {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-
-        @media (max-width: 1024px) {
-            .footer-grid {
-                grid-template-columns: 1fr 1fr;
+            .footer-tagline {
+                font-size: 0.9rem;
             }
         }
 
@@ -495,70 +437,31 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- 🍎 iOS 스타일 풋터 -->
+    <!-- 🍎 iOS 스타일 심플 풋터 -->
     <footer class="main-footer">
         <div class="footer-container">
-            <div class="footer-grid">
-                <!-- 브랜드 -->
-                <div class="footer-brand">
-                    <div class="footer-logo">
-                        <span>🎨</span>
-                        <span>Repost</span>
-                    </div>
-                    <p class="footer-tagline">
-                        AI 기반 블로거 필수 도구.<br>
-                        글쓰기부터 SEO까지, 블로그 성공을 위한 완벽한 솔루션.
-                    </p>
-                    <div class="footer-social">
-                        <a href="#" class="social-link">📘</a>
-                        <a href="#" class="social-link">📸</a>
-                        <a href="#" class="social-link">🐦</a>
-                        <a href="#" class="social-link">📺</a>
-                    </div>
+            <div class="footer-content">
+                <!-- 로고 -->
+                <div class="footer-logo">
+                    <span>🎨</span>
+                    <span>Repost</span>
                 </div>
-
-                <!-- 제품 -->
-                <div class="footer-section">
-                    <h3>제품</h3>
-                    <div class="footer-links">
-                        <a href="/tools/text-analyzer" class="footer-link">텍스트 분석기</a>
-                        <a href="/tools/title-generator" class="footer-link">제목 생성기</a>
-                        <a href="/tools/seo-checker" class="footer-link">SEO 체커</a>
-                        <a href="/tools/ai-writer" class="footer-link">AI 글쓰기</a>
-                        <a href="/tools" class="footer-link">모든 도구 보기</a>
-                    </div>
+                
+                <!-- 태그라인 -->
+                <p class="footer-tagline">
+                    AI 기반 블로그 댓글 자동 추천 서비스
+                </p>
+                
+                <!-- 법적 링크 -->
+                <div class="footer-links">
+                    <a href="/terms" class="footer-link">이용약관</a>
+                    <span class="footer-divider">·</span>
+                    <a href="/privacy" class="footer-link">개인정보처리방침</a>
                 </div>
-
-                <!-- 회사 -->
-                <div class="footer-section">
-                    <h3>회사</h3>
-                    <div class="footer-links">
-                        <a href="#" class="footer-link">소개</a>
-                        <a href="#" class="footer-link">블로그</a>
-                        <a href="#" class="footer-link">채용</a>
-                        <a href="#" class="footer-link">문의하기</a>
-                    </div>
-                </div>
-
-                <!-- 지원 -->
-                <div class="footer-section">
-                    <h3>지원</h3>
-                    <div class="footer-links">
-                        <a href="#" class="footer-link">도움말</a>
-                        <a href="#" class="footer-link">FAQ</a>
-                        <a href="#" class="footer-link">이용약관</a>
-                        <a href="#" class="footer-link">개인정보처리방침</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 하단 -->
-            <div class="footer-bottom">
-                <div>&copy; 2025 Repost. All rights reserved.</div>
-                <div class="footer-legal">
-                    <a href="#">이용약관</a>
-                    <a href="#">개인정보처리방침</a>
-                    <a href="#">사업자정보</a>
+                
+                <!-- 저작권 -->
+                <div class="footer-copyright">
+                    © 2025 Repost. All rights reserved.
                 </div>
             </div>
         </div>
