@@ -124,6 +124,9 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.5);
     position: relative;
     overflow: hidden;
+    /* GPU 가속 */
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
 }
 
 .content-wrapper::before {
@@ -168,6 +171,8 @@ body {
     box-shadow: 
         0 4px 16px rgba(0, 0, 0, 0.08),
         inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    /* GPU 가속 */
+    transform: translate3d(0, 0, 0);
 }
 
 .feature-card:nth-child(1) { animation-delay: 0.8s; }
@@ -619,6 +624,8 @@ button:disabled {
 @media (max-width: 768px) {
     body {
         padding-top: 0;
+        /* 모바일 스크롤 최적화 */
+        -webkit-overflow-scrolling: touch;
     }
 
     .container {
@@ -628,6 +635,30 @@ button:disabled {
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
+    }
+    
+    /* 모바일 성능 최적화: backdrop-filter 대폭 축소 */
+    .content-wrapper {
+        backdrop-filter: blur(20px) saturate(150%);
+        -webkit-backdrop-filter: blur(20px) saturate(150%);
+        background: rgba(255, 255, 255, 0.5);
+        /* GPU 가속 강제 */
+        transform: translate3d(0, 0, 0);
+        -webkit-transform: translate3d(0, 0, 0);
+    }
+    
+    .feature-card {
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        /* GPU 가속 */
+        transform: translate3d(0, 0, 0);
+        -webkit-transform: translate3d(0, 0, 0);
+    }
+    
+    .comment-item {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: rgba(255, 255, 255, 0.95);
     }
 
     .header h1 {
