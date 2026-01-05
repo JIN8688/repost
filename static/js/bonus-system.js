@@ -1373,8 +1373,8 @@ function verifySecretCode() {
     const input = document.getElementById('secretCodeInput');
     const code = input ? input.value.trim() : '';
     
-    // 비밀 코드 목록 (프로덕션에서는 서버 검증 추가 가능)
-    const validCodes = ['repost2024', 'admin2024', 'master2024'];
+    // 비밀 코드 (프로덕션에서는 서버 검증 추가 가능)
+    const validCodes = ['master2024'];
     
     if (validCodes.includes(code.toLowerCase())) {
         // 성공
