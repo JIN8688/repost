@@ -1,858 +1,678 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 텍스트 분석기 - Repost</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "base.html" %}
 
-        :root {
-            /* 🎨 Modern Color Palette */
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-light: #818cf8;
-            --secondary: #ec4899;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #3b82f6;
-            
-            --bg-gradient-1: #667eea;
-            --bg-gradient-2: #764ba2;
-            --bg-dark: #0f172a;
-            --bg-card: rgba(255, 255, 255, 0.95);
-            --text-dark: #1e293b;
-            --text-gray: #64748b;
-            --border: #e2e8f0;
-            
-            /* 🪟 Glassmorphism */
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        }
+{% block title %}텍스트 분석기 - Repost{% endblock %}
 
-        body {
-            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
-            min-height: 100vh;
-            color: var(--text-dark);
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
+{% block extra_css %}
+<style>
+    .page-header {
+        text-align: center;
+        padding: 60px 20px 40px;
+        animation: fadeInDown 0.6s ease-out;
+    }
 
-        /* ✨ Animated Background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(16, 185, 129, 0.2) 0%, transparent 50%);
-            animation: float 20s ease-in-out infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(30px, -30px) rotate(120deg); }
-            66% { transform: translate(-20px, 20px) rotate(240deg); }
-        }
+    .page-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 10px;
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
+    .page-header p {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 300;
+    }
 
-        /* 🎯 Header */
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            animation: fadeInDown 0.6s ease-out;
-        }
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 20px 80px;
+    }
 
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        animation: fadeInUp 0.8s ease-out;
+    }
 
-        .header h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 10px;
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-        .header p {
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 300;
-        }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 24px;
+        padding: 30px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        transition: all 0.3s ease;
+    }
 
-        .back-btn {
-            position: absolute;
-            top: 0;
-            left: 0;
-            padding: 12px 24px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            box-shadow: var(--glass-shadow);
-        }
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
+    }
 
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateX(-5px);
-        }
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
 
-        /* 📝 Main Grid */
+    .input-section {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .input-group {
+        margin-bottom: 20px;
+    }
+
+    .input-label {
+        display: block;
+        color: white;
+        font-weight: 500;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+
+    .input-field {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 12px;
+        color: white;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+
+    .input-field:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+
+    .input-field::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    textarea.input-field {
+        resize: vertical;
+        min-height: 300px;
+        flex: 1;
+    }
+
+    .analyze-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        margin-top: 20px;
+    }
+
+    .analyze-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+    }
+
+    .analyze-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .results-section {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .result-card {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 16px;
+        padding: 20px;
+        animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    .result-card h3 {
+        color: white;
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .result-item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .result-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+    }
+
+    .result-value {
+        color: white;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .status-good {
+        background: rgba(16, 185, 129, 0.2);
+        color: #6ee7b7;
+        border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .status-warning {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fcd34d;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    .status-info {
+        background: rgba(59, 130, 246, 0.2);
+        color: #93c5fd;
+        border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .keyword-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .keyword-item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 12px 16px;
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .keyword-word {
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .keyword-stats {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .keyword-stat {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .suggestion-box {
+        background: rgba(59, 130, 246, 0.15);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+    }
+
+    .score-display {
+        text-align: center;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        margin-bottom: 20px;
+    }
+
+    .score-number {
+        font-size: 4rem;
+        font-weight: 700;
+        color: white;
+        line-height: 1;
+        margin-bottom: 10px;
+    }
+
+    .score-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.1rem;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        color: white;
+        font-size: 1.1rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .message-box {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.95rem;
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .message-box.warning {
+        background: rgba(245, 158, 11, 0.15);
+        border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .message-box.info {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .message-box.success {
+        background: rgba(16, 185, 129, 0.15);
+        border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    @media (max-width: 1200px) {
         .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            animation: fadeInUp 0.8s ease-out;
+            grid-template-columns: 1fr;
         }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* 🪟 Glass Card */
-        .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: var(--glass-shadow);
-            transition: all 0.3s ease;
-        }
-
-        .glass-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
-        }
-
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: white;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-title .icon {
-            font-size: 1.8rem;
-        }
-
-        /* 📝 Input Section */
-        .input-section {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-label {
-            display: block;
-            color: white;
-            font-weight: 500;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: all 0.3s ease;
-        }
-
-        .input-field:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.4);
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-        }
-
-        .input-field::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        textarea.input-field {
-            resize: vertical;
-            min-height: 300px;
-            flex: 1;
-        }
-
-        /* 🎯 Analyze Button */
-        .analyze-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-            margin-top: 20px;
-        }
-
-        .analyze-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
-        }
-
-        .analyze-btn:active {
-            transform: translateY(0);
-        }
-
-        .analyze-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* 📊 Results Section */
-        .results-section {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .result-card {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 16px;
-            padding: 20px;
-            animation: slideIn 0.5s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .result-card h3 {
-            color: white;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .result-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .result-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .result-label {
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 500;
-        }
-
-        .result-value {
-            color: white;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* 🎨 Status Badges */
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .status-good {
-            background: rgba(16, 185, 129, 0.2);
-            color: #6ee7b7;
-            border: 1px solid rgba(16, 185, 129, 0.4);
-        }
-
-        .status-warning {
-            background: rgba(245, 158, 11, 0.2);
-            color: #fcd34d;
-            border: 1px solid rgba(245, 158, 11, 0.4);
-        }
-
-        .status-info {
-            background: rgba(59, 130, 246, 0.2);
-            color: #93c5fd;
-            border: 1px solid rgba(59, 130, 246, 0.4);
-        }
-
-        /* 📊 Keyword List */
-        .keyword-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .keyword-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 12px 16px;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .keyword-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .keyword-word {
-            color: white;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .keyword-stats {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .keyword-stat {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .suggestion-box {
-            background: rgba(59, 130, 246, 0.15);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 10px;
-            padding: 12px 16px;
-            margin-top: 8px;
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9rem;
-        }
-
-        /* 📈 Score Display */
-        .score-display {
-            text-align: center;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 16px;
-            margin-bottom: 20px;
-        }
-
-        .score-number {
-            font-size: 4rem;
-            font-weight: 700;
-            color: white;
-            line-height: 1;
-            margin-bottom: 10px;
-        }
-
-        .score-label {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 1.1rem;
-        }
-
-        /* 🎬 Loading Animation */
-        .loading {
-            text-align: center;
-            padding: 40px;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 255, 255, 0.2);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            color: white;
-            font-size: 1.1rem;
-        }
-
-        /* 🚫 Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        .empty-text {
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-        }
-
-        .empty-subtext {
-            font-size: 0.95rem;
-            opacity: 0.7;
-        }
-
-        /* 📱 Responsive Design */
-        @media (max-width: 1200px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            textarea.input-field {
-                min-height: 200px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 15px;
-            }
-
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .header p {
-                font-size: 1rem;
-            }
-
-            .back-btn {
-                position: static;
-                display: inline-block;
-                margin-bottom: 20px;
-            }
-
-            .glass-card {
-                padding: 20px;
-            }
-
-            .score-number {
-                font-size: 3rem;
-            }
-        }
-
-        /* 🎯 Message Box */
-        .message-box {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            padding: 12px 16px;
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.95rem;
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .message-box.warning {
-            background: rgba(245, 158, 11, 0.15);
-            border-color: rgba(245, 158, 11, 0.4);
-        }
-
-        .message-box.info {
-            background: rgba(59, 130, 246, 0.15);
-            border-color: rgba(59, 130, 246, 0.4);
-        }
-
-        .message-box.success {
-            background: rgba(16, 185, 129, 0.15);
-            border-color: rgba(16, 185, 129, 0.4);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <a href="/" class="back-btn">← 홈으로</a>
         
-        <div class="header">
-            <h1>📊 실시간 텍스트 분석기</h1>
-            <p>블로그 글을 분석하고 최적화하세요</p>
-        </div>
+        textarea.input-field {
+            min-height: 200px;
+        }
+    }
 
-        <div class="main-grid">
-            <!-- 📝 입력 섹션 -->
-            <div class="glass-card input-section">
-                <h2 class="card-title">
-                    <span class="icon">✍️</span>
-                    글 입력
-                </h2>
-                
-                <div class="input-group">
-                    <label class="input-label">제목 (선택사항)</label>
-                    <input type="text" 
-                           id="titleInput" 
-                           class="input-field" 
-                           placeholder="블로그 글 제목을 입력하세요">
-                </div>
+    @media (max-width: 768px) {
+        .page-header h1 { font-size: 2rem; }
+        .page-header p { font-size: 1rem; }
+        .glass-card { padding: 20px; }
+        .score-number { font-size: 3rem; }
+    }
+</style>
+{% endblock %}
 
-                <div class="input-group" style="flex: 1; display: flex; flex-direction: column;">
-                    <label class="input-label">본문 *</label>
-                    <textarea id="textInput" 
-                              class="input-field" 
-                              placeholder="블로그 본문을 붙여넣으세요...
+{% block content %}
+<div class="page-header">
+    <h1>📊 실시간 텍스트 분석기</h1>
+    <p>블로그 글을 분석하고 최적화하세요</p>
+</div>
+
+<div class="container">
+    <div class="main-grid">
+        <!-- 📝 입력 섹션 -->
+        <div class="glass-card input-section">
+            <h2 class="card-title">
+                <span class="icon">✍️</span>
+                글 입력
+            </h2>
+            
+            <div class="input-group">
+                <label class="input-label">제목 (선택사항)</label>
+                <input type="text" 
+                       id="titleInput" 
+                       class="input-field" 
+                       placeholder="블로그 글 제목을 입력하세요">
+            </div>
+
+            <div class="input-group" style="flex: 1; display: flex; flex-direction: column;">
+                <label class="input-label">본문 *</label>
+                <textarea id="textInput" 
+                          class="input-field" 
+                          placeholder="블로그 본문을 붙여넣으세요...
 
 예시:
 안녕하세요! 오늘은 강남에서 정말 맛있는 파스타 맛집을 소개해드릴게요.
 분위기도 좋고 가격도 합리적인 곳이에요!
 
 ..."></textarea>
-                </div>
-
-                <button id="analyzeBtn" class="analyze-btn" onclick="analyzeText()">
-                    🔍 분석 시작
-                </button>
             </div>
 
-            <!-- 📊 결과 섹션 -->
-            <div class="glass-card">
-                <h2 class="card-title">
-                    <span class="icon">📈</span>
-                    분석 결과
-                </h2>
+            <button id="analyzeBtn" class="analyze-btn" onclick="analyzeText()">
+                🔍 분석 시작
+            </button>
+        </div>
 
-                <div id="resultsContainer">
-                    <div class="empty-state">
-                        <div class="empty-icon">📝</div>
-                        <div class="empty-text">아직 분석 결과가 없습니다</div>
-                        <div class="empty-subtext">왼쪽에 텍스트를 입력하고 분석을 시작하세요</div>
-                    </div>
+        <!-- 📊 결과 섹션 -->
+        <div class="glass-card">
+            <h2 class="card-title">
+                <span class="icon">📈</span>
+                분석 결과
+            </h2>
+
+            <div id="resultsContainer">
+                <div class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <div style="font-size: 1.2rem; margin-bottom: 10px;">아직 분석 결과가 없습니다</div>
+                    <div style="font-size: 0.95rem; opacity: 0.7;">왼쪽에 텍스트를 입력하고 분석을 시작하세요</div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        async function analyzeText() {
-            const text = document.getElementById('textInput').value.trim();
-            const title = document.getElementById('titleInput').value.trim();
-            const btn = document.getElementById('analyzeBtn');
-            const resultsContainer = document.getElementById('resultsContainer');
+<script>
+    async function analyzeText() {
+        const text = document.getElementById('textInput').value.trim();
+        const title = document.getElementById('titleInput').value.trim();
+        const btn = document.getElementById('analyzeBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
 
-            if (!text) {
-                alert('본문을 입력해주세요!');
-                return;
+        if (!text) {
+            alert('본문을 입력해주세요!');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = '🔄 분석 중...';
+        resultsContainer.innerHTML = `
+            <div class="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">AI가 텍스트를 분석하고 있습니다...</div>
+            </div>
+        `;
+
+        try {
+            const response = await fetch('/api/analyze-text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text, title })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                displayResults(data.analysis);
+            } else {
+                throw new Error(data.error || '분석 실패');
             }
-
-            // 로딩 상태
-            btn.disabled = true;
-            btn.textContent = '🔄 분석 중...';
+        } catch (error) {
+            console.error('분석 오류:', error);
             resultsContainer.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <div class="loading-text">AI가 텍스트를 분석하고 있습니다...</div>
+                <div class="empty-state">
+                    <div class="empty-icon">❌</div>
+                    <div style="font-size: 1.2rem;">분석 중 오류가 발생했습니다</div>
+                    <div style="font-size: 0.95rem; opacity: 0.7;">${error.message}</div>
                 </div>
             `;
-
-            try {
-                const response = await fetch('/api/analyze-text', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ text, title })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    displayResults(data.analysis);
-                } else {
-                    throw new Error(data.error || '분석 실패');
-                }
-            } catch (error) {
-                console.error('분석 오류:', error);
-                resultsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">❌</div>
-                        <div class="empty-text">분석 중 오류가 발생했습니다</div>
-                        <div class="empty-subtext">${error.message}</div>
-                    </div>
-                `;
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '🔍 분석 시작';
-            }
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '🔍 분석 시작';
         }
+    }
 
-        function displayResults(analysis) {
-            const resultsContainer = document.getElementById('resultsContainer');
-            
-            let html = '<div class="results-section">';
+    function displayResults(analysis) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        
+        let html = '<div class="results-section">';
 
-            // 1️⃣ 가독성 점수
-            html += `
-                <div class="score-display">
-                    <div class="score-number">${analysis.readability.score}<span style="font-size: 2rem;">/100</span></div>
-                    <div class="score-label">가독성 점수</div>
+        // 1️⃣ 가독성 점수
+        html += `
+            <div class="score-display">
+                <div class="score-number">${analysis.readability.score}<span style="font-size: 2rem;">/100</span></div>
+                <div class="score-label">가독성 점수</div>
+            </div>
+        `;
+
+        // 2️⃣ 글자수 분석
+        const charCount = analysis.character_count;
+        html += `
+            <div class="result-card">
+                <h3>📝 글자수 분석</h3>
+                <div class="result-item">
+                    <span class="result-label">전체 글자수</span>
+                    <span class="result-value">${charCount.total.toLocaleString()}자</span>
                 </div>
-            `;
+                <div class="result-item">
+                    <span class="result-label">공백 제외</span>
+                    <span class="result-value">${charCount.without_space.toLocaleString()}자</span>
+                </div>
+                ${charCount.title > 0 ? `
+                <div class="result-item">
+                    <span class="result-label">제목</span>
+                    <span class="result-value">${charCount.title}자</span>
+                </div>
+                ` : ''}
+                <div class="result-item">
+                    <span class="result-label">읽는 시간</span>
+                    <span class="result-value">⏱️ ${charCount.reading_time}</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">권장 범위</span>
+                    <span class="result-value">
+                        ${charCount.recommended_range}
+                        <span class="status-badge status-${charCount.status}">
+                            ${charCount.status === 'good' ? '✅' : charCount.status === 'warning' ? '⚠️' : 'ℹ️'}
+                        </span>
+                    </span>
+                </div>
+                ${charCount.message ? `
+                <div class="message-box ${charCount.status}">
+                    <span>${charCount.status === 'good' ? '✅' : charCount.status === 'warning' ? '⚠️' : 'ℹ️'}</span>
+                    <span>${charCount.message}</span>
+                </div>
+                ` : ''}
+            </div>
+        `;
 
-            // 2️⃣ 글자수 분석
-            const charCount = analysis.character_count;
+        // 3️⃣ 키워드 밀도
+        const keywords = analysis.keyword_density.keywords;
+        if (keywords && keywords.length > 0) {
             html += `
                 <div class="result-card">
-                    <h3>📝 글자수 분석</h3>
-                    <div class="result-item">
-                        <span class="result-label">전체 글자수</span>
-                        <span class="result-value">${charCount.total.toLocaleString()}자</span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">공백 제외</span>
-                        <span class="result-value">${charCount.without_space.toLocaleString()}자</span>
-                    </div>
-                    ${charCount.title > 0 ? `
-                    <div class="result-item">
-                        <span class="result-label">제목</span>
-                        <span class="result-value">${charCount.title}자</span>
-                    </div>
-                    ` : ''}
-                    <div class="result-item">
-                        <span class="result-label">읽는 시간</span>
-                        <span class="result-value">⏱️ ${charCount.reading_time}</span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">권장 범위</span>
-                        <span class="result-value">
-                            ${charCount.recommended_range}
-                            <span class="status-badge status-${charCount.status}">
-                                ${charCount.status === 'good' ? '✅' : charCount.status === 'warning' ? '⚠️' : 'ℹ️'}
-                            </span>
-                        </span>
-                    </div>
-                    ${charCount.message ? `
-                    <div class="message-box ${charCount.status}">
-                        <span>${charCount.status === 'good' ? '✅' : charCount.status === 'warning' ? '⚠️' : 'ℹ️'}</span>
-                        <span>${charCount.message}</span>
-                    </div>
-                    ` : ''}
-                </div>
+                    <h3>🔍 키워드 밀도 분석</h3>
+                    <div class="keyword-list">
             `;
-
-            // 3️⃣ 키워드 밀도
-            const keywords = analysis.keyword_density.keywords;
-            if (keywords && keywords.length > 0) {
-                html += `
-                    <div class="result-card">
-                        <h3>🔍 키워드 밀도 분석</h3>
-                        <div class="keyword-list">
-                `;
-                
-                keywords.forEach(kw => {
-                    html += `
-                        <div class="keyword-item">
-                            <div class="keyword-info">
-                                <span class="keyword-word">${kw.word}</span>
-                                <div class="keyword-stats">
-                                    <span class="keyword-stat">${kw.count}회</span>
-                                    <span class="keyword-stat">${kw.density}%</span>
-                                    <span class="status-badge status-${kw.status}">
-                                        ${kw.status === 'good' ? '✅' : kw.status === 'warning' ? '⚠️' : 'ℹ️'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        ${kw.suggestion ? `
-                        <div class="suggestion-box">
-                            💡 ${kw.suggestion}
-                        </div>
-                        ` : ''}
-                    `;
-                });
-
-                html += `
-                        </div>
-                    </div>
-                `;
-            }
-
-            // 4️⃣ 중복 표현
-            const duplicates = analysis.duplicate_expressions;
-            if (duplicates && duplicates.length > 0) {
-                html += `
-                    <div class="result-card">
-                        <h3>🔄 중복 표현 감지</h3>
-                        <div class="keyword-list">
-                `;
-                
-                duplicates.forEach(dup => {
-                    html += `
-                        <div class="keyword-item">
-                            <div class="keyword-info">
-                                <span class="keyword-word">${dup.expression}</span>
-                                <div class="keyword-stats">
-                                    <span class="keyword-stat">${dup.count}회 반복</span>
-                                    <span class="status-badge status-${dup.status}">
-                                        ${dup.status === 'warning' ? '⚠️' : 'ℹ️'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="suggestion-box">
-                            💡 ${dup.suggestion}
-                        </div>
-                    `;
-                });
-
-                html += `
-                        </div>
-                    </div>
-                `;
-            }
-
-            // 5️⃣ 가독성 상세
-            const readability = analysis.readability;
-            html += `
-                <div class="result-card">
-                    <h3>📖 가독성 상세 분석</h3>
-                    <div class="result-item">
-                        <span class="result-label">평균 문장 길이</span>
-                        <span class="result-value">
-                            ${readability.sentence_length.avg}자
-                            <span class="status-badge status-${readability.sentence_length.status}">
-                                ${readability.sentence_length.status === 'good' ? '✅' : readability.sentence_length.status === 'warning' ? '⚠️' : 'ℹ️'}
-                            </span>
-                        </span>
-                    </div>
-                    ${readability.sentence_length.message ? `
-                    <div class="message-box ${readability.sentence_length.status}">
-                        <span>${readability.sentence_length.status === 'good' ? '✅' : readability.sentence_length.status === 'warning' ? '⚠️' : 'ℹ️'}</span>
-                        <span>${readability.sentence_length.message}</span>
-                    </div>
-                    ` : ''}
-
-                    <div class="result-item" style="margin-top: 10px;">
-                        <span class="result-label">평균 단락 길이</span>
-                        <span class="result-value">
-                            ${readability.paragraph_length.avg}줄
-                            <span class="status-badge status-${readability.paragraph_length.status}">
-                                ${readability.paragraph_length.status === 'good' ? '✅' : '⚠️'}
-                            </span>
-                        </span>
-                    </div>
-                    ${readability.paragraph_length.message ? `
-                    <div class="message-box ${readability.paragraph_length.status}">
-                        <span>${readability.paragraph_length.status === 'good' ? '✅' : '⚠️'}</span>
-                        <span>${readability.paragraph_length.message}</span>
-                    </div>
-                    ` : ''}
-
-                    <div class="result-item" style="margin-top: 10px;">
-                        <span class="result-label">줄바꿈</span>
-                        <span class="result-value">
-                            ${readability.line_breaks.count}회
-                            <span class="status-badge status-${readability.line_breaks.status}">
-                                ${readability.line_breaks.status === 'good' ? '✅' : '⚠️'}
-                            </span>
-                        </span>
-                    </div>
-                    ${readability.line_breaks.message ? `
-                    <div class="message-box ${readability.line_breaks.status}">
-                        <span>${readability.line_breaks.status === 'good' ? '✅' : '⚠️'}</span>
-                        <span>${readability.line_breaks.message}</span>
-                    </div>
-                    ` : ''}
-                </div>
-            `;
-
-            html += '</div>';
             
-            resultsContainer.innerHTML = html;
+            keywords.forEach(kw => {
+                html += `
+                    <div class="keyword-item">
+                        <div class="keyword-info">
+                            <span class="keyword-word">${kw.word}</span>
+                            <div class="keyword-stats">
+                                <span class="keyword-stat">${kw.count}회</span>
+                                <span class="keyword-stat">${kw.density}%</span>
+                                <span class="status-badge status-${kw.status}">
+                                    ${kw.status === 'good' ? '✅' : kw.status === 'warning' ? '⚠️' : 'ℹ️'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    ${kw.suggestion ? `
+                    <div class="suggestion-box">
+                        💡 ${kw.suggestion}
+                    </div>
+                    ` : ''}
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
         }
 
-        // Enter 키로 분석 (Ctrl+Enter 또는 Cmd+Enter)
-        document.getElementById('textInput').addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                analyzeText();
-            }
-        });
-    </script>
-</body>
-</html>
+        // 4️⃣ 중복 표현
+        const duplicates = analysis.duplicate_expressions;
+        if (duplicates && duplicates.length > 0) {
+            html += `
+                <div class="result-card">
+                    <h3>🔄 중복 표현 감지</h3>
+                    <div class="keyword-list">
+            `;
+            
+            duplicates.forEach(dup => {
+                html += `
+                    <div class="keyword-item">
+                        <div class="keyword-info">
+                            <span class="keyword-word">${dup.expression}</span>
+                            <div class="keyword-stats">
+                                <span class="keyword-stat">${dup.count}회 반복</span>
+                                <span class="status-badge status-${dup.status}">
+                                    ${dup.status === 'warning' ? '⚠️' : 'ℹ️'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="suggestion-box">
+                        💡 ${dup.suggestion}
+                    </div>
+                `;
+            });
 
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+
+        // 5️⃣ 가독성 상세
+        const readability = analysis.readability;
+        html += `
+            <div class="result-card">
+                <h3>📖 가독성 상세 분석</h3>
+                <div class="result-item">
+                    <span class="result-label">평균 문장 길이</span>
+                    <span class="result-value">
+                        ${readability.sentence_length.avg}자
+                        <span class="status-badge status-${readability.sentence_length.status}">
+                            ${readability.sentence_length.status === 'good' ? '✅' : readability.sentence_length.status === 'warning' ? '⚠️' : 'ℹ️'}
+                        </span>
+                    </span>
+                </div>
+                ${readability.sentence_length.message ? `
+                <div class="message-box ${readability.sentence_length.status}">
+                    <span>${readability.sentence_length.status === 'good' ? '✅' : readability.sentence_length.status === 'warning' ? '⚠️' : 'ℹ️'}</span>
+                    <span>${readability.sentence_length.message}</span>
+                </div>
+                ` : ''}
+
+                <div class="result-item" style="margin-top: 10px;">
+                    <span class="result-label">평균 단락 길이</span>
+                    <span class="result-value">
+                        ${readability.paragraph_length.avg}줄
+                        <span class="status-badge status-${readability.paragraph_length.status}">
+                            ${readability.paragraph_length.status === 'good' ? '✅' : '⚠️'}
+                        </span>
+                    </span>
+                </div>
+                ${readability.paragraph_length.message ? `
+                <div class="message-box ${readability.paragraph_length.status}">
+                    <span>${readability.paragraph_length.status === 'good' ? '✅' : '⚠️'}</span>
+                    <span>${readability.paragraph_length.message}</span>
+                </div>
+                ` : ''}
+
+                <div class="result-item" style="margin-top: 10px;">
+                    <span class="result-label">줄바꿈</span>
+                    <span class="result-value">
+                        ${readability.line_breaks.count}회
+                        <span class="status-badge status-${readability.line_breaks.status}">
+                            ${readability.line_breaks.status === 'good' ? '✅' : '⚠️'}
+                        </span>
+                    </span>
+                </div>
+                ${readability.line_breaks.message ? `
+                <div class="message-box ${readability.line_breaks.status}">
+                    <span>${readability.line_breaks.status === 'good' ? '✅' : '⚠️'}</span>
+                    <span>${readability.line_breaks.message}</span>
+                </div>
+                ` : ''}
+            </div>
+        `;
+
+        html += '</div>';
+        
+        resultsContainer.innerHTML = html;
+    }
+
+    // Enter 키로 분석 (Ctrl+Enter 또는 Cmd+Enter)
+    document.getElementById('textInput').addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            analyzeText();
+        }
+    });
+</script>
+{% endblock %}
