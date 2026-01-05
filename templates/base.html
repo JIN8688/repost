@@ -29,8 +29,8 @@
             --text-gray: #64748b;
             
             --header-height: 70px;
-            --header-bg: rgba(255, 255, 255, 0.8);
-            --header-border: rgba(0, 0, 0, 0.1);
+            --header-bg: rgba(255, 255, 255, 0.4);
+            --header-border: rgba(255, 255, 255, 0.2);
         }
 
         body {
@@ -59,18 +59,20 @@
         }
 
         .main-header.scrolled {
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            background: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         .header-container {
             max-width: 1400px;
             margin: 0 auto;
             height: 100%;
-            padding: 0 max(20px, env(safe-area-inset-right));
+            padding: 0 max(24px, env(safe-area-inset-right));
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 20px;
         }
 
         /* 로고 */
