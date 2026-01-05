@@ -1382,9 +1382,6 @@ function setupSecretCodeAccess() {
     
     // 이벤트 리스너 등록
     logo.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
         clickCount++;
         console.log(`🖱️ 클릭 ${clickCount}/5`);
         
@@ -1398,12 +1395,14 @@ function setupSecretCodeAccess() {
         
         // 5번 클릭 완료
         if (clickCount === 5) {
+            e.preventDefault(); // 5번째 클릭일 때만 페이지 이동 막기
+            e.stopPropagation();
             clearTimeout(clickTimer);
             clickCount = 0;
             console.log('🔐 시크릿 코드 모달 표시!');
             showSecretCodeModal();
         }
-    }, { capture: true }); // capture 모드로 우선 처리
+    }, true); // capture 모드로 우선 처리
     
     console.log('🎯 이벤트 리스너 등록 완료!');
 }
