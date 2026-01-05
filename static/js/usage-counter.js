@@ -122,19 +122,7 @@ class UsageCounter {
         
         const counterEl = document.getElementById('remainingCount');
         if (counterEl) {
-            counterEl.textContent = `${remaining.total}회`;
-            
-            // 색상 변경 (남은 횟수에 따라)
-            if (remaining.total === 0) {
-                counterEl.style.color = '#ef4444';
-                counterEl.style.background = '#fef2f2';
-            } else if (remaining.total <= 2) {
-                counterEl.style.color = '#f59e0b';
-                counterEl.style.background = '#fffbeb';
-            } else {
-                counterEl.style.color = '#667eea';
-                counterEl.style.background = 'white';
-            }
+            counterEl.textContent = `${remaining.total} 회남음`;
         }
         
         console.log(`🎯 남은 횟수: ${remaining.total}회 (기본: ${remaining.base}, 보너스: ${remaining.bonus})`);
