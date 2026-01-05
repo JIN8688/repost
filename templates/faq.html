@@ -1,0 +1,720 @@
+{% extends "base.html" %}
+
+{% block title %}자주 묻는 질문 - Repost{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 홈 배경 그대로 사용 */
+    body {
+        background: 
+            radial-gradient(at 27% 37%, rgba(102, 126, 234, 0.8) 0px, transparent 50%),
+            radial-gradient(at 97% 21%, rgba(125, 235, 200, 0.7) 0px, transparent 50%),
+            radial-gradient(at 52% 99%, rgba(244, 107, 153, 0.7) 0px, transparent 50%),
+            radial-gradient(at 10% 29%, rgba(118, 75, 162, 0.8) 0px, transparent 50%),
+            #1a1a2e !important;
+        background-attachment: fixed !important;
+    }
+
+    .faq-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 80px 20px;
+    }
+    
+    @media (max-width: 768px) {
+        .faq-container {
+            padding: 30px 20px 60px;
+        }
+    }
+
+    .faq-header {
+        text-align: center;
+        margin-bottom: 60px;
+        animation: fadeInDown 0.6s ease-out;
+    }
+
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .faq-header h1 {
+        font-size: clamp(2rem, 5vw, 2.8rem);
+        font-weight: 800;
+        color: white;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+        margin-bottom: 16px;
+    }
+
+    .faq-header p {
+        font-size: clamp(1rem, 2.5vw, 1.15rem);
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 500;
+    }
+
+    /* 카테고리 탭 */
+    .category-tabs {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 40px;
+        overflow-x: auto;
+        padding: 4px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .category-tabs::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .category-tabs::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+    }
+
+    .category-tab {
+        padding: 12px 24px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        backdrop-filter: blur(10px);
+    }
+
+    .category-tab:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+    }
+
+    .category-tab.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    /* FAQ 아이템 */
+    .faq-category {
+        display: none;
+    }
+
+    .faq-category.active {
+        display: block;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .faq-item {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(30px) saturate(180%);
+        border-radius: 20px;
+        margin-bottom: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .faq-item:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .faq-question {
+        padding: 24px 28px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .faq-question:hover {
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .faq-question-text {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #2d3748;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .faq-icon {
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .faq-toggle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .faq-item.open .faq-toggle {
+        transform: rotate(45deg);
+    }
+
+    .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+    }
+
+    .faq-item.open .faq-answer {
+        max-height: 1000px;
+        padding: 0 28px 24px 28px;
+    }
+
+    .faq-answer-content {
+        color: #4a5568;
+        line-height: 1.8;
+        font-size: 1.05rem;
+        padding-top: 8px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .faq-answer-content strong {
+        color: #2d3748;
+        font-weight: 700;
+    }
+
+    .faq-answer-content ul {
+        margin: 16px 0;
+        padding-left: 24px;
+    }
+
+    .faq-answer-content li {
+        margin-bottom: 8px;
+    }
+
+    /* 검색 박스 */
+    .search-box {
+        margin-bottom: 40px;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 18px 24px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        font-size: 1.05rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        background: white;
+    }
+
+    .search-input::placeholder {
+        color: #a0aec0;
+    }
+
+    /* CTA 섹션 */
+    .faq-cta {
+        text-align: center;
+        padding: 40px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(30px) saturate(180%);
+        border-radius: 24px;
+        margin-top: 60px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .faq-cta h2 {
+        color: #2d3748;
+        font-size: 1.8rem;
+        margin-bottom: 12px;
+        font-weight: 700;
+    }
+
+    .faq-cta p {
+        color: #4a5568;
+        margin-bottom: 24px;
+        font-size: 1.1rem;
+    }
+
+    .cta-button {
+        display: inline-block;
+        padding: 16px 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 14px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    .cta-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+    }
+
+    @media (max-width: 768px) {
+        .faq-question {
+            padding: 20px;
+        }
+
+        .faq-question-text {
+            font-size: 1.05rem;
+        }
+
+        .faq-icon {
+            font-size: 1.3rem;
+        }
+
+        .faq-item.open .faq-answer {
+            padding: 0 20px 20px 20px;
+        }
+
+        .faq-answer-content {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="faq-container">
+    <!-- 헤더 -->
+    <div class="faq-header">
+        <h1>❓ 자주 묻는 질문</h1>
+        <p>궁금한 점이 있으신가요? 여기서 답을 찾아보세요!</p>
+    </div>
+
+    <!-- 검색 박스 -->
+    <div class="search-box">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 질문 검색... (예: 요금제, 환불, 사용법)">
+    </div>
+
+    <!-- 카테고리 탭 -->
+    <div class="category-tabs">
+        <div class="category-tab active" data-category="all">전체</div>
+        <div class="category-tab" data-category="basic">기본 사용법</div>
+        <div class="category-tab" data-category="pricing">요금제</div>
+        <div class="category-tab" data-category="technical">기술/기능</div>
+        <div class="category-tab" data-category="account">계정/결제</div>
+    </div>
+
+    <!-- FAQ 카테고리: 전체 -->
+    <div class="faq-category active" data-category="all">
+        <!-- 기본 사용법 -->
+        <div class="faq-item" data-category="basic">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">🚀</span>
+                    <span>Repost는 어떻게 사용하나요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <strong>매우 간단합니다!</strong>
+                    <ul>
+                        <li>홈페이지에서 네이버 블로그 URL을 입력하세요</li>
+                        <li>"분석하기" 버튼을 클릭하세요</li>
+                        <li>3초 후, AI가 생성한 8개의 댓글이 나타납니다</li>
+                        <li>마음에 드는 댓글을 복사해서 사용하세요</li>
+                    </ul>
+                    회원가입 없이도 바로 사용할 수 있습니다!
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="basic">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">🤖</span>
+                    <span>AI가 생성한 댓글은 얼마나 자연스러운가요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    Repost는 GPT-4 기반의 최신 AI 기술을 사용합니다. AI는 블로그 내용을 실제로 읽고 이해한 후, 맥락에 맞는 자연스러운 댓글을 생성합니다.
+                    <br><br>
+                    <strong>품질 보장:</strong>
+                    <ul>
+                        <li>블로그 내용과 관련된 댓글만 생성</li>
+                        <li>친근하고 자연스러운 말투 사용</li>
+                        <li>스팸처럼 보이지 않는 진정성 있는 댓글</li>
+                        <li>8개의 다양한 스타일 제공</li>
+                    </ul>
+                    약간의 개인적인 터치를 추가하면 더욱 완벽합니다!
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="basic">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">🌐</span>
+                    <span>네이버 블로그 외에 다른 플랫폼도 지원하나요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    현재는 <strong>네이버 블로그만 지원</strong>하지만, 다른 플랫폼도 순차적으로 추가할 예정입니다.
+                    <br><br>
+                    <strong>향후 지원 예정:</strong>
+                    <ul>
+                        <li>티스토리 (2025년 상반기)</li>
+                        <li>브런치 (2025년 하반기)</li>
+                        <li>Velog (2025년 하반기)</li>
+                        <li>워드프레스 (검토 중)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 요금제 -->
+        <div class="faq-item" data-category="pricing">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">💰</span>
+                    <span>무료로 사용할 수 있나요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <strong>네, 무료 플랜을 제공합니다!</strong>
+                    <br><br>
+                    <strong>무료 플랜 혜택:</strong>
+                    <ul>
+                        <li>댓글 자동 추천 (월 10회)</li>
+                        <li>실시간 텍스트 분석기</li>
+                        <li>스마트 제목 생성기</li>
+                        <li>SEO 점수 체커</li>
+                    </ul>
+                    회원가입만 하면 바로 사용할 수 있습니다. 더 많은 기능이 필요하면 언제든지 유료 플랜으로 업그레이드하세요!
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="pricing">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">💎</span>
+                    <span>어떤 요금제를 선택해야 하나요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <strong>사용 패턴에 따라 선택하세요:</strong>
+                    <br><br>
+                    <strong>🆓 FREE (무료):</strong> 처음 시작하거나 가끔 사용하는 경우
+                    <br><br>
+                    <strong>⭐ BASIC (9,900원/월):</strong> 주 2-3회 블로그 네트워킹을 하는 경우
+                    <ul>
+                        <li>월 100회 댓글 자동 추천</li>
+                        <li>우선 처리 속도</li>
+                    </ul>
+                    <strong>💎 PRO (29,900원/월):</strong> 매일 활발히 활동하는 파워 블로거
+                    <ul>
+                        <li>댓글 자동 추천 무제한</li>
+                        <li>AI 글쓰기 도우미</li>
+                        <li>경쟁 블로그 분석</li>
+                        <li>키워드 추천 엔진</li>
+                    </ul>
+                    <strong>💡 팁:</strong> 무료로 시작해서 필요에 따라 업그레이드하세요!
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="pricing">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">🔄</span>
+                    <span>요금제를 언제든지 변경할 수 있나요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <strong>네, 언제든지 변경 가능합니다!</strong>
+                    <br><br>
+                    <strong>업그레이드:</strong> 즉시 적용되며, 남은 기간은 일할 계산으로 환불됩니다
+                    <br><br>
+                    <strong>다운그레이드:</strong> 다음 결제일부터 적용됩니다
+                    <br><br>
+                    <strong>해지:</strong> 언제든지 가능하며, 남은 기간까지 서비스를 계속 이용할 수 있습니다
+                </div>
+            </div>
+        </div>
+
+        <!-- 기술/기능 -->
+        <div class="faq-item" data-category="technical">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">⚡</span>
+                    <span>분석 속도가 얼마나 걸리나요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <strong>매우 빠릅니다!</strong>
+                    <ul>
+                        <li><strong>무료 플랜:</strong> 평균 5-8초</li>
+                        <li><strong>베이직 플랜:</strong> 평균 3-5초 (우선 처리)</li>
+                        <li><strong>프로 플랜:</strong> 평균 2-3초 (최우선 처리)</li>
+                    </ul>
+                    블로그 글의 길이에 따라 약간의 차이가 있을 수 있습니다.
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="technical">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">🛠</span>
+                    <span>블로거 도구는 어떤 기능이 있나요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <strong>6가지 강력한 도구를 제공합니다:</strong>
+                    <ul>
+                        <li><strong>📊 실시간 텍스트 분석기:</strong> 글자 수, 키워드 밀도, 가독성 분석</li>
+                        <li><strong>💡 스마트 제목 생성기:</strong> 클릭률 높은 제목 10개 자동 생성</li>
+                        <li><strong>🎯 SEO 점수 체커:</strong> 검색 노출 최적화 점수와 개선 방법 제시</li>
+                        <li><strong>✍️ AI 글쓰기 도우미:</strong> 새 글 작성 및 기존 글 개선 (PRO)</li>
+                        <li><strong>🔍 경쟁 블로그 분석:</strong> 상위 블로그 분석 및 승리 전략 (PRO)</li>
+                        <li><strong>🔑 키워드 추천 엔진:</strong> 검색량 높은 키워드 자동 추천 (PRO)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="technical">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">📱</span>
+                    <span>모바일에서도 사용할 수 있나요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <strong>물론입니다!</strong> Repost는 반응형 디자인으로 제작되어 PC, 태블릿, 모바일 모두에서 완벽하게 작동합니다.
+                    <br><br>
+                    모바일에서도 PC와 동일한 모든 기능을 사용할 수 있으며, 터치 최적화된 UI로 편리하게 이용할 수 있습니다.
+                </div>
+            </div>
+        </div>
+
+        <!-- 계정/결제 -->
+        <div class="faq-item" data-category="account">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">🔐</span>
+                    <span>회원가입이 필수인가요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <strong>댓글 자동 추천 기능은 회원가입 없이도 사용 가능합니다!</strong>
+                    <br><br>
+                    단, 다음 기능을 이용하려면 회원가입이 필요합니다:
+                    <ul>
+                        <li>사용 기록 저장</li>
+                        <li>블로거 도구 (6가지)</li>
+                        <li>유료 플랜 이용</li>
+                        <li>맞춤 설정 저장</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="account">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">💳</span>
+                    <span>어떤 결제 수단을 지원하나요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <strong>다양한 결제 수단을 지원합니다:</strong>
+                    <ul>
+                        <li>신용카드 (국내/해외 모든 카드)</li>
+                        <li>체크카드</li>
+                        <li>간편결제 (카카오페이, 네이버페이, 토스)</li>
+                        <li>계좌이체</li>
+                    </ul>
+                    안전한 PG사를 통해 결제가 진행되며, 카드 정보는 암호화되어 저장됩니다.
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="account">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">↩️</span>
+                    <span>환불이 가능한가요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <strong>네, 환불 정책은 다음과 같습니다:</strong>
+                    <br><br>
+                    <strong>✅ 전액 환불 (100%):</strong>
+                    <ul>
+                        <li>결제 후 7일 이내</li>
+                        <li>서비스를 사용하지 않은 경우</li>
+                    </ul>
+                    <strong>📊 부분 환불 (일할 계산):</strong>
+                    <ul>
+                        <li>결제 후 7일 초과</li>
+                        <li>서비스를 사용한 경우</li>
+                        <li>남은 기간에 대해 일할 계산 후 환불</li>
+                    </ul>
+                    환불은 contact@repost.kr로 문의하시면 영업일 기준 3일 이내 처리됩니다.
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" data-category="account">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <div class="faq-question-text">
+                    <span class="faq-icon">🔒</span>
+                    <span>개인정보는 안전한가요?</span>
+                </div>
+                <div class="faq-toggle">+</div>
+            </div>
+            <div class="faq-answer">
+                <div class="faq-answer-content">
+                    <strong>개인정보 보호를 최우선으로 합니다!</strong>
+                    <ul>
+                        <li>모든 데이터는 암호화되어 저장됩니다</li>
+                        <li>SSL 인증서를 통한 안전한 통신</li>
+                        <li>개인정보처리방침 준수</li>
+                        <li>제3자에게 정보를 제공하지 않습니다</li>
+                        <li>언제든지 회원 탈퇴 및 정보 삭제 가능</li>
+                    </ul>
+                    자세한 내용은 <a href="/privacy" style="color: #667eea; font-weight: 600;">개인정보처리방침</a>을 확인해주세요.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="faq-cta">
+        <h2>더 궁금한 점이 있으신가요? 🤔</h2>
+        <p>언제든지 문의해주세요. 24시간 이내에 답변드립니다!</p>
+        <a href="/contact" class="cta-button">문의하기</a>
+    </div>
+</div>
+
+<script>
+// FAQ 토글
+function toggleFAQ(element) {
+    const faqItem = element.closest('.faq-item');
+    const wasOpen = faqItem.classList.contains('open');
+    
+    // 모든 FAQ 닫기
+    document.querySelectorAll('.faq-item').forEach(item => {
+        item.classList.remove('open');
+    });
+    
+    // 클릭한 FAQ만 열기 (이미 열려있었으면 닫힌 상태 유지)
+    if (!wasOpen) {
+        faqItem.classList.add('open');
+    }
+}
+
+// 카테고리 필터링
+document.querySelectorAll('.category-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        const category = tab.dataset.category;
+        
+        // 활성 탭 변경
+        document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // FAQ 아이템 필터링
+        document.querySelectorAll('.faq-item').forEach(item => {
+            if (category === 'all' || item.dataset.category === category) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // 모든 FAQ 닫기
+        document.querySelectorAll('.faq-item').forEach(item => {
+            item.classList.remove('open');
+        });
+    });
+});
+
+// 검색 기능
+const searchInput = document.getElementById('searchInput');
+searchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    
+    document.querySelectorAll('.faq-item').forEach(item => {
+        const questionText = item.querySelector('.faq-question-text span:last-child').textContent.toLowerCase();
+        const answerText = item.querySelector('.faq-answer-content').textContent.toLowerCase();
+        
+        if (questionText.includes(searchTerm) || answerText.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // 검색 중에는 카테고리 탭 비활성화
+    if (searchTerm) {
+        document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+    } else {
+        // 검색어가 없으면 '전체' 탭 활성화
+        document.querySelector('.category-tab[data-category="all"]').classList.add('active');
+        document.querySelectorAll('.faq-item').forEach(item => {
+            item.style.display = 'block';
+        });
+    }
+});
+</script>
+{% endblock %}
+

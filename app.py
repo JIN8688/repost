@@ -3423,6 +3423,69 @@ def pricing():
     user = get_user_from_session()
     return render_template('pricing.html', user=user)
 
+@app.route('/guide')
+def guide():
+    """사용 가이드 페이지"""
+    return render_template('guide.html')
+
+@app.route('/faq')
+def faq():
+    """자주 묻는 질문 페이지"""
+    return render_template('faq.html')
+
+@app.route('/contact')
+def contact():
+    """문의하기 페이지"""
+    return render_template('contact.html')
+
+@app.route('/api/contact', methods=['POST'])
+def api_contact():
+    """문의 접수 API"""
+    try:
+        data = request.get_json()
+        
+        # 필수 필드 검증
+        required_fields = ['inquiryType', 'name', 'email', 'subject', 'message']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'{field}는 필수 항목입니다'}), 400
+        
+        # 이메일 형식 검증
+        email = data['email']
+        if '@' not in email:
+            return jsonify({'error': '올바른 이메일 형식이 아닙니다'}), 400
+        
+        # MongoDB에 문의 저장
+        contact_data = {
+            'inquiryType': data['inquiryType'],
+            'name': data['name'],
+            'email': email,
+            'subject': data['subject'],
+            'message': data['message'],
+            'status': 'pending',  # pending, answered
+            'createdAt': datetime.now(),
+            'ip': request.remote_addr,
+            'userAgent': request.headers.get('User-Agent')
+        }
+        
+        db.contacts.insert_one(contact_data)
+        
+        # TODO: 이메일 알림 발송 (선택사항)
+        # send_contact_email(contact_data)
+        
+        log(f"📧 새 문의 접수: {data['subject']} ({email})", "CONTACT")
+        
+        return jsonify({
+            'success': True,
+            'message': '문의가 성공적으로 접수되었습니다'
+        }), 200
+        
+    except Exception as e:
+        log(f"❌ 문의 접수 실패: {e}", "ERROR")
+        return jsonify({
+            'error': '문의 접수에 실패했습니다'
+        }), 500
+
 @app.route('/api/create-payment', methods=['POST'])
 def create_payment():
     """메인페이 결제 생성"""
