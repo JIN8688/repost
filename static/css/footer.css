@@ -254,3 +254,79 @@
     }
 }
 
+/* ===========================================
+   11. 모바일 간소화 풋터 (대형 사이트 패턴)
+   =========================================== */
+
+/* 기본: 모바일 풋터 숨김, PC 풋터 표시 */
+.footer-mobile {
+    display: none;
+}
+
+.footer-desktop {
+    display: block;
+}
+
+/* 모바일: PC 풋터 숨김, 모바일 풋터 표시 */
+@media (max-width: 768px) {
+    .footer-desktop {
+        display: none !important;
+    }
+    
+    .footer-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding: 25px 0;
+        text-align: center;
+    }
+    
+    .footer-mobile-links {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.85rem;
+    }
+    
+    .footer-mobile-links a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: color 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .footer-mobile-links a:hover {
+        color: white;
+    }
+    
+    .footer-divider {
+        color: rgba(255, 255, 255, 0.4);
+        margin: 0;
+    }
+    
+    .footer-mobile-info {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .footer-mobile-info p {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.75rem;
+        margin: 0;
+        line-height: 1.4;
+    }
+    
+    .footer-mobile-contact {
+        color: rgba(255, 255, 255, 0.5) !important;
+        font-size: 0.7rem !important;
+    }
+    
+    /* 메인 풋터 패딩 줄이기 */
+    .main-footer {
+        padding: 25px 0 20px !important;
+        margin-top: 40px !important;
+    }
+}
+
