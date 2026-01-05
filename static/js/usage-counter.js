@@ -135,11 +135,21 @@ class UsageCounter {
         const counterEl = document.getElementById('remainingCount');
         if (counterEl) {
             if (remaining.isMaster) {
-                counterEl.textContent = `9999 회남음`;
+                counterEl.textContent = `오늘 9999회 남음`;
                 console.log('🔑 마스터 계정: 무제한 사용 (9999회)');
             } else {
-                counterEl.textContent = `${remaining.total} 회남음`;
+                counterEl.textContent = `오늘 ${remaining.total}회 남음`;
                 console.log(`🎯 남은 횟수: ${remaining.total}회 (기본: ${remaining.base}, 보너스: ${remaining.bonus})`);
+                
+                // 0회가 되면 팝업 자동 표시
+                if (remaining.total === 0) {
+                    setTimeout(() => {
+                        console.log('⚠️ 사용 횟수 소진! 팝업 표시');
+                        if (typeof showUsageDetail === 'function') {
+                            showUsageDetail();
+                        }
+                    }, 500); // 0.5초 후 팝업 (자연스러운 딜레이)
+                }
             }
         }
     }
