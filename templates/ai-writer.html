@@ -1,758 +1,671 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>✍️ AI 글쓰기 도우미 - Repost</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "base.html" %}
 
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #ec4899;
-            --success: #10b981;
-            --warning: #f59e0b;
-            
-            --bg-gradient-1: #667eea;
-            --bg-gradient-2: #764ba2;
-            
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        }
+{% block title %}AI 글쓰기 도우미 - Repost{% endblock %}
 
-        body {
-            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
-            min-height: 100vh;
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
+{% block extra_css %}
+<style>
+    .page-header {
+        text-align: center;
+        padding: 60px 20px 40px;
+        animation: fadeInDown 0.6s ease-out;
+    }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%);
-            animation: float 20s ease-in-out infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(30px, -30px); }
-        }
+    .page-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 10px;
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
+    .page-header p {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 300;
+    }
 
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            animation: fadeInDown 0.6s ease-out;
-        }
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 20px 80px;
+    }
 
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        animation: fadeInUp 0.8s ease-out;
+    }
 
-        .header h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 10px;
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-        .header p {
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 300;
-        }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 24px;
+        padding: 30px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        transition: all 0.3s ease;
+    }
 
-        .back-btn {
-            position: absolute;
-            top: 0;
-            left: 0;
-            padding: 12px 24px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            box-shadow: var(--glass-shadow);
-        }
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
+    }
 
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateX(-5px);
-        }
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
 
+    .input-section {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .input-group {
+        margin-bottom: 20px;
+    }
+
+    .input-label {
+        display: block;
+        color: white;
+        font-weight: 500;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+
+    .input-field {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 12px;
+        color: white;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+
+    .input-field:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+
+    .input-field::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .tags-input {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 12px;
+        min-height: 48px;
+    }
+
+    .tag {
+        padding: 6px 12px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        color: white;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .tag-remove {
+        cursor: pointer;
+        font-weight: 700;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+
+    .tag-remove:hover {
+        opacity: 1;
+    }
+
+    .tag-input {
+        flex: 1;
+        min-width: 120px;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 0.95rem;
+        outline: none;
+    }
+
+    .tag-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .option-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+    }
+
+    .option-btn {
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        color: white;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .option-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .option-btn.active {
+        background: rgba(99, 102, 241, 0.4);
+        border-color: rgba(99, 102, 241, 0.8);
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .slider-container {
+        margin-top: 10px;
+    }
+
+    .slider {
+        width: 100%;
+        height: 8px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.2);
+        outline: none;
+        -webkit-appearance: none;
+    }
+
+    .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        border: none;
+    }
+
+    .slider-value {
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-top: 8px;
+        text-align: center;
+    }
+
+    .generate-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+        margin-top: 20px;
+    }
+
+    .generate-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6);
+    }
+
+    .generate-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .result-content {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 16px;
+        padding: 25px;
+        color: white;
+        line-height: 1.8;
+        font-size: 1.05rem;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .result-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .action-btn {
+        flex: 1;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        color: white;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .metadata-box {
+        display: flex;
+        gap: 20px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        margin-bottom: 15px;
+    }
+
+    .metadata-item {
+        flex: 1;
+        text-align: center;
+    }
+
+    .metadata-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+
+    .metadata-value {
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        color: white;
+        font-size: 1.1rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    @media (max-width: 1200px) {
         .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            animation: fadeInUp 0.8s ease-out;
+            grid-template-columns: 1fr;
         }
+    }
 
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    @media (max-width: 768px) {
+        .page-header h1 { font-size: 2rem; }
+        .glass-card { padding: 20px; }
+        .option-grid { grid-template-columns: 1fr; }
+    }
 
-        .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: var(--glass-shadow);
-            transition: all 0.3s ease;
-        }
+    .scrollbar-custom::-webkit-scrollbar {
+        width: 8px;
+    }
 
-        .glass-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.45);
-        }
+    .scrollbar-custom::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
 
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: white;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    .scrollbar-custom::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+    }
 
-        .input-section {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
+    .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+</style>
+{% endblock %}
 
-        .input-group {
-            margin-bottom: 20px;
-        }
+{% block content %}
+<div class="page-header">
+    <h1>✍️ AI 글쓰기 도우미</h1>
+    <p>주제만 입력하면 AI가 3초만에 블로그 초안을 작성합니다</p>
+</div>
 
-        .input-label {
-            display: block;
-            color: white;
-            font-weight: 500;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: 12px;
-            color: white;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: all 0.3s ease;
-        }
-
-        .input-field:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.4);
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-        }
-
-        .input-field::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .tags-input {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: 12px;
-            min-height: 48px;
-        }
-
-        .tag {
-            padding: 6px 12px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            color: white;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .tag-remove {
-            cursor: pointer;
-            font-weight: 700;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-
-        .tag-remove:hover {
-            opacity: 1;
-        }
-
-        .tag-input {
-            flex: 1;
-            min-width: 120px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 0.95rem;
-            outline: none;
-        }
-
-        .tag-input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .option-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
-        }
-
-        .option-btn {
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            color: white;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-
-        .option-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .option-btn.active {
-            background: rgba(99, 102, 241, 0.4);
-            border-color: rgba(99, 102, 241, 0.8);
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-        }
-
-        .slider-container {
-            margin-top: 10px;
-        }
-
-        .slider {
-            width: 100%;
-            height: 8px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.2);
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: white;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: white;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            border: none;
-        }
-
-        .slider-value {
-            color: white;
-            font-weight: 600;
-            font-size: 1.1rem;
-            margin-top: 8px;
-            text-align: center;
-        }
-
-        .generate-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, var(--secondary) 0%, #f43f5e 100%);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
-            margin-top: 20px;
-        }
-
-        .generate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6);
-        }
-
-        .generate-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .result-content {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: 16px;
-            padding: 25px;
-            color: white;
-            line-height: 1.8;
-            font-size: 1.05rem;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .result-actions {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .action-btn {
-            flex: 1;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            color: white;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .action-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .metadata-box {
-            display: flex;
-            gap: 20px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            margin-bottom: 15px;
-        }
-
-        .metadata-item {
-            flex: 1;
-            text-align: center;
-        }
-
-        .metadata-label {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-        }
-
-        .metadata-value {
-            color: white;
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 255, 255, 0.2);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            color: white;
-            font-size: 1.1rem;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        @media (max-width: 1200px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            body { padding: 15px; }
-            .header h1 { font-size: 2rem; }
-            .back-btn { position: static; margin-bottom: 20px; display: inline-block; }
-            .glass-card { padding: 20px; }
-            .option-grid { grid-template-columns: 1fr; }
-        }
-
-        .scrollbar-custom::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .scrollbar-custom::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-
-        .scrollbar-custom::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-        }
-
-        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <a href="/" class="back-btn">← 홈으로</a>
-        
-        <div class="header">
-            <h1>✍️ AI 글쓰기 도우미</h1>
-            <p>주제만 입력하면 AI가 3초만에 블로그 초안을 작성합니다</p>
-        </div>
-
-        <div class="main-grid">
-            <!-- 📝 입력 섹션 -->
-            <div class="glass-card input-section">
-                <h2 class="card-title">
-                    <span>🎯</span>
-                    글 설정
-                </h2>
-                
-                <div class="input-group">
-                    <label class="input-label">주제 *</label>
-                    <input type="text" 
-                           id="topicInput" 
-                           class="input-field" 
-                           placeholder="예: 강남 파스타 맛집 추천">
-                </div>
-
-                <div class="input-group">
-                    <label class="input-label">키워드 (Enter로 추가)</label>
-                    <div class="tags-input" id="tagsContainer">
-                        <input type="text" 
-                               id="keywordInput" 
-                               class="tag-input"
-                               placeholder="키워드 입력 후 Enter"
-                               onkeypress="handleKeywordEnter(event)">
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label class="input-label">글 스타일</label>
-                    <div class="option-grid" id="toneOptions">
-                        <div class="option-btn active" data-value="friendly">😊 친근한</div>
-                        <div class="option-btn" data-value="professional">💼 전문적</div>
-                        <div class="option-btn" data-value="casual">😎 가벼운</div>
-                        <div class="option-btn" data-value="formal">🎩 격식있는</div>
-                        <div class="option-btn" data-value="emotional">💖 감성적</div>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label class="input-label">글 구조</label>
-                    <div class="option-grid" id="structureOptions">
-                        <div class="option-btn active" data-value="intro-body-conclusion">📄 기본</div>
-                        <div class="option-btn" data-value="listicle">📋 리스트</div>
-                        <div class="option-btn" data-value="how-to">🔧 가이드</div>
-                        <div class="option-btn" data-value="story">📖 스토리</div>
-                        <div class="option-btn" data-value="comparison">⚖️ 비교</div>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label class="input-label">목표 글자수</label>
-                    <div class="slider-container">
-                        <input type="range" 
-                               id="wordCountSlider" 
-                               class="slider"
-                               min="500" 
-                               max="2000" 
-                               step="100"
-                               value="1000"
-                               oninput="updateWordCount(this.value)">
-                        <div class="slider-value" id="wordCountValue">1000자</div>
-                    </div>
-                </div>
-
-                <button id="generateBtn" class="generate-btn" onclick="generateContent()">
-                    ✨ AI로 글 작성하기
-                </button>
+<div class="container">
+    <div class="main-grid">
+        <!-- 📝 입력 섹션 -->
+        <div class="glass-card input-section">
+            <h2 class="card-title">
+                <span>🎯</span>
+                글 설정
+            </h2>
+            
+            <div class="input-group">
+                <label class="input-label">주제 *</label>
+                <input type="text" 
+                       id="topicInput" 
+                       class="input-field" 
+                       placeholder="예: 강남 파스타 맛집 추천">
             </div>
 
-            <!-- 📊 결과 섹션 -->
-            <div class="glass-card">
-                <h2 class="card-title">
-                    <span>📝</span>
-                    생성된 글
-                </h2>
+            <div class="input-group">
+                <label class="input-label">키워드 (Enter로 추가)</label>
+                <div class="tags-input" id="tagsContainer">
+                    <input type="text" 
+                           id="keywordInput" 
+                           class="tag-input"
+                           placeholder="키워드 입력 후 Enter"
+                           onkeypress="handleKeywordEnter(event)">
+                </div>
+            </div>
 
-                <div id="resultContainer">
-                    <div class="empty-state">
-                        <div class="empty-icon">✍️</div>
-                        <div style="font-size: 1.2rem; margin-bottom: 10px;">아직 생성된 글이 없습니다</div>
-                        <div style="font-size: 0.95rem; opacity: 0.7;">왼쪽에서 주제를 입력하고 생성해보세요</div>
-                    </div>
+            <div class="input-group">
+                <label class="input-label">글 스타일</label>
+                <div class="option-grid" id="toneOptions">
+                    <div class="option-btn active" data-value="friendly">😊 친근한</div>
+                    <div class="option-btn" data-value="professional">💼 전문적</div>
+                    <div class="option-btn" data-value="casual">😎 가벼운</div>
+                    <div class="option-btn" data-value="formal">🎩 격식있는</div>
+                    <div class="option-btn" data-value="emotional">💖 감성적</div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">글 구조</label>
+                <div class="option-grid" id="structureOptions">
+                    <div class="option-btn active" data-value="intro-body-conclusion">📄 기본</div>
+                    <div class="option-btn" data-value="listicle">📋 리스트</div>
+                    <div class="option-btn" data-value="how-to">🔧 가이드</div>
+                    <div class="option-btn" data-value="story">📖 스토리</div>
+                    <div class="option-btn" data-value="comparison">⚖️ 비교</div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">목표 글자수</label>
+                <div class="slider-container">
+                    <input type="range" 
+                           id="wordCountSlider" 
+                           class="slider"
+                           min="500" 
+                           max="2000" 
+                           step="100"
+                           value="1000"
+                           oninput="updateWordCount(this.value)">
+                    <div class="slider-value" id="wordCountValue">1000자</div>
+                </div>
+            </div>
+
+            <button id="generateBtn" class="generate-btn" onclick="generateContent()">
+                ✨ AI로 글 작성하기
+            </button>
+        </div>
+
+        <!-- 📊 결과 섹션 -->
+        <div class="glass-card">
+            <h2 class="card-title">
+                <span>📝</span>
+                생성된 글
+            </h2>
+
+            <div id="resultContainer">
+                <div class="empty-state">
+                    <div class="empty-icon">✍️</div>
+                    <div style="font-size: 1.2rem; margin-bottom: 10px;">아직 생성된 글이 없습니다</div>
+                    <div style="font-size: 0.95rem; opacity: 0.7;">왼쪽에서 주제를 입력하고 생성해보세요</div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        let keywords = [];
-        let selectedTone = 'friendly';
-        let selectedStructure = 'intro-body-conclusion';
+<script>
+    let keywords = [];
+    let selectedTone = 'friendly';
+    let selectedStructure = 'intro-body-conclusion';
 
-        // 옵션 버튼 이벤트
-        document.querySelectorAll('#toneOptions .option-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('#toneOptions .option-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedTone = btn.dataset.value;
-            });
+    // 옵션 버튼 이벤트
+    document.querySelectorAll('#toneOptions .option-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#toneOptions .option-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedTone = btn.dataset.value;
         });
+    });
 
-        document.querySelectorAll('#structureOptions .option-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('#structureOptions .option-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedStructure = btn.dataset.value;
-            });
+    document.querySelectorAll('#structureOptions .option-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#structureOptions .option-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedStructure = btn.dataset.value;
         });
+    });
 
-        function handleKeywordEnter(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const input = e.target;
-                const keyword = input.value.trim();
-                if (keyword && !keywords.includes(keyword)) {
-                    keywords.push(keyword);
-                    addKeywordTag(keyword);
-                    input.value = '';
-                }
+    function handleKeywordEnter(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const input = e.target;
+            const keyword = input.value.trim();
+            if (keyword && !keywords.includes(keyword)) {
+                keywords.push(keyword);
+                addKeywordTag(keyword);
+                input.value = '';
             }
         }
+    }
 
-        function addKeywordTag(keyword) {
-            const container = document.getElementById('tagsContainer');
-            const input = document.getElementById('keywordInput');
-            
-            const tag = document.createElement('div');
-            tag.className = 'tag';
-            tag.innerHTML = `
-                <span>${keyword}</span>
-                <span class="tag-remove" onclick="removeKeyword('${keyword}')">×</span>
-            `;
-            
-            container.insertBefore(tag, input);
+    function addKeywordTag(keyword) {
+        const container = document.getElementById('tagsContainer');
+        const input = document.getElementById('keywordInput');
+        
+        const tag = document.createElement('div');
+        tag.className = 'tag';
+        tag.innerHTML = `
+            <span>${keyword}</span>
+            <span class="tag-remove" onclick="removeKeyword('${keyword}')">×</span>
+        `;
+        
+        container.insertBefore(tag, input);
+    }
+
+    function removeKeyword(keyword) {
+        keywords = keywords.filter(k => k !== keyword);
+        updateTagsDisplay();
+    }
+
+    function updateTagsDisplay() {
+        const container = document.getElementById('tagsContainer');
+        const input = document.getElementById('keywordInput');
+        container.innerHTML = '';
+        keywords.forEach(kw => addKeywordTag(kw));
+        container.appendChild(input);
+    }
+
+    function updateWordCount(value) {
+        document.getElementById('wordCountValue').textContent = value + '자';
+    }
+
+    async function generateContent() {
+        const topic = document.getElementById('topicInput').value.trim();
+        const wordCount = parseInt(document.getElementById('wordCountSlider').value);
+        const btn = document.getElementById('generateBtn');
+        const container = document.getElementById('resultContainer');
+
+        if (!topic) {
+            alert('주제를 입력해주세요!');
+            return;
         }
 
-        function removeKeyword(keyword) {
-            keywords = keywords.filter(k => k !== keyword);
-            updateTagsDisplay();
-        }
+        btn.disabled = true;
+        btn.textContent = '🤖 AI가 글을 작성하는 중...';
+        container.innerHTML = `
+            <div class="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">AI가 창의적인 글을 작성하고 있습니다...<br>약 10-15초 소요됩니다</div>
+            </div>
+        `;
 
-        function updateTagsDisplay() {
-            const container = document.getElementById('tagsContainer');
-            const input = document.getElementById('keywordInput');
-            container.innerHTML = '';
-            keywords.forEach(kw => addKeywordTag(kw));
-            container.appendChild(input);
-        }
-
-        function updateWordCount(value) {
-            document.getElementById('wordCountValue').textContent = value + '자';
-        }
-
-        async function generateContent() {
-            const topic = document.getElementById('topicInput').value.trim();
-            const wordCount = parseInt(document.getElementById('wordCountSlider').value);
-            const btn = document.getElementById('generateBtn');
-            const container = document.getElementById('resultContainer');
-
-            if (!topic) {
-                alert('주제를 입력해주세요!');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = '🤖 AI가 글을 작성하는 중...';
-            container.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <div class="loading-text">AI가 창의적인 글을 작성하고 있습니다...<br>약 10-15초 소요됩니다</div>
-                </div>
-            `;
-
-            try {
-                const response = await fetch('/api/generate-content', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        topic,
-                        keywords,
-                        tone: selectedTone,
-                        structure: selectedStructure,
-                        word_count: wordCount
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    displayContent(data.content, data.metadata);
-                } else {
-                    throw new Error(data.error || 'AI 글 생성 실패');
-                }
-            } catch (error) {
-                console.error('생성 오류:', error);
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">❌</div>
-                        <div style="font-size: 1.2rem;">글 생성 중 오류가 발생했습니다</div>
-                        <div style="font-size: 0.95rem; opacity: 0.7;">${error.message}</div>
-                    </div>
-                `;
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '✨ AI로 글 작성하기';
-            }
-        }
-
-        function displayContent(content, metadata) {
-            const container = document.getElementById('resultContainer');
-            
-            container.innerHTML = `
-                <div class="metadata-box">
-                    <div class="metadata-item">
-                        <div class="metadata-label">글자수</div>
-                        <div class="metadata-value">${metadata.char_count.toLocaleString()}</div>
-                    </div>
-                    <div class="metadata-item">
-                        <div class="metadata-label">단어수</div>
-                        <div class="metadata-value">${metadata.word_count}</div>
-                    </div>
-                    <div class="metadata-item">
-                        <div class="metadata-label">읽는 시간</div>
-                        <div class="metadata-value">${metadata.estimated_reading_time}</div>
-                    </div>
-                </div>
-
-                <div class="result-content scrollbar-custom">${content}</div>
-
-                <div class="result-actions">
-                    <button class="action-btn" onclick="copyContent()">
-                        📋 복사하기
-                    </button>
-                    <button class="action-btn" onclick="downloadContent()">
-                        💾 저장하기
-                    </button>
-                    <button class="action-btn" onclick="regenerateContent()">
-                        🔄 다시 생성
-                    </button>
-                </div>
-            `;
-        }
-
-        function copyContent() {
-            const content = document.querySelector('.result-content').textContent;
-            navigator.clipboard.writeText(content).then(() => {
-                alert('✅ 글이 클립보드에 복사되었습니다!');
+        try {
+            const response = await fetch('/api/generate-content', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic,
+                    keywords,
+                    tone: selectedTone,
+                    structure: selectedStructure,
+                    word_count: wordCount
+                })
             });
-        }
 
-        function downloadContent() {
-            const content = document.querySelector('.result-content').textContent;
-            const topic = document.getElementById('topicInput').value || '블로그글';
-            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${topic}_AI글쓰기.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
+            const data = await response.json();
 
-        function regenerateContent() {
-            if (confirm('새로운 내용으로 다시 생성할까요?')) {
-                generateContent();
+            if (data.success) {
+                displayContent(data.content, data.metadata);
+            } else {
+                throw new Error(data.error || 'AI 글 생성 실패');
             }
+        } catch (error) {
+            console.error('생성 오류:', error);
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">❌</div>
+                    <div style="font-size: 1.2rem;">글 생성 중 오류가 발생했습니다</div>
+                    <div style="font-size: 0.95rem; opacity: 0.7;">${error.message}</div>
+                </div>
+            `;
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '✨ AI로 글 작성하기';
         }
-    </script>
-</body>
-</html>
+    }
 
+    function displayContent(content, metadata) {
+        const container = document.getElementById('resultContainer');
+        
+        container.innerHTML = `
+            <div class="metadata-box">
+                <div class="metadata-item">
+                    <div class="metadata-label">글자수</div>
+                    <div class="metadata-value">${metadata.char_count.toLocaleString()}</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">단어수</div>
+                    <div class="metadata-value">${metadata.word_count}</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">읽는 시간</div>
+                    <div class="metadata-value">${metadata.estimated_reading_time}</div>
+                </div>
+            </div>
+
+            <div class="result-content scrollbar-custom">${content}</div>
+
+            <div class="result-actions">
+                <button class="action-btn" onclick="copyContent()">
+                    📋 복사하기
+                </button>
+                <button class="action-btn" onclick="downloadContent()">
+                    💾 저장하기
+                </button>
+                <button class="action-btn" onclick="regenerateContent()">
+                    🔄 다시 생성
+                </button>
+            </div>
+        `;
+    }
+
+    function copyContent() {
+        const content = document.querySelector('.result-content').textContent;
+        navigator.clipboard.writeText(content).then(() => {
+            alert('✅ 글이 클립보드에 복사되었습니다!');
+        });
+    }
+
+    function downloadContent() {
+        const content = document.querySelector('.result-content').textContent;
+        const topic = document.getElementById('topicInput').value || '블로그글';
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${topic}_AI글쓰기.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function regenerateContent() {
+        if (confirm('새로운 내용으로 다시 생성할까요?')) {
+            generateContent();
+        }
+    }
+</script>
+{% endblock %}
