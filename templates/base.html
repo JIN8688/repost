@@ -1072,6 +1072,24 @@
         }
     </script>
     
+    <!-- 공통 API 처리 스크립트 -->
+    <script src="/static/js/common-api.js"></script>
+    
+    <!-- 사용자 정보 로드 (선택적) -->
+    <script>
+        // 로그인 상태 확인 및 UI 업데이트 (필요한 페이지에서만)
+        async function updateUserUI() {
+            const userInfo = await getUserInfo();
+            if (userInfo && userInfo.logged_in) {
+                console.log('로그인 상태:', userInfo.user);
+                // 필요 시 헤더 UI 업데이트
+            }
+        }
+        
+        // 페이지 로드 시 실행 (선택적)
+        // window.addEventListener('load', updateUserUI);
+    </script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

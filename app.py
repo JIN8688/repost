@@ -16,6 +16,11 @@ import pytz
 import hashlib
 import hmac
 
+# 🚀 Neon PostgreSQL & OAuth
+from database import db
+from oauth import init_oauth, get_google_user_info, get_kakao_user_info, get_naver_user_info
+from auth_decorators import login_required, check_usage_limit
+
 # 🇰🇷 한국 시간대 설정
 KST = pytz.timezone('Asia/Seoul')
 
@@ -166,6 +171,16 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'repost-secret-key-2025-production')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 CORS(app)
+
+# 🚀 OAuth 초기화
+oauth = init_oauth(app)
+
+# 🗄️ 데이터베이스 초기화
+try:
+    db.init_tables()
+    log("✅ Database tables initialized", "DB")
+except Exception as e:
+    log(f"❌ Database initialization failed: {e}", "ERROR")
 
 # 🔐 세션 보안 설정
 app.secret_key = os.environ.get('SECRET_KEY', 'repost-admin-secret-key-change-this-in-production')
@@ -1770,6 +1785,7 @@ def keyword_recommender():
 # ============================
 
 @app.route('/api/analyze-text', methods=['POST'])
+@check_usage_limit('text_analyzer')
 def analyze_text():
     """📊 실시간 텍스트 분석 API"""
     try:
@@ -2047,6 +2063,7 @@ def analyze_readability(text):
 # ============================
 
 @app.route('/api/generate-titles', methods=['POST'])
+@check_usage_limit('title_generator')
 def generate_titles():
     """💡 AI 제목 생성 API"""
     try:
@@ -2285,6 +2302,7 @@ def evaluate_title_api():
 # ============================
 
 @app.route('/api/check-seo', methods=['POST'])
+@check_usage_limit('seo_checker')
 def check_seo():
     """🎯 SEO 종합 분석 API"""
     try:
@@ -2579,6 +2597,7 @@ def extract_quick_wins(seo_result):
 # ============================
 
 @app.route('/api/generate-content', methods=['POST'])
+@check_usage_limit('ai_writer')
 def generate_content():
     """✍️ AI 글쓰기 도우미 API"""
     try:
@@ -2855,6 +2874,7 @@ def generate_improvement_suggestions(original, improved):
 # ============================
 
 @app.route('/api/analyze-competitors', methods=['POST'])
+@check_usage_limit('competitor_analyzer')
 def analyze_competitors():
     """🔍 경쟁 블로그 분석 API"""
     try:
@@ -3134,6 +3154,7 @@ def get_score_message(score):
 # ============================
 
 @app.route('/api/recommend-keywords', methods=['POST'])
+@check_usage_limit('keyword_recommender')
 def recommend_keywords():
     """🔑 키워드 추천 API"""
     try:
@@ -3294,7 +3315,7 @@ def login_required_user(f):
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    """회원가입"""
+    """회원가입 (일반 + OAuth)"""
     if request.method == 'GET':
         return render_template('signup.html')
     
@@ -3303,39 +3324,25 @@ def signup():
         email = data.get('email', '').strip().lower()
         password = data.get('password', '')
         name = data.get('name', '').strip()
+        marketing_consent = data.get('marketingConsent', False)
         
-        if not email or not password or not name:
-            return jsonify({'success': False, 'error': '모든 필드를 입력해주세요'}), 400
+        # 입력 검증
+        if not email or not name:
+            return jsonify({'success': False, 'error': '이메일과 이름을 입력해주세요'}), 400
+        
+        if not password or len(password) < 8:
+            return jsonify({'success': False, 'error': '비밀번호는 8자 이상이어야 합니다'}), 400
         
         # 이메일 중복 체크
-        existing_user = redis_client.get(f'user_email:{email}')
+        existing_user = db.get_user_by_email(email)
         if existing_user:
             return jsonify({'success': False, 'error': '이미 가입된 이메일입니다'}), 400
         
         # 사용자 생성
-        user_id = f"user_{datetime.now().timestamp()}"
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        user = db.create_user(email, password, name, marketing_consent)
         
-        user_data = {
-            'id': user_id,
-            'email': email,
-            'password': password_hash,
-            'name': name,
-            'plan': 'free',  # free, basic, pro
-            'created_at': datetime.now(KST).isoformat(),
-            'usage': {
-                'text_analyzer': 0,
-                'title_generator': 0,
-                'seo_checker': 0,
-                'ai_writer': 0,
-                'competitor_analyzer': 0,
-                'keyword_recommender': 0
-            }
-        }
-        
-        # Redis에 저장
-        redis_client.set(f'user:{user_id}', json.dumps(user_data))
-        redis_client.set(f'user_email:{email}', user_id)
+        if not user:
+            return jsonify({'success': False, 'error': '회원가입에 실패했습니다. 다시 시도해주세요'}), 500
         
         log(f"✅ 회원가입 성공: {email}", "AUTH")
         
@@ -3346,7 +3353,7 @@ def signup():
     
     except Exception as e:
         log(f"❌ 회원가입 실패: {e}", "ERROR")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': '서버 오류가 발생했습니다'}), 500
 
 @app.route('/login-page')
 def login_page():
@@ -3360,50 +3367,168 @@ def login():
         data = request.get_json()
         email = data.get('email', '').strip().lower()
         password = data.get('password', '')
+        remember_me = data.get('rememberMe', False)
         
         if not email or not password:
             return jsonify({'success': False, 'error': '이메일과 비밀번호를 입력해주세요'}), 400
         
-        # 사용자 찾기
-        user_id = redis_client.get(f'user_email:{email}')
-        if not user_id:
-            return jsonify({'success': False, 'error': '존재하지 않는 이메일입니다'}), 401
+        # 사용자 인증
+        user = db.verify_user(email, password)
         
-        user_id = user_id.decode() if isinstance(user_id, bytes) else user_id
-        user_data_str = redis_client.get(f'user:{user_id}')
-        if not user_data_str:
-            return jsonify({'success': False, 'error': '사용자 정보를 찾을 수 없습니다'}), 401
-        
-        user_data = json.loads(user_data_str)
-        
-        # 비밀번호 확인
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
-        if user_data['password'] != password_hash:
-            return jsonify({'success': False, 'error': '비밀번호가 일치하지 않습니다'}), 401
+        if not user:
+            return jsonify({'success': False, 'error': '이메일 또는 비밀번호가 일치하지 않습니다'}), 401
         
         # 세션 설정
-        session['user_id'] = user_id
-        session.permanent = True
+        session['user_id'] = user['id']
+        session['user_email'] = user['email']
+        session['user_name'] = user['name']
+        session.permanent = remember_me
+        
+        # 마지막 로그인 시간 업데이트
+        db.update_last_login(user['id'])
         
         log(f"✅ 로그인 성공: {email}", "AUTH")
         
         return jsonify({
             'success': True,
             'user': {
-                'name': user_data['name'],
-                'email': user_data['email'],
-                'plan': user_data['plan']
+                'name': user['name'],
+                'email': user['email'],
+                'plan': user['plan']
             }
         }), 200
     
     except Exception as e:
         log(f"❌ 로그인 실패: {e}", "ERROR")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': '서버 오류가 발생했습니다'}), 500
 
 @app.route('/logout')
 def logout():
     """로그아웃"""
     session.clear()
+    return redirect(url_for('index'))
+
+# =====================================
+# 👤 사용자 정보 API
+# =====================================
+
+@app.route('/api/user-info')
+def get_user_info_api():
+    """현재 로그인한 사용자 정보 반환"""
+    if 'user_id' not in session:
+        return jsonify({
+            'logged_in': False
+        }), 200
+    
+    try:
+        user = db.get_user_by_email(session.get('user_email'))
+        if not user:
+            return jsonify({
+                'logged_in': False
+            }), 200
+        
+        return jsonify({
+            'logged_in': True,
+            'user': {
+                'name': user['name'],
+                'email': user['email'],
+                'plan': user['plan'],
+                'profile_image': user.get('profile_image'),
+                'oauth_provider': user.get('oauth_provider')
+            }
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 사용자 정보 조회 실패: {e}", "ERROR")
+        return jsonify({
+            'logged_in': False
+        }), 200
+
+# =====================================
+# 🔐 OAuth 소셜 로그인
+# =====================================
+
+@app.route('/auth/<provider>')
+def oauth_login(provider):
+    """OAuth 로그인 시작 (Google, Kakao, Naver)"""
+    try:
+        oauth_client = oauth.create_client(provider)
+        redirect_uri = url_for('oauth_callback', provider=provider, _external=True)
+        return oauth_client.authorize_redirect(redirect_uri)
+    except Exception as e:
+        log(f"❌ OAuth 로그인 시작 실패 ({provider}): {e}", "ERROR")
+        flash('소셜 로그인에 실패했습니다. 다시 시도해주세요.', 'error')
+        return redirect(url_for('login_page'))
+
+@app.route('/auth/<provider>/callback')
+def oauth_callback(provider):
+    """OAuth 로그인 콜백"""
+    try:
+        oauth_client = oauth.create_client(provider)
+        token = oauth_client.authorize_access_token()
+        
+        # 제공자별 사용자 정보 가져오기
+        if provider == 'google':
+            user_info = get_google_user_info(token)
+        elif provider == 'kakao':
+            user_info = get_kakao_user_info(token)
+        elif provider == 'naver':
+            user_info = get_naver_user_info(token)
+        else:
+            raise ValueError(f'지원하지 않는 제공자: {provider}')
+        
+        if not user_info or not user_info.get('email'):
+            flash('소셜 로그인에 실패했습니다. 이메일 정보를 가져올 수 없습니다.', 'error')
+            return redirect(url_for('login_page'))
+        
+        # 기존 사용자 확인 (OAuth ID로)
+        user = db.get_user_by_oauth(provider, user_info['oauth_id'])
+        
+        # 기존 사용자가 없으면 새로 생성
+        if not user:
+            # 이메일로 기존 계정 확인 (같은 이메일로 다른 방법으로 가입한 경우)
+            existing_user = db.get_user_by_email(user_info['email'])
+            
+            if existing_user:
+                # 이미 다른 방법으로 가입된 이메일
+                flash('해당 이메일은 이미 다른 방법으로 가입되어 있습니다.', 'error')
+                return redirect(url_for('login_page'))
+            
+            # 신규 사용자 생성
+            user = db.create_user(
+                email=user_info['email'],
+                password=None,  # OAuth는 비밀번호 없음
+                name=user_info['name'],
+                marketing_consent=False,
+                oauth_provider=provider,
+                oauth_id=user_info['oauth_id'],
+                profile_image=user_info.get('profile_image')
+            )
+            
+            if not user:
+                flash('회원가입에 실패했습니다. 다시 시도해주세요.', 'error')
+                return redirect(url_for('login_page'))
+            
+            log(f"✅ OAuth 회원가입 성공: {user_info['email']} ({provider})", "AUTH")
+        
+        # 세션 설정
+        session['user_id'] = user['id']
+        session['user_email'] = user['email']
+        session['user_name'] = user['name']
+        session.permanent = True
+        
+        # 마지막 로그인 시간 업데이트
+        db.update_last_login(user['id'])
+        
+        log(f"✅ OAuth 로그인 성공: {user['email']} ({provider})", "AUTH")
+        
+        flash('로그인되었습니다!', 'success')
+        return redirect(url_for('index'))
+    
+    except Exception as e:
+        log(f"❌ OAuth 콜백 실패 ({provider}): {e}", "ERROR")
+        flash('소셜 로그인에 실패했습니다. 다시 시도해주세요.', 'error')
+        return redirect(url_for('login_page'))
     return redirect(url_for('index'))
 
 @app.route('/mypage')
