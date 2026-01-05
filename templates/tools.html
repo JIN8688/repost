@@ -6,17 +6,19 @@
 <style>
     .tools-hero {
         text-align: center;
-        padding: 80px 20px 60px;
+        padding: 120px 20px 60px;
         max-width: 900px;
         margin: 0 auto;
     }
 
     .tools-hero h1 {
-        font-size: 3.5rem;
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
         font-weight: 800;
-        color: white;
+        background: linear-gradient(135deg, #a78bfa 0%, #ec4899 50%, #f59e0b 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
         margin-bottom: 20px;
-        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         animation: fadeInDown 0.6s ease-out;
     }
 
@@ -26,9 +28,9 @@
     }
 
     .tools-hero p {
-        font-size: 1.3rem;
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 300;
+        font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 500;
         animation: fadeInUp 0.8s ease-out;
     }
 
@@ -38,30 +40,30 @@
     }
 
     .tools-container {
-        max-width: 1200px;
+        max-width: 1400px;
         margin: 0 auto;
-        padding: 0 20px 80px;
+        padding: 0 20px 100px;
     }
 
     .tools-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
         gap: 30px;
         margin-bottom: 60px;
     }
 
     .tool-card {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 24px;
-        padding: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 28px;
+        padding: 45px 40px;
         text-decoration: none;
-        color: white;
+        color: inherit;
         transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         position: relative;
         overflow: hidden;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
     }
 
     .tool-card::before {
@@ -71,15 +73,15 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
         opacity: 0;
         transition: opacity 0.4s ease;
     }
 
     .tool-card:hover {
-        transform: translateY(-15px) scale(1.03);
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-12px) scale(1.02);
+        box-shadow: 0 25px 70px rgba(102, 126, 234, 0.25);
+        border-color: rgba(102, 126, 234, 0.4);
     }
 
     .tool-card:hover::before {
@@ -87,47 +89,50 @@
     }
 
     .tool-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
+        font-size: 4.5rem;
+        margin-bottom: 25px;
         display: block;
-        animation: bounce 2s infinite;
-    }
-
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
+        position: relative;
+        z-index: 1;
     }
 
     .tool-card:hover .tool-icon {
-        animation: none;
-        transform: scale(1.2) rotate(5deg);
-        transition: transform 0.4s ease;
+        transform: scale(1.15) rotate(5deg);
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .tool-title {
-        font-size: 2rem;
+        font-size: 1.8rem;
         font-weight: 700;
         margin-bottom: 15px;
+        color: #1a1a2e;
+        position: relative;
+        z-index: 1;
     }
 
     .tool-description {
-        font-size: 1.1rem;
-        line-height: 1.6;
-        color: rgba(255, 255, 255, 0.85);
-        margin-bottom: 20px;
+        font-size: 1.05rem;
+        line-height: 1.7;
+        color: #4a5568;
+        margin-bottom: 25px;
+        position: relative;
+        z-index: 1;
     }
 
     .tool-features {
         list-style: none;
-        margin-bottom: 25px;
+        margin-bottom: 30px;
+        position: relative;
+        z-index: 1;
     }
 
     .tool-features li {
         font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 8px;
-        padding-left: 20px;
+        color: #4a5568;
+        margin-bottom: 10px;
+        padding-left: 28px;
         position: relative;
+        line-height: 1.6;
     }
 
     .tool-features li::before {
@@ -136,76 +141,98 @@
         left: 0;
         color: var(--success);
         font-weight: 700;
+        font-size: 1.1rem;
     }
 
     .tool-badge {
         display: inline-block;
-        padding: 8px 16px;
+        padding: 8px 18px;
         border-radius: 20px;
         font-size: 0.9rem;
-        font-weight: 600;
+        font-weight: 700;
         margin-top: 10px;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     }
 
     .badge-free {
-        background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
     }
 
     .badge-popular {
-        background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
     }
 
-    .section-title {
-        text-align: center;
-        font-size: 2rem;
-        font-weight: 700;
+    .badge-new {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         color: white;
-        margin-bottom: 40px;
+    }
+
+    .badge-pro {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
     }
 
     .coming-soon {
         text-align: center;
-        padding: 60px 40px;
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 70px 40px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(15px);
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
     }
 
     .coming-soon h2 {
         color: white;
-        font-size: 2rem;
+        font-size: 2.2rem;
+        font-weight: 700;
         margin-bottom: 15px;
     }
 
     .coming-soon p {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 1.1rem;
-        margin-bottom: 30px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.15rem;
+        margin-bottom: 35px;
     }
 
     .upcoming-tools {
         display: flex;
         justify-content: center;
-        gap: 20px;
+        gap: 18px;
         flex-wrap: wrap;
     }
 
     .upcoming-item {
-        padding: 12px 24px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 500;
+        padding: 14px 28px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
     @media (max-width: 768px) {
-        .tools-hero h1 { font-size: 2.5rem; }
-        .tools-hero p { font-size: 1.1rem; }
-        .tools-grid { grid-template-columns: 1fr; gap: 25px; }
-        .tool-card { padding: 30px 25px; }
-        .tool-icon { font-size: 3rem; }
-        .tool-title { font-size: 1.6rem; }
+        .tools-hero {
+            padding: 100px 20px 40px;
+        }
+        .tools-grid {
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+        .tool-card {
+            padding: 35px 30px;
+        }
+        .tool-icon {
+            font-size: 3.5rem;
+        }
+        .tool-title {
+            font-size: 1.5rem;
+        }
     }
 </style>
 {% endblock %}
@@ -263,7 +290,7 @@
                 <li>즉시 개선 가능한 항목 제안</li>
                 <li>등급별 상세 피드백</li>
             </ul>
-            <span class="tool-badge badge-free">NEW</span>
+            <span class="tool-badge badge-new">NEW</span>
         </a>
 
         <!-- ✍️ AI 글쓰기 도우미 -->
@@ -279,7 +306,7 @@
                 <li>목표 글자수 맞춤 생성</li>
                 <li>5가지 구조 템플릿</li>
             </ul>
-            <span class="tool-badge badge-popular">PRO</span>
+            <span class="tool-badge badge-pro">PRO</span>
         </a>
 
         <!-- 🔍 경쟁 블로그 분석 -->
@@ -295,7 +322,7 @@
                 <li>공통 키워드 추출</li>
                 <li>경쟁력 점수 계산</li>
             </ul>
-            <span class="tool-badge badge-popular">PRO</span>
+            <span class="tool-badge badge-pro">PRO</span>
         </a>
 
         <!-- 🔑 키워드 추천 -->
@@ -311,7 +338,7 @@
                 <li>난이도별 분류</li>
                 <li>키워드 조합 추천</li>
             </ul>
-            <span class="tool-badge badge-popular">PRO</span>
+            <span class="tool-badge badge-pro">PRO</span>
         </a>
     </div>
 

@@ -451,22 +451,29 @@
     </footer>
 
     <script>
-        // 스크롤 시 헤더 표시
+        // 스크롤 시 헤더 표시 (메인 페이지만)
         const header = document.getElementById('mainHeader');
-        let lastScroll = 0;
-
-        window.addEventListener('scroll', () => {
-            const currentScroll = window.pageYOffset;
-            
-            // 30px 이상 스크롤하면 헤더 즉시 표시
-            if (currentScroll > 30) {
-                header.classList.add('visible');
-            } else {
-                header.classList.remove('visible');
-            }
-            
-            lastScroll = currentScroll;
-        });
+        const isMainPage = window.location.pathname === '/';
+        
+        if (isMainPage) {
+            // 메인 페이지: 스크롤 시 헤더 표시
+            let lastScroll = 0;
+            window.addEventListener('scroll', () => {
+                const currentScroll = window.pageYOffset;
+                
+                // 30px 이상 스크롤하면 헤더 즉시 표시
+                if (currentScroll > 30) {
+                    header.classList.add('visible');
+                } else {
+                    header.classList.remove('visible');
+                }
+                
+                lastScroll = currentScroll;
+            });
+        } else {
+            // 다른 페이지: 헤더 항상 표시
+            header.classList.add('visible');
+        }
 
         // 모바일 메뉴 토글
         function toggleMobileMenu() {
