@@ -560,7 +560,7 @@ function showUsageDetail() {
         const isMaster = localStorage.getItem('repost_admin') === 'true';
         
         // 체험 기간 상태 조회
-        const trialStatus = bonusSystem ? bonusSystem.getTrialStatus() : { isNewUser: false, daysLeft: 0 };
+        const trialStatus = bonusSystem ? bonusSystem.getTrialStatus() : { isNewUser: false, daysRemaining: 0 };
         const isNewUser = trialStatus.isNewUser;
         
         // 남은 횟수 계산
@@ -592,7 +592,7 @@ function showUsageDetail() {
             situation = 'new_user_with_usage';
             emoji = '✨';
             title = `체험 기간 중 ${remaining}회 남았어요!`;
-            subtitle = `앞으로 ${trialStatus.daysLeft}일간 하루 7회 사용 가능`;
+            subtitle = `앞으로 ${trialStatus.daysRemaining}일간 하루 7회 사용 가능`;
             description = `지금은 <strong style="color: #667eea;">7일 무료 체험 기간</strong>입니다! 매일 자정에 7회로 초기화되니 마음껏 사용해보세요 😊`;
             closeButtonText = '계속 사용하기';
         } else if (isNewUser && !hasUsage) {
@@ -601,7 +601,7 @@ function showUsageDetail() {
             emoji = '⏰';
             title = '오늘 사용 횟수를 모두 사용했어요!';
             subtitle = '내일 자정에 다시 7회로 초기화됩니다';
-            description = `아직 <strong style="color: #667eea;">${trialStatus.daysLeft}일</strong> 체험 기간이 남았어요! 내일 다시 7회를 사용할 수 있습니다. 또는 보너스로 더 받으세요! 🎁`;
+            description = `아직 <strong style="color: #667eea;">${trialStatus.daysRemaining}일</strong> 체험 기간이 남았어요! 내일 다시 7회를 사용할 수 있습니다. 또는 보너스로 더 받으세요! 🎁`;
             closeButtonText = '내일 다시 올게요';
         } else if (!isNewUser && hasUsage) {
             // 4️⃣ 일반 유저 + 남은 횟수 있음
