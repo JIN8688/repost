@@ -219,36 +219,6 @@
     </div>
 </div>
 
-<!-- 💬 Quick 피드백 위젯 -->
-<div class="feedback-widget" id="feedbackWidget">
-    <button class="feedback-close" onclick="closeFeedbackWidget()">✕</button>
-    
-    <div class="feedback-header" id="feedbackMessage">
-        <div class="feedback-icon">🎉</div>
-        <div class="feedback-title">Repost가 도움이 되셨나요?</div>
-        <p class="feedback-subtitle">솔직한 의견을 들려주세요</p>
-    </div>
-    
-    <div class="feedback-buttons">
-        <button class="feedback-btn" onclick="submitQuickFeedback(5)">
-            <span class="emoji">😍</span>
-            <span class="label">최고예요</span>
-        </button>
-        <button class="feedback-btn" onclick="submitQuickFeedback(4)">
-            <span class="emoji">😊</span>
-            <span class="label">좋아요</span>
-        </button>
-        <button class="feedback-btn" onclick="submitQuickFeedback(3)">
-            <span class="emoji">😐</span>
-            <span class="label">보통</span>
-        </button>
-        <button class="feedback-btn" onclick="submitQuickFeedback(2)">
-            <span class="emoji">😕</span>
-            <span class="label">별로예요</span>
-        </button>
-    </div>
-</div>
-
 <!-- 🎁 보너스 시스템 모달 -->
 <div id="bonusModals"></div>
 {% endblock %}
