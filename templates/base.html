@@ -333,15 +333,24 @@
         }
 
         .footer-container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
+            padding: 0 40px;
         }
 
         .footer-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1.5fr;
-            gap: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 60px;
             margin-bottom: 50px;
+        }
+
+        /* 우측 섹션들 */
+        .footer-sections {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 50px;
         }
 
         /* 브랜드 섹션 */
@@ -461,24 +470,48 @@
                 margin-top: 60px;
             }
 
+            .footer-container {
+                padding: 0 20px;
+            }
+
             .footer-grid {
-                grid-template-columns: 1fr;
+                flex-direction: column;
                 gap: 40px;
-                margin-bottom: 40px;
+                align-items: center;
+                text-align: center;
             }
 
             .footer-brand {
                 max-width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .footer-logo {
+                justify-content: center;
             }
 
             .logo-text {
                 font-size: 1.5rem;
             }
 
+            .footer-sections {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                width: 100%;
+            }
+
+            .footer-section {
+                text-align: center;
+            }
+
+            .footer-title {
+                text-align: center;
+            }
+
             .footer-bottom {
-                flex-direction: column;
                 align-items: center;
-                gap: 15px;
             }
 
             .footer-copyright {
@@ -604,37 +637,40 @@
                     </p>
                 </div>
                 
-                <!-- 서비스 -->
-                <div class="footer-section">
-                    <h4 class="footer-title">서비스</h4>
-                    <ul class="footer-menu">
-                        <li><a href="/">댓글 자동 추천</a></li>
-                        <li><a href="/tools">블로거 도구</a></li>
-                        <li><a href="/pricing">요금제</a></li>
-                    </ul>
-                </div>
-                
-                <!-- 지원 -->
-                <div class="footer-section">
-                    <h4 class="footer-title">지원</h4>
-                    <ul class="footer-menu">
-                        <li><a href="/guide">사용 가이드</a></li>
-                        <li><a href="/faq">자주 묻는 질문</a></li>
-                        <li><a href="/contact">문의하기</a></li>
-                        <li><a href="/terms">이용약관</a></li>
-                        <li><a href="/privacy">개인정보처리방침</a></li>
-                    </ul>
-                </div>
-                
-                <!-- 회사 정보 -->
-                <div class="footer-section">
-                    <h4 class="footer-title">회사 정보</h4>
-                    <ul class="footer-info">
-                        <li>상호명: 리포스트</li>
-                        <li>대표: 김태진</li>
-                        <li>이메일: contact@repost.kr</li>
-                        <li>사업자등록번호: 123-45-67890</li>
-                    </ul>
+                <!-- 우측 섹션들 -->
+                <div class="footer-sections">
+                    <!-- 서비스 -->
+                    <div class="footer-section">
+                        <h4 class="footer-title">서비스</h4>
+                        <ul class="footer-menu">
+                            <li><a href="/">댓글 자동 추천</a></li>
+                            <li><a href="/tools">블로거 도구</a></li>
+                            <li><a href="/pricing">요금제</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- 지원 -->
+                    <div class="footer-section">
+                        <h4 class="footer-title">지원</h4>
+                        <ul class="footer-menu">
+                            <li><a href="/guide">사용 가이드</a></li>
+                            <li><a href="/faq">자주 묻는 질문</a></li>
+                            <li><a href="/contact">문의하기</a></li>
+                            <li><a href="/terms">이용약관</a></li>
+                            <li><a href="/privacy">개인정보처리방침</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- 회사 정보 -->
+                    <div class="footer-section">
+                        <h4 class="footer-title">회사 정보</h4>
+                        <ul class="footer-info">
+                            <li>상호명: 리포스트</li>
+                            <li>대표: 김태진</li>
+                            <li>이메일: contact@repost.kr</li>
+                            <li>사업자등록번호: 123-45-67890</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
             
