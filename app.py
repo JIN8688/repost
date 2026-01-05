@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from flask_cors import CORS
 from functools import wraps
 import requests
@@ -13,6 +13,8 @@ from urllib.parse import urlparse, parse_qs
 import redis
 from collections import Counter
 import pytz
+import hashlib
+import hmac
 
 # 🇰🇷 한국 시간대 설정
 KST = pytz.timezone('Asia/Seoul')
@@ -161,6 +163,8 @@ else:
     log("☁️ 배포 환경 - 시스템 환경변수 사용")
 
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'repost-secret-key-2025-production')
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 CORS(app)
 
 # 🔐 세션 보안 설정
@@ -3184,6 +3188,337 @@ def generate_keyword_combination(keyword_types):
         })
     
     return combinations
+
+# ============================
+# 🔐 사용자 인증 시스템
+# ============================
+
+# 간단한 사용자 세션 체크 (Redis 기반)
+def get_user_from_session():
+    """세션에서 사용자 정보 가져오기"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return None
+    
+    try:
+        user_data = redis_client.get(f'user:{user_id}')
+        if user_data:
+            return json.loads(user_data)
+        return None
+    except:
+        return None
+
+def login_required_user(f):
+    """사용자 로그인 필수 데코레이터"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not get_user_from_session():
+            return redirect(url_for('login_page'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    """회원가입"""
+    if request.method == 'GET':
+        return render_template('signup.html')
+    
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '')
+        name = data.get('name', '').strip()
+        
+        if not email or not password or not name:
+            return jsonify({'success': False, 'error': '모든 필드를 입력해주세요'}), 400
+        
+        # 이메일 중복 체크
+        existing_user = redis_client.get(f'user_email:{email}')
+        if existing_user:
+            return jsonify({'success': False, 'error': '이미 가입된 이메일입니다'}), 400
+        
+        # 사용자 생성
+        user_id = f"user_{datetime.now().timestamp()}"
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        
+        user_data = {
+            'id': user_id,
+            'email': email,
+            'password': password_hash,
+            'name': name,
+            'plan': 'free',  # free, basic, pro
+            'created_at': datetime.now(KST).isoformat(),
+            'usage': {
+                'text_analyzer': 0,
+                'title_generator': 0,
+                'seo_checker': 0,
+                'ai_writer': 0,
+                'competitor_analyzer': 0,
+                'keyword_recommender': 0
+            }
+        }
+        
+        # Redis에 저장
+        redis_client.set(f'user:{user_id}', json.dumps(user_data))
+        redis_client.set(f'user_email:{email}', user_id)
+        
+        log(f"✅ 회원가입 성공: {email}", "AUTH")
+        
+        return jsonify({
+            'success': True,
+            'message': '회원가입이 완료되었습니다!'
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 회원가입 실패: {e}", "ERROR")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/login-page')
+def login_page():
+    """로그인 페이지"""
+    return render_template('login.html')
+
+@app.route('/login', methods=['POST'])
+def login():
+    """로그인"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '')
+        
+        if not email or not password:
+            return jsonify({'success': False, 'error': '이메일과 비밀번호를 입력해주세요'}), 400
+        
+        # 사용자 찾기
+        user_id = redis_client.get(f'user_email:{email}')
+        if not user_id:
+            return jsonify({'success': False, 'error': '존재하지 않는 이메일입니다'}), 401
+        
+        user_id = user_id.decode() if isinstance(user_id, bytes) else user_id
+        user_data_str = redis_client.get(f'user:{user_id}')
+        if not user_data_str:
+            return jsonify({'success': False, 'error': '사용자 정보를 찾을 수 없습니다'}), 401
+        
+        user_data = json.loads(user_data_str)
+        
+        # 비밀번호 확인
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        if user_data['password'] != password_hash:
+            return jsonify({'success': False, 'error': '비밀번호가 일치하지 않습니다'}), 401
+        
+        # 세션 설정
+        session['user_id'] = user_id
+        session.permanent = True
+        
+        log(f"✅ 로그인 성공: {email}", "AUTH")
+        
+        return jsonify({
+            'success': True,
+            'user': {
+                'name': user_data['name'],
+                'email': user_data['email'],
+                'plan': user_data['plan']
+            }
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 로그인 실패: {e}", "ERROR")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/logout')
+def logout():
+    """로그아웃"""
+    session.clear()
+    return redirect(url_for('index'))
+
+@app.route('/mypage')
+@login_required_user
+def mypage():
+    """마이페이지"""
+    user = get_user_from_session()
+    return render_template('mypage.html', user=user)
+
+# ============================
+# 💳 메인페이 결제 시스템 (키인)
+# ============================
+
+@app.route('/pricing')
+def pricing():
+    """요금제 페이지"""
+    user = get_user_from_session()
+    return render_template('pricing.html', user=user)
+
+@app.route('/api/create-payment', methods=['POST'])
+def create_payment():
+    """메인페이 결제 생성"""
+    try:
+        user = get_user_from_session()
+        if not user:
+            return jsonify({'success': False, 'error': '로그인이 필요합니다'}), 401
+        
+        data = request.get_json()
+        plan = data.get('plan')  # 'basic' or 'pro'
+        
+        if plan not in ['basic', 'pro']:
+            return jsonify({'success': False, 'error': '잘못된 플랜입니다'}), 400
+        
+        # 플랜 정보
+        plans = {
+            'basic': {'name': '베이직 플랜', 'price': 9900},
+            'pro': {'name': '프로 플랜', 'price': 19900}
+        }
+        
+        plan_info = plans[plan]
+        
+        # 주문번호 생성
+        order_id = f"ORDER_{user['id']}_{datetime.now().timestamp()}"
+        
+        # 메인페이 결제 정보 생성
+        payment_data = {
+            'order_id': order_id,
+            'user_id': user['id'],
+            'plan': plan,
+            'amount': plan_info['price'],
+            'product_name': plan_info['name'],
+            'created_at': datetime.now(KST).isoformat(),
+            'status': 'pending'
+        }
+        
+        # Redis에 임시 저장
+        redis_client.setex(f'payment:{order_id}', 3600, json.dumps(payment_data))
+        
+        log(f"💳 결제 생성: {user['email']} - {plan} ({plan_info['price']}원)", "PAYMENT")
+        
+        return jsonify({
+            'success': True,
+            'order_id': order_id,
+            'amount': plan_info['price'],
+            'product_name': plan_info['name']
+        }), 200
+    
+    except Exception as e:
+        log(f"❌ 결제 생성 실패: {e}", "ERROR")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/payment-callback', methods=['POST'])
+def payment_callback():
+    """메인페이 결제 콜백"""
+    try:
+        # 메인페이에서 전달받은 데이터
+        data = request.form.to_dict()
+        order_id = data.get('order_id')
+        status = data.get('status')  # 'success' or 'fail'
+        
+        # 결제 정보 조회
+        payment_data_str = redis_client.get(f'payment:{order_id}')
+        if not payment_data_str:
+            return jsonify({'success': False, 'error': '결제 정보를 찾을 수 없습니다'}), 404
+        
+        payment_data = json.loads(payment_data_str)
+        
+        if status == 'success':
+            # 사용자 플랜 업데이트
+            user_id = payment_data['user_id']
+            user_data_str = redis_client.get(f'user:{user_id}')
+            user_data = json.loads(user_data_str)
+            
+            user_data['plan'] = payment_data['plan']
+            user_data['plan_started_at'] = datetime.now(KST).isoformat()
+            user_data['plan_expires_at'] = (datetime.now(KST) + timedelta(days=30)).isoformat()
+            
+            # 사용 횟수 초기화
+            user_data['usage'] = {
+                'text_analyzer': 0,
+                'title_generator': 0,
+                'seo_checker': 0,
+                'ai_writer': 0,
+                'competitor_analyzer': 0,
+                'keyword_recommender': 0
+            }
+            
+            redis_client.set(f'user:{user_id}', json.dumps(user_data))
+            
+            # 결제 정보 업데이트
+            payment_data['status'] = 'completed'
+            payment_data['completed_at'] = datetime.now(KST).isoformat()
+            redis_client.set(f'payment:{order_id}', json.dumps(payment_data))
+            
+            log(f"✅ 결제 완료: {user_data['email']} - {payment_data['plan']}", "PAYMENT")
+            
+            return jsonify({'success': True, 'message': '결제가 완료되었습니다!'}), 200
+        else:
+            payment_data['status'] = 'failed'
+            redis_client.set(f'payment:{order_id}', json.dumps(payment_data))
+            log(f"❌ 결제 실패: {order_id}", "PAYMENT")
+            return jsonify({'success': False, 'error': '결제가 실패했습니다'}), 400
+    
+    except Exception as e:
+        log(f"❌ 결제 콜백 실패: {e}", "ERROR")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============================
+# 🎯 사용 제한 시스템
+# ============================
+
+def check_usage_limit(tool_name):
+    """사용 제한 체크"""
+    user = get_user_from_session()
+    if not user:
+        return {'allowed': False, 'error': '로그인이 필요합니다', 'redirect': '/login-page'}
+    
+    # 플랜별 제한
+    limits = {
+        'free': {
+            'text_analyzer': 3,
+            'title_generator': 2,
+            'seo_checker': 1,
+            'ai_writer': 0,  # 무료 불가
+            'competitor_analyzer': 0,  # 무료 불가
+            'keyword_recommender': 0  # 무료 불가
+        },
+        'basic': {
+            'text_analyzer': 999999,  # 무제한
+            'title_generator': 999999,
+            'seo_checker': 999999,
+            'ai_writer': 10,
+            'competitor_analyzer': 5,
+            'keyword_recommender': 20
+        },
+        'pro': {
+            'text_analyzer': 999999,
+            'title_generator': 999999,
+            'seo_checker': 999999,
+            'ai_writer': 999999,
+            'competitor_analyzer': 999999,
+            'keyword_recommender': 999999
+        }
+    }
+    
+    user_plan = user.get('plan', 'free')
+    user_usage = user.get('usage', {})
+    current_usage = user_usage.get(tool_name, 0)
+    limit = limits[user_plan].get(tool_name, 0)
+    
+    if current_usage >= limit:
+        return {
+            'allowed': False,
+            'error': f'{"무료 플랜에서는 사용할 수 없습니다" if limit == 0 else "이번 달 사용 한도를 초과했습니다"}',
+            'current': current_usage,
+            'limit': limit,
+            'plan': user_plan
+        }
+    
+    # 사용 횟수 증가
+    user_usage[tool_name] = current_usage + 1
+    user['usage'] = user_usage
+    redis_client.set(f"user:{user['id']}", json.dumps(user))
+    
+    return {
+        'allowed': True,
+        'current': user_usage[tool_name],
+        'limit': limit,
+        'plan': user_plan
+    }
 
 # ============================
 # 📊 관리자 대시보드

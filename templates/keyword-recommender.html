@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔑 키워드 추천 - Repost</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #6366f1; --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --bg-gradient-1: #667eea; --bg-gradient-2: #764ba2;
+            --glass-bg: rgba(255, 255, 255, 0.1); --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+            min-height: 100vh; padding: 20px; position: relative; overflow-x: hidden;
+        }
+        body::before {
+            content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite; pointer-events: none; z-index: 0;
+        }
+        @keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(30px, -30px); } }
+        .container { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+        .header { text-align: center; margin-bottom: 40px; animation: fadeInDown 0.6s ease-out; }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        .header h1 { font-size: 3rem; font-weight: 700; color: white; margin-bottom: 10px; text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); }
+        .header p { font-size: 1.2rem; color: rgba(255, 255, 255, 0.9); font-weight: 300; }
+        .back-btn {
+            position: absolute; top: 0; left: 0; padding: 12px 24px;
+            background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
+            border-radius: 12px; color: white; text-decoration: none; font-weight: 500;
+            transition: all 0.3s ease; box-shadow: var(--glass-shadow);
+        }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.2); transform: translateX(-5px); }
+        .glass-card {
+            background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
+            border-radius: 24px; padding: 30px; box-shadow: var(--glass-shadow); margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .card-title { font-size: 1.5rem; font-weight: 600; color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .input-group { margin-bottom: 20px; }
+        .input-label { display: block; color: white; font-weight: 500; margin-bottom: 8px; font-size: 0.95rem; }
+        .input-field {
+            width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 12px; color: white; font-size: 1rem; font-family: inherit; transition: all 0.3s ease;
+        }
+        .input-field:focus { outline: none; background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.4); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1); }
+        .input-field::placeholder { color: rgba(255, 255, 255, 0.5); }
+        .recommend-btn {
+            width: 100%; padding: 16px; background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+            border: none; border-radius: 12px; color: white; font-size: 1.1rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+        }
+        .recommend-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6); }
+        .recommend-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .keyword-section { margin-bottom: 30px; }
+        .section-header { color: white; font-size: 1.3rem; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .keyword-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+        .keyword-item {
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 20px;
+            transition: all 0.3s ease; cursor: pointer;
+        }
+        .keyword-item:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-3px); }
+        .keyword-text { color: white; font-weight: 600; font-size: 1.15rem; margin-bottom: 12px; }
+        .keyword-meta { display: flex; gap: 15px; margin-bottom: 10px; }
+        .meta-item {
+            display: flex; align-items: center; gap: 5px; color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+        .volume-badge {
+            padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;
+        }
+        .volume-high { background: rgba(239, 68, 68, 0.3); color: #fca5a5; }
+        .volume-medium { background: rgba(245, 158, 11, 0.3); color: #fcd34d; }
+        .volume-low { background: rgba(16, 185, 129, 0.3); color: #6ee7b7; }
+        .difficulty-badge {
+            padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;
+        }
+        .difficulty-hard { background: rgba(239, 68, 68, 0.3); color: #fca5a5; }
+        .difficulty-medium { background: rgba(245, 158, 11, 0.3); color: #fcd34d; }
+        .difficulty-easy { background: rgba(16, 185, 129, 0.3); color: #6ee7b7; }
+        .keyword-recommendation { color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; line-height: 1.5; }
+        .combination-list { display: flex; flex-direction: column; gap: 15px; }
+        .combination-item {
+            background: rgba(255, 255, 255, 0.15); padding: 20px; border-radius: 12px;
+            border-left: 4px solid var(--primary);
+        }
+        .combination-title { color: white; font-weight: 600; font-size: 1.2rem; margin-bottom: 10px; }
+        .combination-keywords {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;
+        }
+        .combination-keyword-tag {
+            padding: 6px 12px; background: rgba(255, 255, 255, 0.2); border-radius: 15px;
+            color: white; font-size: 0.9rem;
+        }
+        .combination-strategy { color: rgba(255, 255, 255, 0.8); font-size: 0.95rem; }
+        .loading { text-align: center; padding: 60px 20px; }
+        .spinner {
+            width: 50px; height: 50px; border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: white; font-size: 1.1rem; }
+        .empty-state { text-align: center; padding: 60px 20px; color: rgba(255, 255, 255, 0.8); }
+        .empty-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.5; }
+        @media (max-width: 768px) {
+            body { padding: 15px; } .header h1 { font-size: 2rem; }
+            .back-btn { position: static; margin-bottom: 20px; display: inline-block; }
+            .glass-card { padding: 20px; } .keyword-list { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← 홈으로</a>
+        <div class="header">
+            <h1>🔑 키워드 추천 엔진</h1>
+            <p>검색량과 경쟁도를 분석하여 최적의 키워드를 추천합니다</p>
+        </div>
+        <div class="glass-card">
+            <h2 class="card-title"><span>🎯</span> 주제 입력</h2>
+            <div class="input-group">
+                <label class="input-label">블로그 주제 *</label>
+                <input type="text" id="topicInput" class="input-field" placeholder="예: 강남 맛집">
+            </div>
+            <button id="recommendBtn" class="recommend-btn" onclick="recommendKeywords()">✨ 키워드 추천받기</button>
+        </div>
+        <div id="resultsContainer"></div>
+    </div>
+    <script>
+        async function recommendKeywords() {
+            const topic = document.getElementById('topicInput').value.trim();
+            const btn = document.getElementById('recommendBtn');
+            const container = document.getElementById('resultsContainer');
+            if (!topic) { alert('주제를 입력해주세요!'); return; }
+            btn.disabled = true; btn.textContent = '🔍 분석 중...';
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><div class="loading-text">최적의 키워드를 찾고 있습니다...</div></div>';
+            try {
+                const response = await fetch('/api/recommend-keywords', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic })
+                });
+                const data = await response.json();
+                if (data.success) { displayResults(data.keywords); }
+                else { throw new Error(data.error || '추천 실패'); }
+            } catch (error) {
+                console.error('추천 오류:', error);
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div style="font-size: 1.2rem;">키워드 추천 중 오류가 발생했습니다</div></div>';
+            } finally { btn.disabled = false; btn.textContent = '✨ 키워드 추천받기'; }
+        }
+        function displayResults(keywords) {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = `
+                <div class="glass-card">
+                    <div class="keyword-section">
+                        <div class="section-header">🎯 주요 키워드 (검색량 높음)</div>
+                        <div class="keyword-list">
+                            ${keywords.primary.map(kw => createKeywordCard(kw)).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card">
+                    <div class="keyword-section">
+                        <div class="section-header">🔗 연관 키워드</div>
+                        <div class="keyword-list">
+                            ${keywords.secondary.map(kw => createKeywordCard(kw)).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card">
+                    <div class="keyword-section">
+                        <div class="section-header">💎 롱테일 키워드 (추천!)</div>
+                        <div class="keyword-list">
+                            ${keywords.long_tail.map(kw => createKeywordCard(kw)).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card">
+                    <h2 class="card-title"><span>🎨</span> 추천 키워드 조합</h2>
+                    <div class="combination-list">
+                        ${keywords.recommended_combination.map(combo => `
+                            <div class="combination-item">
+                                <div class="combination-title">${combo.title}</div>
+                                <div class="combination-keywords">
+                                    ${combo.keywords.map(kw => `<span class="combination-keyword-tag">${kw}</span>`).join('')}
+                                </div>
+                                <div class="combination-strategy">💡 ${combo.strategy}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        function createKeywordCard(kw) {
+            const volumeClass = kw.volume === 'high' ? 'volume-high' : kw.volume === 'medium' ? 'volume-medium' : 'volume-low';
+            const difficultyClass = kw.difficulty === 'hard' ? 'difficulty-hard' : kw.difficulty === 'medium' ? 'difficulty-medium' : 'difficulty-easy';
+            const volumeText = kw.volume === 'high' ? '높음' : kw.volume === 'medium' ? '중간' : '낮음';
+            const difficultyText = kw.difficulty === 'hard' ? '어려움' : kw.difficulty === 'medium' ? '보통' : '쉬움';
+            return `
+                <div class="keyword-item" onclick="copyKeyword('${kw.keyword}')">
+                    <div class="keyword-text">${kw.keyword}</div>
+                    <div class="keyword-meta">
+                        <div class="meta-item">
+                            <span>📊</span>
+                            <span class="volume-badge ${volumeClass}">검색량 ${volumeText}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>🎯</span>
+                            <span class="difficulty-badge ${difficultyClass}">난이도 ${difficultyText}</span>
+                        </div>
+                    </div>
+                    <div class="meta-item" style="margin-bottom: 8px;">
+                        <span>🔢</span>
+                        <span>월 ${kw.volume_estimate.toLocaleString()}회 검색 (추정)</span>
+                    </div>
+                    <div class="keyword-recommendation">💡 ${kw.recommendation}</div>
+                </div>
+            `;
+        }
+        function copyKeyword(keyword) {
+            navigator.clipboard.writeText(keyword).then(() => {
+                alert(`✅ "${keyword}" 키워드가 복사되었습니다!`);
+            });
+        }
+        document.getElementById('topicInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') recommendKeywords();
+        });
+    </script>
+</body>
+</html>
+
