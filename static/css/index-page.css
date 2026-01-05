@@ -110,17 +110,34 @@ body {
    3. 컨텐츠 래퍼
    =========================================== */
 .content-wrapper {
-    background: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(30px) saturate(180%);
-    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
     border-radius: 30px;
     padding: 35px;
     box-shadow: 
         0 8px 32px rgba(31, 38, 135, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        0 0 0 1px rgba(255, 255, 255, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
     animation: fadeInUp 0.8s ease-out 0.8s backwards;
     margin-top: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.content-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.8) 50%, 
+        transparent 100%
+    );
 }
 
 /* ===========================================
